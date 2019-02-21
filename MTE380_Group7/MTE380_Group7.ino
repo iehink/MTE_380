@@ -117,7 +117,7 @@ void setup() {
   }
   
   // Define starting position #TODO - update to actual expected starting position
-  STARTING_TILE = &COURSE[1][1];
+  STARTING_TILE = &COURSE[0][0];
   CURRENT_TILE = STARTING_TILE;
   CURRENT_DIRECTION = EAST;
   DISTANCE_NORTH = 150;
@@ -138,8 +138,8 @@ void loop() {
   
   // testing loop
   while (TESTING) {
-    for (int x = 0; x < 5; x++) {
-      for (int y = 0; y < 5; y++) {
+    for (int x = 0; x <= 5; x++) {
+      for (int y = 0; y <= 5; y++) {
         if ((*CURRENT_TILE).row == x && (*CURRENT_TILE).col == y) {
           Serial.print("C");
         }
@@ -151,15 +151,21 @@ void loop() {
       Serial.println();
     }
 
-    Serial.print("Input target tile (x then y): ");
+    Serial.print("Input target tile (x y, e.g. 3 4 for second row third column): ");
 
-    testX = Serial.read();
-    testY = Serial.read();
-
-    AddToPath(&COURSE[testX][testY]);
+    while (!Serial.available()){}
+    testX = Serial.parseInt();
+    while (!Serial.available()){}
+    testY = Serial.parseInt();
+    Serial.read();
+    Serial.println(testX);
+    Serial.println(testY);
+    
+    SelectPath(&COURSE[testX][testY]);
     COURSE[testX][testY].goal = POSSIBILITY;
 
     testPoint = PATH_HEAD;
+    
     while(testPoint != PATH_TAIL) {
       Serial.print((*testPoint->tile).row);
       Serial.print(", ");
@@ -167,6 +173,10 @@ void loop() {
       Serial.print("\t");
       testPoint = testPoint -> next;
     }
+    Serial.print((*testPoint->tile).row);
+    Serial.print(", ");
+    Serial.print((*testPoint->tile).col);
+    Serial.println();
   }
 
   // Production loop #TODO implement front IR scanner to handle when we're gonna hit a wall (maybe)
@@ -250,12 +260,12 @@ void loop() {
  */
 
 // Function to add the next path point to the path list #TODO - could optimize to head to closer points first
-void AddToPath(struct Tile* tile){
+void AddToPath(struct Tile* newTile){
   struct PathPoint* nextTile = (struct PathPoint*) malloc(sizeof(struct PathPoint));
-  nextTile->tile = tile;
+  nextTile->tile = newTile;
   nextTile->next = NULL;
   
-  if (PATH_HEAD = NULL) {
+  if (PATH_HEAD == NULL) {
     PATH_HEAD = nextTile;
     PATH_TAIL = nextTile;
   } else { // append to end of list
@@ -524,6 +534,7 @@ void SelectPath(struct Tile* target) {
       AddToPath(&corner[2]);
     }
 
+    AddToPath(target);
     return;
   }
 }
