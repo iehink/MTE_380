@@ -283,7 +283,7 @@ void Encoder2_ISR(){
   ENCODER_2++;
 }
 
-// Function to drive the vehicle forward at speed s [mm/s] #TODO
+// Function to drive the vehicle forward at speed s [mm/s]. Negative speed drives it backwards. #TODO
 void Forward(double s){
   double maxSpeed = 500; //[mm/s] #TODO: determine actual max speed (taking into account accuracy of encoders as well)
 
@@ -299,7 +299,8 @@ void Forward(double s){
 
 // Function to adjust heading #TODO: improve to adjust heading based on IMU
 void Head(int dir) {
-  int degCW = (dir - CURRENT_DIRECTION) * 90;
+  // Use the fact that the integer respresentation of each direction is incremented by one for each cardinal direction going CW 
+  int degCW = (dir - CURRENT_DIRECTION) * 90; 
   if (degCW < 0) {
     degCW += 360;
   }
@@ -340,7 +341,17 @@ void Navigate() {
   int colDiff = (*PATH_HEAD->tile).col - (*CURRENT_TILE).col;
 
   // Adjust heading
-  if (rowDiff == 0) { // If we are already in the correct row and just need to go across a column
+   if (rowDiff == 0 && colDiff == 0) { // if we are already on the correct tile, navigate to the center
+    if (CURRENT_DIRECTION == NORTH) {
+      distToTile = 0.5 * TILE_DISTANCE - DISTANCE_NORTH;
+    } else if (CURRENT_DIRECTION == SOUTH) {
+      distToTile = 0.5 * TILE_DISTANCE + DISTANCE_NORTH;
+    } else if (CURRENT_DIRECTION == EAST) {
+      distToTile = 0.5 * TILE_DISTANCE - DISTANCE_EAST;
+    } else if (CURRENT_DIRECTION == WEST) {
+      distToTile = 0.5 * TILE_DISTANCE + DISTANCE_EAST;
+    }
+   } else if (rowDiff == 0) { // If we are already in the correct row and just need to go across a column
     if (colDiff < 0) {
       Head(WEST);
       colDiff = -1 * colDiff;
@@ -430,7 +441,7 @@ double ScanLongIR(int IR_Pin, double ratio, double dist){
   if (abs(newDist - dist) > threshold) {
     int numTiles, i;
     struct Tile tile;
-
+    
     // Use a multiplier to minimize repetitiveness of the code, since one is just the opposite of the other
     if(IR_Pin == IR_LEFT_PIN) { // left IR sensor picked up something interesting
       i = 1;
@@ -482,6 +493,7 @@ void SelectPath(struct Tile* target) {
   
   if (PATH_TAIL == NULL) {
     prevTile = *CURRENT_TILE;
+    AddToPath(CURRENT_TILE); // Ensure alignment to center of tile before we begin travelling to the target
   } else {
     prevTile = *PATH_TAIL->tile;
   }
