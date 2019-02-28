@@ -73,13 +73,25 @@ void loop()
 {
   int front_IR_dist = 0, left_IR_dist = 0, right_IR_dist = 0;
   int spd = MAX_SPEED;
-  Serial.println(analogRead(A0));
-  //Forward(spd);
-  //Reverse(spd);
-  //RightTrack(MOTOR_A_FWD, spd);
-  //LeftTrack(MOTOR_B_FWD, spd);
-  //RightTrack(MOTOR_A_REV, spd);
-  //LeftTrack(MOTOR_B_REV, spd);
+  while(ReadHallEffect() < 30)
+  {
+    //Stop();
+    //Forward(spd);
+    //Reverse(spd);
+    //LeftTrack(MOTOR_B_REV, spd);
+    RightTrack(MOTOR_A_REV, spd);
+  }
+  Serial.println(ReadHallEffect());
+  while(ReadHallEffect() >= 30)
+  {
+    //Stop();
+    //Forward(spd);
+    //Reverse(spd);
+    RightTrack(MOTOR_A_FWD, spd);
+    //LeftTrack(MOTOR_B_FWD, spd);
+    //RightTrack(MOTOR_A_REV, spd);
+    //LeftTrack(MOTOR_B_REV, spd);
+  }
   // demo loop
   /*
   while (true)
@@ -140,6 +152,12 @@ void TurnLeft(int spd)
   LeftTrack(MOTOR_B_REV, spd);
 }
 
+void Stop()
+{
+  Brake(MOTOR_A_BRAKE, true);
+  Brake(MOTOR_B_BRAKE, true);
+}
+
 int ReadIRLeft()
 {
   return ReadIR(IRLeft);
@@ -166,6 +184,12 @@ void RightTrack(int dir, int spd)
   {
     spd = MAX_SPEED;
   }
+
+  Serial.println("DIR:");
+  Serial.println(digitalRead(MOTOR_A_DIR));
+  Serial.println("PIN:");
+  Serial.println(dir);
+  delay(1000);
   
   if (digitalRead(MOTOR_A_DIR) == dir)
   {
@@ -205,6 +229,17 @@ int ReadIR(SharpIR sensor)
   for(int i = 0; i < number_of_readings; i++)
   {
     sum += sensor.getDistance();
+  }
+  return sum / number_of_readings;  
+}
+
+int ReadHallEffect()
+{
+  int number_of_readings = 10;
+  int sum = 0;
+  for(int i = 0; i < number_of_readings; i++)
+  {
+    sum += analogRead(A0); //TODO
   }
   return sum / number_of_readings;  
 }
