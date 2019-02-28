@@ -57,23 +57,31 @@ void setup()
   MOTOR_A_BRAKE = 9;
   pinMode(3, OUTPUT);
   MOTOR_A_PWM = 3;
-  MOTOR_A_FWD = 1;
-  MOTOR_A_REV = 0; //?
+  MOTOR_A_FWD = LOW;
+  MOTOR_A_REV = HIGH;
   pinMode(13, OUTPUT);
   MOTOR_B_DIR = 13;
   pinMode(8, OUTPUT);
   MOTOR_B_BRAKE = 8;
   pinMode(11, OUTPUT);
   MOTOR_B_PWM = 11;
-  MOTOR_B_FWD = 0;
-  MOTOR_B_REV = 1; //?
+  MOTOR_B_FWD = HIGH;
+  MOTOR_B_REV = LOW;
 }
 
 void loop()
 {
   int front_IR_dist = 0, left_IR_dist = 0, right_IR_dist = 0;
-  
+  int spd = MAX_SPEED;
+  Serial.println(analogRead(A0));
+  //Forward(spd);
+  //Reverse(spd);
+  //RightTrack(MOTOR_A_FWD, spd);
+  //LeftTrack(MOTOR_B_FWD, spd);
+  //RightTrack(MOTOR_A_REV, spd);
+  //LeftTrack(MOTOR_B_REV, spd);
   // demo loop
+  /*
   while (true)
   {
     front_IR_dist = ReadIRFront();
@@ -87,6 +95,7 @@ void loop()
       Forward(MAX_SPEED);
     }
   }
+  */
 }
 
 
@@ -160,6 +169,7 @@ void RightTrack(int dir, int spd)
   
   if (digitalRead(MOTOR_A_DIR) == dir)
   {
+    Brake(MOTOR_A_BRAKE, false);
     analogWrite(MOTOR_A_PWM, spd);
   }
   else // If we're changing directions, we need to stop first
@@ -178,6 +188,7 @@ void LeftTrack(int dir, int spd)
   
   if (digitalRead(MOTOR_B_DIR) == dir)
   {
+    Brake(MOTOR_B_BRAKE, false);
     analogWrite(MOTOR_B_PWM, spd);
   }
   else // If we're changing directions, we need to stop first
