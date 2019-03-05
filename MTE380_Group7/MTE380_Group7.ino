@@ -12,6 +12,10 @@
  * Coordinates indicated as (RC), e.g. 12 means first row, second column.
  */
 
+// Includes
+#include <SharpIR.h>
+#include <SparkFun_MMA8452Q.h>
+#include <Wire.h> // for I2C
 
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * ************************************************************** Define structs **************************************************************
@@ -35,8 +39,25 @@ struct PathPoint {
  * ********************************************************* Define global variables **********************************************************
  * --------------------------------------------------------------------------------------------------------------------------------------------
  */
-int ENCODER_1_PIN, ENCODER_2_PIN, IR_LEFT_PIN, IR_RIGHT_PIN, IR_FRONT_PIN; // Pinouts
+ // Encoder constants
+int ENCODER_1_PIN, ENCODER_2_PIN; // Pinouts
 int ENCODER_1, ENCODER_2; // To track when the encoders receive pulses
+
+// IR sensors
+SharpIR IRLeft(SharpIR::GP2Y0A02YK0F, A3);
+SharpIR IRRight(SharpIR::GP2Y0A02YK0F, A4);
+SharpIR IRFront(SharpIR::GP2Y0A21YK0F, A5);
+
+// Motor constants
+int MOTOR_A_DIR, MOTOR_A_BRAKE, MOTOR_A_PWM, MOTOR_B_DIR, MOTOR_B_BRAKE, MOTOR_B_PWM; // Motor pinouts; A is right, B is left
+int MOTOR_A_FWD, MOTOR_A_REV, MOTOR_B_REV, MOTOR_B_FWD; // Motor direction constants
+int CLOCKWISE = 1, COUNTER_CLOCKWISE = 0;
+int MAX_SPEED = 255;
+
+// Accelerometer
+MMA8452Q accel;
+
+// Pathfinding globals
 int CURRENT_DIRECTION; // To track grid location/direction
 struct Tile* CURRENT_TILE; // Pointer to tile in COURSE array that we are currently on
 struct Tile* STARTING_TILE; // Pointer to tile in COURSE array that we started on
@@ -63,7 +84,7 @@ double TILE_DISTANCE = 304.8; // length of each tile (1 ft = 304.8mm) #TODO - up
 double IR_SENSOR_DISTANCE = 30; // distance from center of device to IR sensor
 
 // Define sensor ratios
-double ENCODER_1_RATIO = 1, ENCODER_2_RATIO = 1.1; // [mm/encoder pulse] #TODO - determine actual ratios
+double ENCODER_1_RATIO = 0.15, ENCODER_2_RATIO = 1; // [mm/encoder pulse] #TODO - determine actual ratios
 double IR_LEFT_RATIO = 1, IR_RIGHT_RATIO = 1, IR_FRONT_RATIO = 1; // [mm/value] #TODO - determine actual ratios
 
 
@@ -74,7 +95,7 @@ double IR_LEFT_RATIO = 1, IR_RIGHT_RATIO = 1, IR_FRONT_RATIO = 1; // [mm/value] 
 void AddToPath(struct Tile* tile); // Function to add a new target to the path
 void Encoder1_ISR(); // ISR to monitor encoder 1 and increment when a pulse is received
 void Encoder2_ISR(); // ISR to monitor encoder 1 and increment when a pulse is received
-void Forward(double s); // Function to drive the vehicle forward at speed s [mm/s]
+void Forward(double spd); // Function to drive the vehicle forward at speed s [mm/s]
 void Head (int dir); // Function to adjust heading (N/W/E/S)
 bool IDTile(); // Function to attempt to identify the current tile. Returns TRUE when tile is identified and identity has been stored in the COURSE matrix.
 bool LookForGoal(); // Function to search the current tile for any goal and identify what goal is. Returns TRUE if it found a goal and updates goal of tile as suitable.
@@ -96,18 +117,46 @@ void setup() {
   Serial.begin(9600);
   
   // Define pinouts #TODO - set actual pinouts
+  // Define encoder pinouts
   ENCODER_1_PIN = A0;
   ENCODER_2_PIN = A2;
-  IR_LEFT_PIN = A3;
-  IR_RIGHT_PIN = A4;
-  IR_FRONT_PIN = A5;
+
+  // Define motor pinouts
+  pinMode(12, OUTPUT);
+  MOTOR_A_DIR = 12;
+  pinMode(9, OUTPUT);
+  MOTOR_A_BRAKE = 9;
+  pinMode(3, OUTPUT);
+  MOTOR_A_PWM = 3;
+  MOTOR_A_FWD = LOW;
+  MOTOR_A_REV = HIGH;
+  pinMode(13, OUTPUT);
+  MOTOR_B_DIR = 13;
+  pinMode(8, OUTPUT);
+  MOTOR_B_BRAKE = 8;
+  pinMode(11, OUTPUT);
+  MOTOR_B_PWM = 11;
+  MOTOR_B_FWD = HIGH;
+  MOTOR_B_REV = LOW;
+
+  // Initialize motors
+  analogWrite(MOTOR_A_PWM, 0);
+  analogWrite(MOTOR_B_PWM, 0);
 
   // Attach interrupts and define encoder starting values
   ENCODER_1 = 0;
   ENCODER_2 = 0;
-  attachInterrupt(digitalPinToInterrupt(ENCODER_1_PIN), Encoder1_ISR, FALLING);
-  attachInterrupt(digitalPinToInterrupt(ENCODER_2_PIN), Encoder2_ISR, FALLING);
+  //attachInterrupt(digitalPinToInterrupt(ENCODER_1_PIN), Encoder1_ISR, FALLING);
+  //attachInterrupt(digitalPinToInterrupt(ENCODER_2_PIN), Encoder2_ISR, FALLING);
 
+  // Initialize accelerometer
+  Wire.begin();
+
+  if (accel.begin() == false) {
+    Serial.println("Accelerometer not connected. Please check connections and read the hookup guide.");
+    while (1);
+  }
+  
   // Set up COURSE matrix
   for (int x = 0; x < 6; x++) {
     for (int y = 0; y < 6; y++) {
@@ -119,14 +168,14 @@ void setup() {
   // Define starting position #TODO - update to actual expected starting position
   STARTING_TILE = &COURSE[0][0];
   CURRENT_TILE = STARTING_TILE;
-  CURRENT_DIRECTION = EAST;
-  DISTANCE_NORTH = 150;
-  DISTANCE_EAST = 150;
+  CURRENT_DIRECTION = NORTH;
+  DISTANCE_NORTH = 0;
+  DISTANCE_EAST = 0;
 }
 
 void loop() {
   bool TESTING = true; // set to true to simulate/test, set to false when actually using sensor values
-  int testX, testY;
+  int testX = 1, testY;
   struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
   
   // Variables to keep track of expected distance measurements to be received from the IR sensors
@@ -137,6 +186,56 @@ void loop() {
   struct Tile* peopleTile;
   
   // testing loop
+  while (TESTING) {
+    Stop();
+    while(testX == 1){
+      if (digitalRead(2) == HIGH) {
+        testX = 0;
+      }
+    }
+
+    testX = 1;
+
+    CURRENT_DIRECTION = NORTH;
+    while (DISTANCE_NORTH < 200) {
+      Forward(MAX_SPEED);
+      //ReadEncoders();
+      //Serial.println(DISTANCE_NORTH);
+      /*if (analogRead(0) > 400) {
+        DISTANCE_NORTH = 100;
+      }*/
+      /*
+      if (accel.available()) {      // Wait for new data from accelerometer
+        // Acceleration of x, y, and z directions in g units
+        Serial.print(accel.getCalculatedX(), 3);
+        Serial.print("\t");
+        Serial.print(accel.getCalculatedY(), 3);
+        Serial.print("\t");
+        Serial.print(accel.getCalculatedZ(), 3);
+        Serial.println();
+      }
+      */
+    }
+
+    CURRENT_DIRECTION = SOUTH;
+    while(DISTANCE_NORTH > 0) {
+      Reverse(MAX_SPEED);
+      ReadEncoders();
+      //Serial.println(DISTANCE_NORTH);
+      /*
+      if (accel.available()) {      // Wait for new data from accelerometer
+        // Acceleration of x, y, and z directions in g units
+        Serial.print(accel.getCalculatedX(), 3);
+        Serial.print("\t");
+        Serial.print(accel.getCalculatedY(), 3);
+        Serial.print("\t");
+        Serial.print(accel.getCalculatedZ(), 3);
+        Serial.println();
+      }
+      */
+    }
+  }
+  /*
   while (TESTING) {
     for (int x = 0; x <= 5; x++) {
       for (int y = 0; y <= 5; y++) {
@@ -177,13 +276,23 @@ void loop() {
     Serial.print(", ");
     Serial.print((*testPoint->tile).col);
     Serial.println();
-  }
 
+    if (accel.available()) {      // Wait for new data from accelerometer
+    // Acceleration of x, y, and z directions in g units
+    Serial.print(accel.getCalculatedX(), 3);
+    Serial.print("\t");
+    Serial.print(accel.getCalculatedY(), 3);
+    Serial.print("\t");
+    Serial.print(accel.getCalculatedZ(), 3);
+    Serial.println();
+  }
+  }
+  */
   // Production loop #TODO implement front IR scanner to handle when we're gonna hit a wall (maybe)
   while (completedGoals < 5) {
     // Scan for targets (note that ScanLongIR will update the path as required)
-    leftIRDist = ScanLongIR(IR_LEFT_PIN, IR_LEFT_RATIO, leftIRDist);
-    rightIRDist = ScanLongIR(IR_RIGHT_PIN, IR_RIGHT_RATIO, rightIRDist); 
+    //leftIRDist = ScanLongIR(IR_LEFT_PIN, IR_LEFT_RATIO, leftIRDist);
+    //rightIRDist = ScanLongIR(IR_RIGHT_PIN, IR_RIGHT_RATIO, rightIRDist); 
 
     // Update distance travelled
     if (NewTile()){
@@ -259,6 +368,176 @@ void loop() {
  * --------------------------------------------------------------------------------------------------------------------------------------------
  */
 
+
+/*
+// Scanning function to check long-range IR and add tiles to the target path if the sensors pick things up #TODO - could be optimized to find things when turning
+double ScanLongIR(int IR_Pin, double ratio, double dist){
+  double newDist = 0;
+  double threshold = 5000; // threshold at which a change in IR reading will be considered significant enough to investigate [mm]
+
+  newDist = analogRead(IR_Pin) * ratio;
+  if (abs(newDist - dist) > threshold) {
+    int numTiles, i;
+    struct Tile tile;
+    
+    // Use a multiplier to minimize repetitiveness of the code, since one is just the opposite of the other
+    if(IR_Pin == IR_LEFT_PIN) { // left IR sensor picked up something interesting
+      i = 1;
+    } else { // right IR sensor picked up something interesting
+      i = -1;
+    }
+
+    numTiles = floor((newDist + IR_SENSOR_DISTANCE)/TILE_DISTANCE);
+
+    // Determine where new target tile is
+    if (CURRENT_DIRECTION == NORTH) { 
+      tile.row = (*CURRENT_TILE).row - i*numTiles;
+    } else if (CURRENT_DIRECTION == EAST) {
+      tile.col = (*CURRENT_TILE).col - i*numTiles;
+    } else if (CURRENT_DIRECTION == SOUTH) {
+      tile.row = (*CURRENT_TILE).row + i*numTiles;
+    } else {
+      tile.col = (*CURRENT_TILE).col + i*numTiles;
+    }
+
+    COURSE[tile.row][tile.col].goal = POSSIBILITY;
+    SelectPath(&COURSE[tile.row][tile.col]);
+    
+  } else {
+    dist = 0.9 * dist + 0.1 * newDist; // Update expectation of sensor reading, weighted towards what it has been previously
+  }
+
+  return dist;
+}
+*/
+
+
+/* --------------------------------------------------------------------------------------------------------------------------------------------
+ * ****************************************************** Movement functions are below. ******************************************************
+ * --------------------------------------------------------------------------------------------------------------------------------------------
+ */
+void Brake(int brakePin, bool brake){
+  if(brake) 
+  {
+    digitalWrite(brakePin, HIGH);
+  }
+  else
+  {
+    digitalWrite(brakePin, LOW);
+  }
+}
+
+void Forward(int spd){
+  RightTrack(MOTOR_A_FWD, spd);
+  LeftTrack(MOTOR_B_FWD, spd);
+}
+
+// Function to adjust heading #TODO: improve to adjust heading based on IMU
+void Head(int dir) {
+  // Use the fact that the integer respresentation of each direction is incremented by one for each cardinal direction going CW 
+  int degCW = (dir - CURRENT_DIRECTION) * 90; 
+  if (degCW < 0) {
+    degCW += 360;
+  }
+
+  Turn(degCW);
+}
+
+void Reverse(int spd){
+  RightTrack(MOTOR_A_REV, spd);
+  LeftTrack(MOTOR_B_REV, spd);
+}
+
+void Stop(){
+  Brake(MOTOR_A_BRAKE, true);
+  Brake(MOTOR_B_BRAKE, true);
+}
+
+// Function to turn the device degCW degrees clockwise and update current direction #TODO
+void Turn (int degCW) {
+  // Note that the distances shouldn't be affected and the center of the nose should return to the same place (or the distance track should be aware where it is now). One optional soln is to disable and reenable the interrupts:
+  noInterrupts(); // disable interrupts (stop encoders from keeping track)
+
+  interrupts(); // re-enable interrupts (allow encoders to continue keeping track)
+  return;
+}
+
+void TurnLeft(int spd){
+  RightTrack(MOTOR_A_FWD, spd);
+  LeftTrack(MOTOR_B_REV, spd);
+}
+
+void TurnRight(int spd){
+  RightTrack(MOTOR_A_REV, spd);
+  LeftTrack(MOTOR_B_FWD, spd);
+}
+
+/* --------------------------------------------------------------------------------------------------------------------------------------------
+ * ******************************************************* Sensor functions are below. *******************************************************
+ * --------------------------------------------------------------------------------------------------------------------------------------------
+ */
+int ReadIRFront(){
+  return ReadIR(IRFront);
+}
+
+int ReadIRLeft(){
+  return ReadIR(IRLeft);
+}
+
+int ReadIRRight(){
+  return ReadIR(IRRight);
+}
+
+double ReadEncoders(){
+  double distance = (ReadEncoder1() + ReadEncoder2())/2; // average what each encoder thinks
+  // Update distance travelled
+  if (CURRENT_DIRECTION == NORTH) {
+    DISTANCE_NORTH += distance; 
+  } else if (CURRENT_DIRECTION == SOUTH) {
+    DISTANCE_NORTH -= distance;
+  } else if (CURRENT_DIRECTION == EAST) {
+    DISTANCE_EAST += distance;
+  } else {
+    DISTANCE_EAST -= distance;
+  } 
+  return distance;
+}
+
+/* --------------------------------------------------------------------------------------------------------------------------------------------
+ * ************************************************* Tile identification functions are below. *************************************************
+ * --------------------------------------------------------------------------------------------------------------------------------------------
+ */
+// Function to attempt to identify the current tile. Returns TRUE when tile is identified and identity has been stored in COURSE matrix. #TODO
+bool IDTile(){
+  return true;
+}
+ 
+/* --------------------------------------------------------------------------------------------------------------------------------------------
+ * **************************************************** Goal-handling functions are below. ****************************************************
+ * --------------------------------------------------------------------------------------------------------------------------------------------
+ */
+// Function to search the current tile for any goal and identify what goal is. Returns TRUE if it found a goal and updates goal of tile as suitable. #TODO
+bool LookForGoal(){
+  /*  if (the fire sensor says there's fire) {
+   *    (*CURRENT_TILE).goal = FIRE;
+   *  }
+   *  ...
+   *  else {
+   *    (*CURRENT_TILE).goal = NOTHING; // Maybe?
+   *  }
+   *  etc.
+   */
+}
+
+// Function to search a sand tile for food. Returns TRUE (and acknowledges food) if food is found. #TODO
+bool SearchSand(){
+  return false;
+}
+
+/* --------------------------------------------------------------------------------------------------------------------------------------------
+ * ***************************************************** Pathfinding functions are below. *****************************************************
+ * --------------------------------------------------------------------------------------------------------------------------------------------
+ */
 // Function to add the next path point to the path list #TODO - could optimize to head to closer points first
 void AddToPath(struct Tile* newTile){
   struct PathPoint* nextTile = (struct PathPoint*) malloc(sizeof(struct PathPoint));
@@ -275,59 +554,8 @@ void AddToPath(struct Tile* newTile){
   return;
 }
 
-// Interrupts
-void Encoder1_ISR(){
-  ENCODER_1++;
-}
-void Encoder2_ISR(){
-  ENCODER_2++;
-}
-
-// Function to drive the vehicle forward at speed s [mm/s]. Negative speed drives it backwards. #TODO
-void Forward(double s){
-  double maxSpeed = 500; //[mm/s] #TODO: determine actual max speed (taking into account accuracy of encoders as well)
-
-  // Confirm it is not told to go faster than it can
-  if (s > maxSpeed) {
-    s = maxSpeed;
-  }
-
-  // #TODO: insert motor control here
-  
-  return;
-}
-
-// Function to adjust heading #TODO: improve to adjust heading based on IMU
-void Head(int dir) {
-  // Use the fact that the integer respresentation of each direction is incremented by one for each cardinal direction going CW 
-  int degCW = (dir - CURRENT_DIRECTION) * 90; 
-  if (degCW < 0) {
-    degCW += 360;
-  }
-
-  Turn(degCW);
-}
-
-// Function to attempt to identify the current tile. Returns TRUE when tile is identified and identity has been stored in COURSE matrix. #TODO
-bool IDTile(){
-  return true;
-}
-
-// Function to search the current tile for any goal and identify what goal is. Returns TRUE if it found a goal and updates goal of tile as suitable. #TODO
-bool LookForGoal(){
-  /*  if (the fire sensor says there's fire) {
-   *    (*CURRENT_TILE).goal = FIRE;
-   *  }
-   *  ...
-   *  else {
-   *    (*CURRENT_TILE).goal = NOTHING; // Maybe?
-   *  }
-   *  etc.
-   */
-}
-
 // Function to adjust path direction and speed as indicated by the path list. Heads to center of next target tile at a speed relative to its distance from the tile.
-void Navigate() {
+void Navigate(){
   double distToTile = 0, speedRatio = 0.5;
 
   // If we have no objectives presently #TODO
@@ -379,22 +607,7 @@ void Navigate() {
 }
 
 // Function to determine if a new tile has been reached
-bool NewTile() {
-  double distance = (ENCODER_1_RATIO*ENCODER_1 + ENCODER_2_RATIO*ENCODER_2)/2; // average what each encoder thinks
-  // Reset encoder values immediately to minimize risk of missing values
-  ENCODER_1 = 0; 
-  ENCODER_2 = 0;
-
-  // Update distance travelled
-  if (CURRENT_DIRECTION == NORTH) {
-    DISTANCE_NORTH += distance; 
-  } else if (CURRENT_DIRECTION == SOUTH) {
-    DISTANCE_NORTH -= distance;
-  } else if (CURRENT_DIRECTION == EAST) {
-    DISTANCE_EAST += distance;
-  } else {
-    DISTANCE_EAST -= distance;
-  } 
+bool NewTile(){
 
   // Determine if we are now on a new tile
   if (abs(DISTANCE_NORTH) > TILE_DISTANCE) {
@@ -432,53 +645,8 @@ void PathPointReached(){
   delete temp;
 }
 
-// Scanning function to check long-range IR and add tiles to the target path if the sensors pick things up #TODO - could be optimized to find things when turning
-double ScanLongIR(int IR_Pin, double ratio, double dist){
-  double newDist = 0;
-  double threshold = 5000; // threshold at which a change in IR reading will be considered significant enough to investigate [mm]
-
-  newDist = analogRead(IR_Pin) * ratio;
-  if (abs(newDist - dist) > threshold) {
-    int numTiles, i;
-    struct Tile tile;
-    
-    // Use a multiplier to minimize repetitiveness of the code, since one is just the opposite of the other
-    if(IR_Pin == IR_LEFT_PIN) { // left IR sensor picked up something interesting
-      i = 1;
-    } else { // right IR sensor picked up something interesting
-      i = -1;
-    }
-
-    numTiles = floor((newDist + IR_SENSOR_DISTANCE)/TILE_DISTANCE);
-
-    // Determine where new target tile is
-    if (CURRENT_DIRECTION == NORTH) { 
-      tile.row = (*CURRENT_TILE).row - i*numTiles;
-    } else if (CURRENT_DIRECTION == EAST) {
-      tile.col = (*CURRENT_TILE).col - i*numTiles;
-    } else if (CURRENT_DIRECTION == SOUTH) {
-      tile.row = (*CURRENT_TILE).row + i*numTiles;
-    } else {
-      tile.col = (*CURRENT_TILE).col + i*numTiles;
-    }
-
-    COURSE[tile.row][tile.col].goal = POSSIBILITY;
-    SelectPath(&COURSE[tile.row][tile.col]);
-    
-  } else {
-    dist = 0.9 * dist + 0.1 * newDist; // Update expectation of sensor reading, weighted towards what it has been previously
-  }
-
-  return dist;
-}
-
-// Function to search a sand tile for food. Returns TRUE (and acknowledges food) if food is found. #TODO
-bool SearchSand(){
-  return false;
-}
-
 // Function to determine the optimal path to a given target tile
-void SelectPath(struct Tile* target) {
+void SelectPath(struct Tile* target){
   // If the target tile is already being targeted, leave the path alone and log to console for testing purposes #TODO: remove for production
   if ((*target).pathTarget) {
     Serial.print("Attempted to target same tile again");
@@ -551,11 +719,83 @@ void SelectPath(struct Tile* target) {
   }
 }
 
-// Function to turn the device degCW degrees clockwise and update current direction #TODO
-void Turn (int degCW) {
-  // Note that the distances shouldn't be affected and the center of the nose should return to the same place (or the distance track should be aware where it is now). One optional soln is to disable and reenable the interrupts:
-  noInterrupts(); // disable interrupts (stop encoders from keeping track)
+/* ------------------------------------------------------------------------------------------------------------------------------
+ * ********************************************* Low Level Functions are below. *************************************************
+ * ------------------------------------------------------------------------------------------------------------------------------
+ */
+// Interrupts
+void Encoder1_ISR(){
+  ENCODER_1++;
+  Serial.println("ENCODER 1 INTERRUPT");
+}
+void Encoder2_ISR(){
+  ENCODER_2++;
+  Serial.println("ENCODER 2 INTERRUPT");
+}
 
-  interrupts(); // re-enable interrupts (allow encoders to continue keeping track)
-  return;
+void LeftTrack(int dir, int spd){
+  if (spd > MAX_SPEED)
+  {
+    spd = MAX_SPEED;
+  }
+  
+  if (digitalRead(MOTOR_B_DIR) == dir)
+  {
+    Brake(MOTOR_B_BRAKE, false);
+    analogWrite(MOTOR_B_PWM, spd);
+  }
+  else // If we're changing directions, we need to stop first
+  { 
+    Brake(MOTOR_B_BRAKE, true);
+    digitalWrite(MOTOR_B_DIR, dir);
+  }
+}
+
+double ReadEncoder1(){
+  double distance = ENCODER_1_RATIO*analogRead(ENCODER_1_PIN);
+  //Serial.println(distance);
+  // Reset encoder values immediately to minimize risk of missing values
+  ENCODER_1 = 0; 
+  return distance;
+}
+
+double ReadEncoder2(){
+  //double distance = ENCODER_2_RATIO*ENCODER_2;
+  double distance = ENCODER_2_RATIO*analogRead(ENCODER_2_PIN);
+  Serial.println(distance);
+  // Reset encoder values immediately to minimize risk of missing values
+  ENCODER_2 = 0; 
+  return distance;
+}
+
+bool ReadHallEffect(){
+  Serial.println(!digitalRead(52));
+  return !digitalRead(52);
+}
+
+int ReadIR(SharpIR sensor){
+  int number_of_readings = 5;
+  int sum = 0;
+  for(int i = 0; i < number_of_readings; i++)
+  {
+    sum += sensor.getDistance();
+  }
+  return sum / number_of_readings;  
+}
+
+void RightTrack(int dir, int spd){
+  if (spd > MAX_SPEED)
+  {
+    spd = MAX_SPEED;
+  }
+  if (digitalRead(MOTOR_A_DIR) == dir)
+  {
+    Brake(MOTOR_A_BRAKE, false);
+    analogWrite(MOTOR_A_PWM, spd);
+  }
+  else // If we're changing directions, we need to stop first
+  { 
+    Brake(MOTOR_A_BRAKE, true);
+    digitalWrite(MOTOR_A_DIR, dir);
+  }
 }

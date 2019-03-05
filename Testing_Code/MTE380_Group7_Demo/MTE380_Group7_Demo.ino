@@ -67,6 +67,10 @@ void setup()
   MOTOR_B_PWM = 11;
   MOTOR_B_FWD = HIGH;
   MOTOR_B_REV = LOW;
+
+  // init motors
+  analogWrite(MOTOR_A_PWM, 0);
+  analogWrite(MOTOR_B_PWM, 0);
 }
 
 void loop()
@@ -75,23 +79,19 @@ void loop()
   int spd = MAX_SPEED;
   while(!ReadHallEffect())
   {
-    //Stop();
     Forward(spd);
-    //Reverse(spd);
-    //LeftTrack(MOTOR_B_REV, spd);
-    //RightTrack(MOTOR_A_REV, spd);
   }
+  // Debouncing
+  delay(50);
+  while(ReadHallEffect());
   delay(50);
   while(!ReadHallEffect())
   {
-    //Stop();
-    //Forward(spd);
     Reverse(spd);
-    //RightTrack(MOTOR_A_FWD, spd);
-    //LeftTrack(MOTOR_B_FWD, spd);
-    //RightTrack(MOTOR_A_REV, spd);
-    //LeftTrack(MOTOR_B_REV, spd);
   }
+  // Debouncing
+  delay(50);
+  while(ReadHallEffect());
   delay(50);
   while(!ReadHallEffect())
   {
@@ -103,6 +103,9 @@ void loop()
     //RightTrack(MOTOR_A_REV, spd);
     //LeftTrack(MOTOR_B_REV, spd);
   }
+  // Debouncing
+  delay(50);
+  while(ReadHallEffect());
   delay(50);
   Serial.println(ReadHallEffect());
   // demo loop
