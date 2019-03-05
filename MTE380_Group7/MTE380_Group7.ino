@@ -52,7 +52,7 @@ SharpIR IRFront(SharpIR::GP2Y0A21YK0F, A5);
 int MOTOR_A_DIR, MOTOR_A_BRAKE, MOTOR_A_PWM, MOTOR_B_DIR, MOTOR_B_BRAKE, MOTOR_B_PWM; // Motor pinouts; A is right, B is left
 int MOTOR_A_FWD, MOTOR_A_REV, MOTOR_B_REV, MOTOR_B_FWD; // Motor direction constants
 int CLOCKWISE = 1, COUNTER_CLOCKWISE = 0;
-int MAX_SPEED = 255;
+int MAX_SPEED = 254;
 
 // Accelerometer
 MMA8452Q accel;
@@ -79,14 +79,13 @@ int PEOPLE = 1, LOST = 2, FOOD = 3, FIRE = 4, DELIVER = 5, POSSIBILITY = 6; //, 
 struct PathPoint* PATH_HEAD = NULL;
 struct PathPoint* PATH_TAIL = NULL;
 
-double DISTANCE_NORTH, DISTANCE_EAST; // Distance based on center of nose of robot, as measured from the lower-left corner of the current tile [mm].
+double DISTANCE_NORTH, DISTANCE_EAST; // Distance based on center of nose of robot, as measured from the south-west corner of the current tile [mm].
 double TILE_DISTANCE = 304.8; // length of each tile (1 ft = 304.8mm) #TODO - update with actual measurements/testing
 double IR_SENSOR_DISTANCE = 30; // distance from center of device to IR sensor
 
 // Define sensor ratios
-double ENCODER_1_RATIO = 0.15, ENCODER_2_RATIO = 1; // [mm/encoder pulse] #TODO - determine actual ratios
+double ENCODER_1_RATIO = 5, ENCODER_2_RATIO = 5; // [mm/encoder pulse] #TODO - determine actual ratios
 double IR_LEFT_RATIO = 1, IR_RIGHT_RATIO = 1, IR_FRONT_RATIO = 1; // [mm/value] #TODO - determine actual ratios
-
 
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * With the exception of setup() and loop(), functions are initialized below and alphabetized beneath setup() and loop() for easy navigation.
@@ -111,15 +110,14 @@ void Turn (int degCW); // Function to turn the device degCW degrees clockwise an
  * ******************************************************** Running code begins below. ********************************************************
  * --------------------------------------------------------------------------------------------------------------------------------------------
  */
-
 void setup() {
   // Begin serial comms for testing
   Serial.begin(9600);
   
   // Define pinouts #TODO - set actual pinouts
-  // Define encoder pinouts
-  ENCODER_1_PIN = A0;
-  ENCODER_2_PIN = A2;
+  // Define encoder pinouts - must be 2, 3, 18, 19, 20, or 21 (viable pins for interrupts)
+  ENCODER_1_PIN = 2;
+  ENCODER_2_PIN = 18;
 
   // Define motor pinouts
   pinMode(12, OUTPUT);
@@ -145,9 +143,9 @@ void setup() {
 
   // Attach interrupts and define encoder starting values
   ENCODER_1 = 0;
+  attachInterrupt(digitalPinToInterrupt(ENCODER_1_PIN), Encoder1_ISR, RISING);
   ENCODER_2 = 0;
-  //attachInterrupt(digitalPinToInterrupt(ENCODER_1_PIN), Encoder1_ISR, FALLING);
-  //attachInterrupt(digitalPinToInterrupt(ENCODER_2_PIN), Encoder2_ISR, FALLING);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_2_PIN), Encoder2_ISR, RISING);
 
   // Initialize accelerometer
   Wire.begin();
@@ -175,7 +173,7 @@ void setup() {
 
 void loop() {
   bool TESTING = true; // set to true to simulate/test, set to false when actually using sensor values
-  int testX = 1, testY;
+  int testX = 1, testY = 0;
   struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
   
   // Variables to keep track of expected distance measurements to be received from the IR sensors
@@ -189,18 +187,18 @@ void loop() {
   while (TESTING) {
     Stop();
     while(testX == 1){
-      if (digitalRead(2) == HIGH) {
+      if (digitalRead(4) == HIGH) {
         testX = 0;
       }
     }
-
+    
     testX = 1;
 
     CURRENT_DIRECTION = NORTH;
-    while (DISTANCE_NORTH < 200) {
+    while (DISTANCE_NORTH < 100) {
       Forward(MAX_SPEED);
-      //ReadEncoders();
-      //Serial.println(DISTANCE_NORTH);
+      ReadEncoders();
+      Serial.println(DISTANCE_NORTH);
       /*if (analogRead(0) > 400) {
         DISTANCE_NORTH = 100;
       }*/
@@ -219,9 +217,9 @@ void loop() {
 
     CURRENT_DIRECTION = SOUTH;
     while(DISTANCE_NORTH > 0) {
-      Reverse(MAX_SPEED);
+      Reverse(100);
       ReadEncoders();
-      //Serial.println(DISTANCE_NORTH);
+      Serial.println(DISTANCE_NORTH);
       /*
       if (accel.available()) {      // Wait for new data from accelerometer
         // Acceleration of x, y, and z directions in g units
@@ -367,8 +365,6 @@ void loop() {
  * *********************************************************** Functions are below. ***********************************************************
  * --------------------------------------------------------------------------------------------------------------------------------------------
  */
-
-
 /*
 // Scanning function to check long-range IR and add tiles to the target path if the sensors pick things up #TODO - could be optimized to find things when turning
 double ScanLongIR(int IR_Pin, double ratio, double dist){
@@ -432,8 +428,7 @@ void Forward(int spd){
   LeftTrack(MOTOR_B_FWD, spd);
 }
 
-// Function to adjust heading #TODO: improve to adjust heading based on IMU
-void Head(int dir) {
+void Head(int dir) { // Function to adjust heading #TODO: improve to adjust heading based on IMU
   // Use the fact that the integer respresentation of each direction is incremented by one for each cardinal direction going CW 
   int degCW = (dir - CURRENT_DIRECTION) * 90; 
   if (degCW < 0) {
@@ -453,12 +448,27 @@ void Stop(){
   Brake(MOTOR_B_BRAKE, true);
 }
 
-// Function to turn the device degCW degrees clockwise and update current direction #TODO
-void Turn (int degCW) {
-  // Note that the distances shouldn't be affected and the center of the nose should return to the same place (or the distance track should be aware where it is now). One optional soln is to disable and reenable the interrupts:
-  noInterrupts(); // disable interrupts (stop encoders from keeping track)
+void Turn (int degCW) { // Function to turn the device degCW degrees clockwise and update current direction #TODO
+  ReadEncoders(); // Update distance value first so we don't upset that measurement
 
-  interrupts(); // re-enable interrupts (allow encoders to continue keeping track)
+  double distPerDeg = 10;
+  double turnDist = (abs(ReadEncoder1())+abs(ReadEncoder2()))/2;
+  
+  degCW = degCW%360;
+
+  if (degCW <= 90) {
+    while(turnDist < distPerDeg*degCW){
+      TurnRight(150);
+      turnDist += (abs(ReadEncoder1())+abs(ReadEncoder2()))/2;
+    }
+  } else {
+    while((abs(ReadEncoder1())+abs(ReadEncoder2()))/2 < distPerDeg*(360 - degCW)){
+      TurnLeft(150);
+      turnDist += (abs(ReadEncoder1())+abs(ReadEncoder2()))/2;
+    }
+  }
+
+  Stop();
   return;
 }
 
@@ -490,6 +500,7 @@ int ReadIRRight(){
 
 double ReadEncoders(){
   double distance = (ReadEncoder1() + ReadEncoder2())/2; // average what each encoder thinks
+  
   // Update distance travelled
   if (CURRENT_DIRECTION == NORTH) {
     DISTANCE_NORTH += distance; 
@@ -538,8 +549,7 @@ bool SearchSand(){
  * ***************************************************** Pathfinding functions are below. *****************************************************
  * --------------------------------------------------------------------------------------------------------------------------------------------
  */
-// Function to add the next path point to the path list #TODO - could optimize to head to closer points first
-void AddToPath(struct Tile* newTile){
+void AddToPath(struct Tile* newTile){ // Function to add the next path point to the path list #TODO - could optimize to head to closer points first
   struct PathPoint* nextTile = (struct PathPoint*) malloc(sizeof(struct PathPoint));
   nextTile->tile = newTile;
   nextTile->next = NULL;
@@ -554,8 +564,7 @@ void AddToPath(struct Tile* newTile){
   return;
 }
 
-// Function to adjust path direction and speed as indicated by the path list. Heads to center of next target tile at a speed relative to its distance from the tile.
-void Navigate(){
+void Navigate(){ // Function to adjust path direction and speed as indicated by the path list. Heads to center of next target tile at a speed relative to its distance from the tile.
   double distToTile = 0, speedRatio = 0.5;
 
   // If we have no objectives presently #TODO
@@ -606,8 +615,7 @@ void Navigate(){
   return;
 }
 
-// Function to determine if a new tile has been reached
-bool NewTile(){
+bool NewTile(){ // Function to determine if a new tile has been reached
 
   // Determine if we are now on a new tile
   if (abs(DISTANCE_NORTH) > TILE_DISTANCE) {
@@ -632,8 +640,7 @@ bool NewTile(){
   return true; // we either incremented N-S or E-W, or we would've returned false at this point
 }
 
-// Function to pop the target off the list
-void PathPointReached(){
+void PathPointReached(){ // Function to pop the target off the list
   struct PathPoint* temp = new PathPoint;
 
   // Store that the tile is being removed from the path
@@ -645,8 +652,7 @@ void PathPointReached(){
   delete temp;
 }
 
-// Function to determine the optimal path to a given target tile
-void SelectPath(struct Tile* target){
+void SelectPath(struct Tile* target){ // Function to determine the optimal path to a given target tile
   // If the target tile is already being targeted, leave the path alone and log to console for testing purposes #TODO: remove for production
   if ((*target).pathTarget) {
     Serial.print("Attempted to target same tile again");
@@ -726,11 +732,9 @@ void SelectPath(struct Tile* target){
 // Interrupts
 void Encoder1_ISR(){
   ENCODER_1++;
-  Serial.println("ENCODER 1 INTERRUPT");
 }
 void Encoder2_ISR(){
   ENCODER_2++;
-  Serial.println("ENCODER 2 INTERRUPT");
 }
 
 void LeftTrack(int dir, int spd){
@@ -752,20 +756,21 @@ void LeftTrack(int dir, int spd){
 }
 
 double ReadEncoder1(){
-  double distance = ENCODER_1_RATIO*analogRead(ENCODER_1_PIN);
-  //Serial.println(distance);
-  // Reset encoder values immediately to minimize risk of missing values
-  ENCODER_1 = 0; 
-  return distance;
+  // Store current encoder value and immediately clear it (to minimize misses of rotations)
+  int encoder = ENCODER_1;
+  ENCODER_1 = 0;
+  
+  // Return distance conversion
+  return ENCODER_1_RATIO * encoder;
 }
 
 double ReadEncoder2(){
-  //double distance = ENCODER_2_RATIO*ENCODER_2;
-  double distance = ENCODER_2_RATIO*analogRead(ENCODER_2_PIN);
-  Serial.println(distance);
-  // Reset encoder values immediately to minimize risk of missing values
-  ENCODER_2 = 0; 
-  return distance;
+  // Store current encoder value and immediately clear it (to minimize misses of rotations)
+  int encoder = ENCODER_2;
+  ENCODER_2 = 0;
+
+  // Return distance conversion
+  return ENCODER_2_RATIO * encoder;
 }
 
 bool ReadHallEffect(){
