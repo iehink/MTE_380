@@ -51,8 +51,9 @@ SharpIR IRFront(SharpIR::GP2Y0A21YK0F, A5);
 // Motor constants
 int MOTOR_A_DIR, MOTOR_A_BRAKE, MOTOR_A_PWM, MOTOR_B_DIR, MOTOR_B_BRAKE, MOTOR_B_PWM; // Motor pinouts; A is right, B is left
 int MOTOR_A_FWD, MOTOR_A_REV, MOTOR_B_REV, MOTOR_B_FWD; // Motor direction constants
+double MOTOR_A_SPEED_RATIO = 1, MOTOR_B_SPEED_RATIO = 0.85; // MUST NOT BE GREATER THAN 1
 int CLOCKWISE = 1, COUNTER_CLOCKWISE = 0;
-int MAX_SPEED = 254;
+int MAX_SPEED = 250;
 
 // Accelerometer
 MMA8452Q accel;
@@ -84,7 +85,7 @@ double TILE_DISTANCE = 304.8; // length of each tile (1 ft = 304.8mm) #TODO - up
 double IR_SENSOR_DISTANCE = 30; // distance from center of device to IR sensor
 
 // Define sensor ratios
-double ENCODER_1_RATIO = 5, ENCODER_2_RATIO = 5; // [mm/encoder pulse] #TODO - determine actual ratios
+double ENCODER_1_RATIO = 2.4, ENCODER_2_RATIO = 2.4; // [mm/encoder pulse] #TODO - determine actual ratios
 double IR_LEFT_RATIO = 1, IR_RIGHT_RATIO = 1, IR_FRONT_RATIO = 1; // [mm/value] #TODO - determine actual ratios
 
 /* --------------------------------------------------------------------------------------------------------------------------------------------
@@ -116,8 +117,8 @@ void setup() {
   
   // Define pinouts #TODO - set actual pinouts
   // Define encoder pinouts - must be 2, 3, 18, 19, 20, or 21 (viable pins for interrupts)
-  ENCODER_1_PIN = 2;
-  ENCODER_2_PIN = 18;
+  ENCODER_1_PIN = 2; // left
+  ENCODER_2_PIN = 18; //right
 
   // Define motor pinouts
   pinMode(12, OUTPUT);
@@ -143,9 +144,9 @@ void setup() {
 
   // Attach interrupts and define encoder starting values
   ENCODER_1 = 0;
-  attachInterrupt(digitalPinToInterrupt(ENCODER_1_PIN), Encoder1_ISR, RISING);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_1_PIN), Encoder1_ISR, CHANGE);
   ENCODER_2 = 0;
-  attachInterrupt(digitalPinToInterrupt(ENCODER_2_PIN), Encoder2_ISR, RISING);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_2_PIN), Encoder2_ISR, CHANGE);
 
   // Initialize accelerometer
   Wire.begin();
@@ -158,22 +159,23 @@ void setup() {
   // Set up COURSE matrix
   for (int x = 0; x < 6; x++) {
     for (int y = 0; y < 6; y++) {
-      COURSE[x][y].row = x;
-      COURSE[x][y].col = y;
+      COURSE[x][y].row = x+1;
+      COURSE[x][y].col = y+1;
     }
   }
   
   // Define starting position #TODO - update to actual expected starting position
-  STARTING_TILE = &COURSE[0][0];
+  STARTING_TILE = &COURSE[3][3];
   CURRENT_TILE = STARTING_TILE;
-  CURRENT_DIRECTION = NORTH;
-  DISTANCE_NORTH = 0;
-  DISTANCE_EAST = 0;
+  CURRENT_DIRECTION = EAST;
+  DISTANCE_NORTH = 150;
+  DISTANCE_EAST = 200;
 }
 
 void loop() {
+  bool SQUARE_TEST = false;
   bool TESTING = true; // set to true to simulate/test, set to false when actually using sensor values
-  int testX = 1, testY = 0;
+  int testX = 1, testY = 0, testZ = 0;
   struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
   
   // Variables to keep track of expected distance measurements to be received from the IR sensors
@@ -184,7 +186,37 @@ void loop() {
   struct Tile* peopleTile;
   
   // testing loop
-  while (TESTING) {
+  while(TESTING){
+    SelectPath(&COURSE[0][4]);
+    
+    Stop();
+    while(testX == 1){
+      if (digitalRead(4) == HIGH) {
+        testX = 0;
+        Serial.print("Go to ");
+        Serial.print((*PATH_HEAD->tile).row);
+        Serial.println((*PATH_HEAD->tile).col);
+      }
+    }
+    
+    testX = 1;
+
+    while (PATH_HEAD != NULL) {
+      ReadEncoders();
+      if (NewTile()) {
+        Serial.println("New tile!");
+        Serial.print(CURRENT_DIRECTION);
+        Serial.print(" : ");
+        Serial.print((*CURRENT_TILE).row);
+        Serial.print(", ");
+        Serial.println((*CURRENT_TILE).col);
+      }
+      
+      Navigate();
+    }
+  }
+
+  while (SQUARE_TEST) {
     Stop();
     while(testX == 1){
       if (digitalRead(4) == HIGH) {
@@ -193,45 +225,39 @@ void loop() {
     }
     
     testX = 1;
-
+    
     CURRENT_DIRECTION = NORTH;
-    while (DISTANCE_NORTH < 100) {
+    while (DISTANCE_NORTH < 200) {
+      Forward(200);
+      ReadEncoders();
+      Serial.println(DISTANCE_NORTH);
+    }
+
+    Head(EAST);
+    Stop();
+
+    while(DISTANCE_EAST < 100) {
       Forward(MAX_SPEED);
       ReadEncoders();
-      Serial.println(DISTANCE_NORTH);
-      /*if (analogRead(0) > 400) {
-        DISTANCE_NORTH = 100;
-      }*/
-      /*
-      if (accel.available()) {      // Wait for new data from accelerometer
-        // Acceleration of x, y, and z directions in g units
-        Serial.print(accel.getCalculatedX(), 3);
-        Serial.print("\t");
-        Serial.print(accel.getCalculatedY(), 3);
-        Serial.print("\t");
-        Serial.print(accel.getCalculatedZ(), 3);
-        Serial.println();
-      }
-      */
     }
 
-    CURRENT_DIRECTION = SOUTH;
+    Head(SOUTH);
+    Stop();
+
     while(DISTANCE_NORTH > 0) {
-      Reverse(100);
+      Forward(MAX_SPEED);
       ReadEncoders();
-      Serial.println(DISTANCE_NORTH);
-      /*
-      if (accel.available()) {      // Wait for new data from accelerometer
-        // Acceleration of x, y, and z directions in g units
-        Serial.print(accel.getCalculatedX(), 3);
-        Serial.print("\t");
-        Serial.print(accel.getCalculatedY(), 3);
-        Serial.print("\t");
-        Serial.print(accel.getCalculatedZ(), 3);
-        Serial.println();
-      }
-      */
     }
+
+    Head(WEST);
+    while(DISTANCE_EAST > 0){
+      Forward(MAX_SPEED);
+      ReadEncoders();
+    }
+
+    Head(NORTH);
+    if (DISTANCE_NORTH < 0) DISTANCE_NORTH = 0; // fixing weird bug where it goes heckin negative
+    if (DISTANCE_EAST < 0) DISTANCE_EAST = 0; // fixing weird bug where it goes heckin negative
   }
   /*
   while (TESTING) {
@@ -436,6 +462,8 @@ void Head(int dir) { // Function to adjust heading #TODO: improve to adjust head
   }
 
   Turn(degCW);
+
+  CURRENT_DIRECTION = dir;
 }
 
 void Reverse(int spd){
@@ -451,24 +479,29 @@ void Stop(){
 void Turn (int degCW) { // Function to turn the device degCW degrees clockwise and update current direction #TODO
   ReadEncoders(); // Update distance value first so we don't upset that measurement
 
-  double distPerDeg = 10;
-  double turnDist = (abs(ReadEncoder1())+abs(ReadEncoder2()))/2;
+  double distPerDeg = 4.03;
+  double turnDist = ReadEncoder1()/2.0;
   
   degCW = degCW%360;
 
-  if (degCW <= 90) {
+  if (degCW <= 180) {
     while(turnDist < distPerDeg*degCW){
-      TurnRight(150);
-      turnDist += (abs(ReadEncoder1())+abs(ReadEncoder2()))/2;
+      TurnRight(200);
+      turnDist += ReadEncoder1();
+      delay(100);
     }
   } else {
-    while((abs(ReadEncoder1())+abs(ReadEncoder2()))/2 < distPerDeg*(360 - degCW)){
-      TurnLeft(150);
-      turnDist += (abs(ReadEncoder1())+abs(ReadEncoder2()))/2;
+    while(turnDist < distPerDeg*(360 - degCW)){
+      TurnLeft(200);
+      turnDist += ReadEncoder1();
+      delay(100);
     }
   }
 
   Stop();
+  // reset encoders to not mess with other functions
+  ENCODER_1 = 0;
+  ENCODER_2 = 0;
   return;
 }
 
@@ -499,7 +532,17 @@ int ReadIRRight(){
 }
 
 double ReadEncoders(){
-  double distance = (ReadEncoder1() + ReadEncoder2())/2; // average what each encoder thinks
+  double enc1 = ReadEncoder1(), enc2 = ReadEncoder2();
+  double distance = (enc1 + enc2)/2; // average what each encoder thinks
+
+  if (abs(enc1 - enc2) > 10) {
+    Serial.println("ERROR: ENCODER DISCREPANCY");
+    if (enc1 > enc2) {
+      Serial.println("ENCODER 2 LAGGING");
+    } else {
+      Serial.println("ENCODER 1 LAGGING");
+    }
+  }
   
   // Update distance travelled
   if (CURRENT_DIRECTION == NORTH) {
@@ -565,11 +608,11 @@ void AddToPath(struct Tile* newTile){ // Function to add the next path point to 
 }
 
 void Navigate(){ // Function to adjust path direction and speed as indicated by the path list. Heads to center of next target tile at a speed relative to its distance from the tile.
-  double distToTile = 0, speedRatio = 0.5;
+  double distToTile = 0, speedRatio = MAX_SPEED/TILE_DISTANCE;
 
   // If we have no objectives presently #TODO
   if (PATH_HEAD == NULL) {
-    Forward(100); // #TODO change this to whatever speed we determine is useful
+    Stop(); // #TODO change this to whatever speed we determine is useful
     return;
   }
 
@@ -587,6 +630,10 @@ void Navigate(){ // Function to adjust path direction and speed as indicated by 
       distToTile = 0.5 * TILE_DISTANCE - DISTANCE_EAST;
     } else if (CURRENT_DIRECTION == WEST) {
       distToTile = 0.5 * TILE_DISTANCE + DISTANCE_EAST;
+    }
+    Serial.println(distToTile);
+    if (abs(distToTile) < 10) {
+      PathPointReached();
     }
    } else if (rowDiff == 0) { // If we are already in the correct row and just need to go across a column
     if (colDiff < 0) {
@@ -610,8 +657,10 @@ void Navigate(){ // Function to adjust path direction and speed as indicated by 
     distToTile += (rowDiff - 0.5) * TILE_DISTANCE;
   }
 
+
   // Head toward target at speed relative to the distance from the target tile
-  Forward(distToTile * speedRatio);
+  //Forward(int(distToTile * speedRatio));
+  Forward(MAX_SPEED);
   return;
 }
 
@@ -741,8 +790,10 @@ void LeftTrack(int dir, int spd){
   if (spd > MAX_SPEED)
   {
     spd = MAX_SPEED;
-  }
-  
+  }  
+
+  spd = int(spd * MOTOR_B_SPEED_RATIO);
+
   if (digitalRead(MOTOR_B_DIR) == dir)
   {
     Brake(MOTOR_B_BRAKE, false);
@@ -755,20 +806,34 @@ void LeftTrack(int dir, int spd){
   }
 }
 
-double ReadEncoder1(){
+double ReadEncoder1(){ // Returns distance and resets encoder values
   // Store current encoder value and immediately clear it (to minimize misses of rotations)
   int encoder = ENCODER_1;
   ENCODER_1 = 0;
+
+  /* Test code
+  if(encoder != 0) {
+    Serial.print("ENCODER 1: ");
+    Serial.print(encoder * ENCODER_1_RATIO);
+  }
+  */
   
   // Return distance conversion
   return ENCODER_1_RATIO * encoder;
 }
 
-double ReadEncoder2(){
+double ReadEncoder2(){ // Returns distance and resets encoder values
   // Store current encoder value and immediately clear it (to minimize misses of rotations)
   int encoder = ENCODER_2;
   ENCODER_2 = 0;
 
+  /* Test code
+  if(encoder != 0) {
+    Serial.print(" ENCODER 2 ");
+    Serial.println(encoder * ENCODER_2_RATIO);
+  }
+  */
+  
   // Return distance conversion
   return ENCODER_2_RATIO * encoder;
 }
@@ -793,6 +858,9 @@ void RightTrack(int dir, int spd){
   {
     spd = MAX_SPEED;
   }
+
+  spd = int(spd * MOTOR_A_SPEED_RATIO);
+  
   if (digitalRead(MOTOR_A_DIR) == dir)
   {
     Brake(MOTOR_A_BRAKE, false);
