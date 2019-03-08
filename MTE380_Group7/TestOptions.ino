@@ -1,4 +1,4 @@
-void Test1(){
+void Test1(){ // Test tile selection + navigation
   bool buttonPressed = false;
   SelectPath(&COURSE[0][4]);
   
@@ -6,16 +6,35 @@ void Test1(){
   while(!buttonPressed){
     if (digitalRead(4) == HIGH) {
       buttonPressed = true;
-      Serial.print("Go to ");
-      Serial.print((*PATH_HEAD->tile).row);
-      Serial.println((*PATH_HEAD->tile).col);
     }
   }
   
   buttonPressed = false;
 
-  while (PATH_HEAD != NULL) {
-    Navigate();
+  while (Navigate()) {
+    Serial.print(CURRENT_DIRECTION);
+    Serial.print(" ");
+    Serial.print((*CURRENT_TILE).row);
+    Serial.print(" ");
+    Serial.println((*CURRENT_TILE).col);
+    //Serial.println(DISTANCE_NORTH);
+    /*
+    if (PATH_HEAD != NULL) {
+      Serial.print((*PATH_HEAD->tile).row);
+      Serial.print((*PATH_HEAD->tile).col);
+      Serial.print(" ");
+      if (PATH_HEAD->next != NULL) {
+        Serial.print((*PATH_HEAD->next->tile).row);
+        Serial.print((*PATH_HEAD->next->tile).col);
+        Serial.print(" ");
+        if (PATH_HEAD->next->next != NULL) {
+          Serial.print((*PATH_HEAD->next->next->tile).row);
+          Serial.print((*PATH_HEAD->next->next->tile).col);
+          Serial.println(" ");
+        }
+      }
+    }
+    */
   }
 }
 

@@ -1,5 +1,5 @@
  // Encoder constants
-int ENCODER_1_PIN = 2, ENCODER_2_PIN = 18; // Pinouts - must be 2, 3, 18, 19, 20, or 21 (viable pins for interrupts)
+int ENCODER_1_PIN = 19, ENCODER_2_PIN = 18; // Pinouts - must be 2, 3, 18, 19, 20, or 21 (viable pins for interrupts)
 int ENCODER_1, ENCODER_2; // To track when the encoders receive pulses
 double ENCODER_1_RATIO = 2.4, ENCODER_2_RATIO = 2.4; // [mm/encoder pulse] #TODO - determine actual ratios
 

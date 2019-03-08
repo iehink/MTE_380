@@ -1,4 +1,4 @@
-/* MTE 380 Group 7
+  /* MTE 380 Group 7
  * Date Created: 2019/02/16
  * Author: Catherine Fowler
  * Last Updated: 2019/02/20
@@ -77,24 +77,36 @@ void setup() {
   // Set up COURSE matrix
   for (int x = 0; x < 6; x++) {
     for (int y = 0; y < 6; y++) {
-      COURSE[x][y].row = x+1;
-      COURSE[x][y].col = y+1;
+      COURSE[x][y].row = x;
+      COURSE[x][y].col = y;
     }
   }
+  /* 00 01  02  03  04  05
+   * 10 11  12  13  14  15
+   * 20 21  22  23  24  25
+   * 30 31  32  33  34  35
+   * 40 41  42  43  44  45
+   * 50 51  52  53  54  55
+   */
   
   // Define starting position #TODO - update to actual expected starting position
   STARTING_TILE = &COURSE[3][3];
   CURRENT_TILE = STARTING_TILE;
-  CURRENT_DIRECTION = EAST;
+  CURRENT_DIRECTION = NORTH;
   DISTANCE_NORTH = 150;
   DISTANCE_EAST = 200;
 }
 
 void loop() {
+  bool runTestCode = true;
   struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
   
   // Variables to keep track of expected distance measurements to be received from the IR sensors
   double leftIRDist = 0, rightIRDist = 0;
+
+  while(runTestCode) {
+    Test1();
+  }
   
   // Production loop #TODO implement front IR scanner to handle when we're gonna hit a wall (maybe)
   while (CheckGoals() < 5) {
