@@ -8,6 +8,7 @@ int MOTOR_B_REV = LOW, MOTOR_B_FWD = HIGH; // Motor direction constants
 double MOTOR_A_SPEED_RATIO = 1, MOTOR_B_SPEED_RATIO = 0.85; // MUST NOT BE GREATER THAN 1
 int CLOCKWISE = 1, COUNTER_CLOCKWISE = 0;
 int MAX_SPEED = 250;
+int TURN_SPEED = 200;
 
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * ****************************************************** Movement functions are below. ******************************************************
@@ -67,13 +68,13 @@ void Turn (int degCW) { // Function to turn the device degCW degrees clockwise a
 
   if (degCW <= 180) {
     while(turnDist < distPerDeg*degCW){
-      TurnRight(200);
+      TurnRight(TURN_SPEED);
       turnDist += ReadEncoder1();
       delay(100);
     }
   } else {
     while(turnDist < distPerDeg*(360 - degCW)){
-      TurnLeft(200);
+      TurnLeft(TURN_SPEED);
       turnDist += ReadEncoder1();
       delay(100);
     }

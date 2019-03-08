@@ -95,11 +95,7 @@ void loop() {
   
   // Variables to keep track of expected distance measurements to be received from the IR sensors
   double leftIRDist = 0, rightIRDist = 0;
-
-  while(true){
-    Test1();
-  }
-
+  
   // Production loop #TODO implement front IR scanner to handle when we're gonna hit a wall (maybe)
   while (CheckGoals() < 5) {
     // Scan for targets (note that ScanLongIR will update the path as required)
