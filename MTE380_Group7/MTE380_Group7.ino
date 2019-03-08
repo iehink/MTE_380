@@ -60,6 +60,8 @@ struct PathPoint* PATH_TAIL = NULL;
 double DISTANCE_NORTH, DISTANCE_EAST; // Distance based on center of nose of robot, as measured from the south-west corner of the current tile [mm].
 double TILE_DISTANCE = 304.8; // length of each tile (1 ft = 304.8mm) #TODO - update with actual measurements/testing
 
+bool TEST = true;
+
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * ******************************************************** Running code begins below. ********************************************************
  * --------------------------------------------------------------------------------------------------------------------------------------------
@@ -92,29 +94,34 @@ void setup() {
 
 void loop() {
   struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
-  
-  // Variables to keep track of expected distance measurements to be received from the IR sensors
-  double leftIRDist = 0, rightIRDist = 0;
-  
-  // Production loop #TODO implement front IR scanner to handle when we're gonna hit a wall (maybe)
-  while (CheckGoals() < 5) {
-    // Scan for targets (note that ScanLongIR will update the path as required)
-    //leftIRDist = ScanLongIR(IR_LEFT_PIN, IR_LEFT_RATIO, leftIRDist);
-    //rightIRDist = ScanLongIR(IR_RIGHT_PIN, IR_RIGHT_RATIO, rightIRDist); 
 
-    // Update navigation
-    Navigate();
-
-    // If we have not identified the current tile, attempt to do so now #TODO: decide if we want to continue doing this after finding food
-    if((*CURRENT_TILE).type == UNK){
-      IDTile();
-    }    
+  if(TEST) {
+    BasicEncoderTest();
   }
-
-  SelectPath(STARTING_TILE);
-
-  while(true){
-    //just keep trucking til you're home
-    Navigate();
+  else { /*  
+    // Variables to keep track of expected distance measurements to be received from the IR sensors
+    double leftIRDist = 0, rightIRDist = 0;
+    
+    // Production loop #TODO implement front IR scanner to handle when we're gonna hit a wall (maybe)
+    while (CheckGoals() < 5) {
+      // Scan for targets (note that ScanLongIR will update the path as required)
+      //leftIRDist = ScanLongIR(IR_LEFT_PIN, IR_LEFT_RATIO, leftIRDist);
+      //rightIRDist = ScanLongIR(IR_RIGHT_PIN, IR_RIGHT_RATIO, rightIRDist); 
+  
+      // Update navigation
+      Navigate();
+  
+      // If we have not identified the current tile, attempt to do so now #TODO: decide if we want to continue doing this after finding food
+      if((*CURRENT_TILE).type == UNK){
+        IDTile();
+      }    
+    }
+  
+    SelectPath(STARTING_TILE);
+  
+    while(true){
+      //just keep trucking til you're home
+      Navigate();
+    } */
   }
 }

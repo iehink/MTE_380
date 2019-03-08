@@ -119,3 +119,33 @@ void Test3() {
     Serial.println();
   }
 }
+
+void BasicEncoderTest(){
+  while(true) {
+    LeftTrack(0, 250);
+    RightTrack(1, 250);
+  }/*
+  bool buttonPressed = false;
+  
+  Stop();
+  while(!buttonPressed){
+    if (digitalRead(4) == HIGH) {
+      buttonPressed = true;
+    }
+  }
+  
+  buttonPressed = false;
+  delay(200);
+  
+  while(!buttonPressed){
+    if (digitalRead(4) == HIGH) {
+      buttonPressed = true;
+    }
+    Serial.print("ENC LEFT: ");
+    Serial.println(ReadEncoderLeft());
+    Serial.print("ENC RIGHT: ");
+    Serial.println(ReadEncoderRight());
+    delay(3000);
+  }
+ */ 
+}

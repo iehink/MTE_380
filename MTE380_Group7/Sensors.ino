@@ -1,7 +1,7 @@
  // Encoder constants
-int ENCODER_1_PIN = 2, ENCODER_2_PIN = 18; // Pinouts - must be 2, 3, 18, 19, 20, or 21 (viable pins for interrupts)
-int ENCODER_1, ENCODER_2; // To track when the encoders receive pulses
-double ENCODER_1_RATIO = 2.4, ENCODER_2_RATIO = 2.4; // [mm/encoder pulse] #TODO - determine actual ratios
+int ENCODER_LEFT_PIN = 18, ENCODER_RIGHT_PIN = 19; // Pinouts - must be 2, 3, 18, 19, 20, or 21 (viable pins for interrupts)
+int ENCODER_LEFT, ENCODER_RIGHT; // To track when the encoders receive pulses
+double ENCODER_LEFT_RATIO = 2.4, ENCODER_RIGHT_RATIO = 2.4; // [mm/encoder pulse] #TODO - determine actual ratios
 
 
 // IR sensors
@@ -24,16 +24,15 @@ void InitAccelerometer() {
 
   if (accel.begin() == false) {
     Serial.println("Accelerometer not connected. Please check connections and read the hookup guide.");
-    while (1);
   }
 }
 
 void InitEncoders() {
   // Attach interrupts and define encoder starting values
-  ENCODER_1 = 0;
-  attachInterrupt(digitalPinToInterrupt(ENCODER_1_PIN), Encoder1_ISR, CHANGE);
-  ENCODER_2 = 0;
-  attachInterrupt(digitalPinToInterrupt(ENCODER_2_PIN), Encoder2_ISR, CHANGE);
+  ENCODER_LEFT = 0;
+  attachInterrupt(digitalPinToInterrupt(ENCODER_LEFT_PIN), EncoderLeft_ISR, CHANGE);
+  ENCODER_RIGHT = 0;
+  attachInterrupt(digitalPinToInterrupt(ENCODER_RIGHT_PIN), EncoderRight_ISR, CHANGE);
 }
 
 int ReadIRFront(){
@@ -49,15 +48,15 @@ int ReadIRRight(){
 }
 
 double ReadEncoders(){
-  double enc1 = ReadEncoder1(), enc2 = ReadEncoder2();
-  double distance = (enc1 + enc2)/2; // average what each encoder thinks
+  double encL = ReadEncoderLeft(), encR = ReadEncoderRight();
+  double distance = (encL + encR)/2; // average what each encoder thinks
 
-  if (abs(enc1 - enc2) > 10) {
+  if (abs(encL - encR) > 10) {
     Serial.println("ERROR: ENCODER DISCREPANCY");
-    if (enc1 > enc2) {
-      Serial.println("ENCODER 2 LAGGING");
+    if (encL > encR) {
+      Serial.println("ENCODER Right LAGGING");
     } else {
-      Serial.println("ENCODER 1 LAGGING");
+      Serial.println("ENCODER Left LAGGING");
     }
   }
   
@@ -75,8 +74,8 @@ double ReadEncoders(){
 }
 
 void ResetEncoders() {
-  ENCODER_1 = 0;
-  ENCODER_2 = 0;
+  ENCODER_LEFT = 0;
+  ENCODER_RIGHT = 0;
 }
 
 /* ------------------------------------------------------------------------------------------------------------------------------
@@ -84,43 +83,29 @@ void ResetEncoders() {
  * ------------------------------------------------------------------------------------------------------------------------------
  */
 // Interrupts
-void Encoder1_ISR(){
-  ENCODER_1++;
+void EncoderLeft_ISR(){
+  ENCODER_LEFT++;
 }
-void Encoder2_ISR(){
-  ENCODER_2++;
+void EncoderRight_ISR(){
+  ENCODER_RIGHT++;
 }
 
-double ReadEncoder1(){ // Returns distance and resets encoder values
+double ReadEncoderLeft(){ // Returns distance and resets encoder values
   // Store current encoder value and immediately clear it (to minimize misses of rotations)
-  int encoder = ENCODER_1;
-  ENCODER_1 = 0;
-
-  /* Test code
-  if(encoder != 0) {
-    Serial.print("ENCODER 1: ");
-    Serial.print(encoder * ENCODER_1_RATIO);
-  }
-  */
+  int encoder = ENCODER_LEFT;
+  ENCODER_LEFT = 0;
   
   // Return distance conversion
-  return ENCODER_1_RATIO * encoder;
+  return /*ENCODER_LEFT_RATIO **/ encoder;
 }
 
-double ReadEncoder2(){ // Returns distance and resets encoder values
+double ReadEncoderRight(){ // Returns distance and resets encoder values
   // Store current encoder value and immediately clear it (to minimize misses of rotations)
-  int encoder = ENCODER_2;
-  ENCODER_2 = 0;
-
-  /* Test code
-  if(encoder != 0) {
-    Serial.print(" ENCODER 2 ");
-    Serial.println(encoder * ENCODER_2_RATIO);
-  }
-  */
+  int encoder = ENCODER_RIGHT;
+  ENCODER_RIGHT = 0;
   
   // Return distance conversion
-  return ENCODER_2_RATIO * encoder;
+  return /*ENCODER_RIGHT_RATIO **/ encoder;
 }
 
 bool ReadHallEffect(){
