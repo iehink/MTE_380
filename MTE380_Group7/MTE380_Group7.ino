@@ -39,6 +39,9 @@ struct PathPoint {
  * ********************************************************* Define global variables **********************************************************
  * --------------------------------------------------------------------------------------------------------------------------------------------
  */
+
+bool TEST = true;
+ 
 // Pathfinding globals
 int CURRENT_DIRECTION; // To track grid location/direction
 struct Tile* CURRENT_TILE; // Pointer to tile in COURSE array that we are currently on
@@ -101,84 +104,89 @@ void setup() {
 
 void loop() {
   struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
+
+  if (TEST){
+    // Add test call in here...
+  }
+  else{
+    // Variables to keep track of expected distance measurements to be received from the IR sensors
+    double leftIRDist = 0, rightIRDist = 0;
+    // Variable to keep track of number of completed goals
+    int completedGoals = 0;
+    // Variable to keep track of where the people are
+    struct Tile* peopleTile;
   
-  // Variables to keep track of expected distance measurements to be received from the IR sensors
-  double leftIRDist = 0, rightIRDist = 0;
-  // Variable to keep track of number of completed goals
-  int completedGoals = 0;
-  // Variable to keep track of where the people are
-  struct Tile* peopleTile;
-
-  // Production loop #TODO implement front IR scanner to handle when we're gonna hit a wall (maybe)
-  while (completedGoals < 5) {
-    // Scan for targets (note that ScanLongIR will update the path as required)
-    //leftIRDist = ScanLongIR(IR_LEFT_PIN, IR_LEFT_RATIO, leftIRDist);
-    //rightIRDist = ScanLongIR(IR_RIGHT_PIN, IR_RIGHT_RATIO, rightIRDist); 
-
-    // Update distance travelled
-    if (NewTile()){
-      //flash LED for testing purposes #TODO
-    }
-
-    // Update navigation
-    Navigate();
-
-    // If we are on a tile identified as a possibility, look for a goal on the tile
-    if ((*CURRENT_TILE).goal == POSSIBILITY) {
-      LookForGoal();
-    }
-    
-    // If we have not identified the current tile, attempt to do so now #TODO: decide if we want to continue doing this after finding food
-    if((*CURRENT_TILE).type == UNK){
-      IDTile();
-    }
-
-    // Check goals
-    // If we haven't found food yet and we are on a sand tile, search for food
-    if (!GOAL[FOOD] && (*CURRENT_TILE).type == SAND && SearchSand()) {
-      GOAL[FOOD] = true;
-      completedGoals++;
-      if (GOAL[PEOPLE]){
-        AddToPath(peopleTile);
+    // Production loop #TODO implement front IR scanner to handle when we're gonna hit a wall (maybe)
+    while (completedGoals < 5) {
+      // Scan for targets (note that ScanLongIR will update the path as required)
+      //leftIRDist = ScanLongIR(IR_LEFT_PIN, IR_LEFT_RATIO, leftIRDist);
+      //rightIRDist = ScanLongIR(IR_RIGHT_PIN, IR_RIGHT_RATIO, rightIRDist); 
+  
+      // Update distance travelled
+      if (NewTile()){
+        //flash LED for testing purposes #TODO
+      }
+  
+      // Update navigation
+      Navigate();
+  
+      // If we are on a tile identified as a possibility, look for a goal on the tile
+      if ((*CURRENT_TILE).goal == POSSIBILITY) {
+        LookForGoal();
+      }
+      
+      // If we have not identified the current tile, attempt to do so now #TODO: decide if we want to continue doing this after finding food
+      if((*CURRENT_TILE).type == UNK){
+        IDTile();
+      }
+  
+      // Check goals
+      // If we haven't found food yet and we are on a sand tile, search for food
+      if (!GOAL[FOOD] && (*CURRENT_TILE).type == SAND && SearchSand()) {
+        GOAL[FOOD] = true;
+        completedGoals++;
+        if (GOAL[PEOPLE]){
+          AddToPath(peopleTile);
+        }
+      }
+      
+      if (!GOAL[PEOPLE] && (*CURRENT_TILE).goal == PEOPLE) {
+        // #TODO: Flash LED certain number of times
+        GOAL[PEOPLE] = true;
+        completedGoals++;
+        peopleTile = CURRENT_TILE;
+      }
+  
+      if (!GOAL[LOST] && (*CURRENT_TILE).goal == LOST) {
+        // #TODO: Flash LED certain number of times
+        GOAL[LOST] = true;
+        completedGoals++;
+      }
+      
+      if (!GOAL[FIRE] && (*CURRENT_TILE).goal == FIRE) {
+        // #TODO: Start that fan!
+        /*  while (fire sensor says there's fire) {
+         *    blow it out
+         *  }
+         */
+         GOAL[FIRE] = true;
+         completedGoals++;
+      }
+  
+      // If we haven't delivered food yet but we have found the food and are back at the people 
+      // (note that finding food adds the people tile to the path if people have been found)
+      if (!GOAL[DELIVER] && GOAL[FOOD] && (*CURRENT_TILE).goal == PEOPLE){
+        // #TODO: Flash LED certain number of times
+        GOAL[DELIVER] = true;
+        completedGoals++;
       }
     }
-    
-    if (!GOAL[PEOPLE] && (*CURRENT_TILE).goal == PEOPLE) {
-      // #TODO: Flash LED certain number of times
-      GOAL[PEOPLE] = true;
-      completedGoals++;
-      peopleTile = CURRENT_TILE;
+  
+    SelectPath(STARTING_TILE);
+  
+    while(true){
+      //just keep trucking til you're home
+      Navigate();
     }
-
-    if (!GOAL[LOST] && (*CURRENT_TILE).goal == LOST) {
-      // #TODO: Flash LED certain number of times
-      GOAL[LOST] = true;
-      completedGoals++;
-    }
-    
-    if (!GOAL[FIRE] && (*CURRENT_TILE).goal == FIRE) {
-      // #TODO: Start that fan!
-      /*  while (fire sensor says there's fire) {
-       *    blow it out
-       *  }
-       */
-       GOAL[FIRE] = true;
-       completedGoals++;
-    }
-
-    // If we haven't delivered food yet but we have found the food and are back at the people 
-    // (note that finding food adds the people tile to the path if people have been found)
-    if (!GOAL[DELIVER] && GOAL[FOOD] && (*CURRENT_TILE).goal == PEOPLE){
-      // #TODO: Flash LED certain number of times
-      GOAL[DELIVER] = true;
-      completedGoals++;
-    }
-  }
-
-  SelectPath(STARTING_TILE);
-
-  while(true){
-    //just keep trucking til you're home
-    Navigate();
   }
 }
