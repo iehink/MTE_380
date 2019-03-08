@@ -62,20 +62,20 @@ void Turn (int degCW) { // Function to turn the device degCW degrees clockwise a
   ReadEncoders(); // Update distance value first so we don't upset that measurement
 
   double distPerDeg = 4.03;
-  double turnDist = (ReadEncoder1() + ReadEncoder2())/2.0;
+  double turnDist = ReadEncoderLeft()/2.0;
   
   degCW = degCW%360;
 
   if (degCW <= 180) {
     while(turnDist < distPerDeg*degCW){
       TurnRight(TURN_SPEED);
-      turnDist += (ReadEncoder1() + ReadEncoder2())/2.0;
+      turnDist += ReadEncoderLeft();
       delay(100);
     }
   } else {
     while(turnDist < distPerDeg*(360 - degCW)){
       TurnLeft(TURN_SPEED);
-      turnDist += (ReadEncoder1() + ReadEncoder2())/2.0;
+      turnDist += ReadEncoderLeft();
       delay(100);
     }
   }
@@ -118,6 +118,7 @@ void RightTrack(int dir, int spd){
 }
 
 void LeftTrack(int dir, int spd){
+  Serial.println(digitalRead(MOTOR_B_DIR));
   if (spd > MAX_SPEED)
   {
     spd = MAX_SPEED;
@@ -132,7 +133,9 @@ void LeftTrack(int dir, int spd){
   }
   else // If we're changing directions, we need to stop first
   { 
+    Serial.println(dir);
     Brake(MOTOR_B_BRAKE, true);
     digitalWrite(MOTOR_B_DIR, dir);
+    Serial.println(digitalRead(MOTOR_B_DIR));
   }
 }
