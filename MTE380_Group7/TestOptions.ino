@@ -165,7 +165,7 @@ void Test3() {
 void BasicEncoderTest(){
   while(true) {
     LeftTrack(0, 250);
-    RightTrack(1, 250);
+    //RightTrack(1, 250);
   }/*
   bool buttonPressed = false;
 

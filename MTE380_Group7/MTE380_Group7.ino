@@ -96,7 +96,7 @@ void loop() {
   struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
 
   if(TEST) {
-    BasicEncoderTest();
+    Test1();
   }
   else { /*
     // Variables to keep track of expected distance measurements to be received from the IR sensors

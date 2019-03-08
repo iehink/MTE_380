@@ -46,6 +46,12 @@ void InitMotors() {
   // Initialize motors
   analogWrite(MOTOR_A_PWM, 0);
   analogWrite(MOTOR_B_PWM, 0);
+  pinMode(MOTOR_A_DIR, OUTPUT);
+  pinMode(MOTOR_B_DIR, OUTPUT);
+  pinMode(MOTOR_A_BRAKE, OUTPUT);
+  pinMode(MOTOR_B_BRAKE, OUTPUT);
+  pinMode(MOTOR_A_PWM, OUTPUT);
+  pinMode(MOTOR_B_PWM, OUTPUT);
 }
 
 void Reverse(int spd){
