@@ -15,16 +15,6 @@ void Test1(){
   buttonPressed = false;
 
   while (PATH_HEAD != NULL) {
-    ReadEncoders();
-    if (NewTile()) {
-      Serial.println("New tile!");
-      Serial.print(CURRENT_DIRECTION);
-      Serial.print(" : ");
-      Serial.print((*CURRENT_TILE).row);
-      Serial.print(", ");
-      Serial.println((*CURRENT_TILE).col);
-    }
-    
     Navigate();
   }
 }

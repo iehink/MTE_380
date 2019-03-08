@@ -29,7 +29,7 @@ void Forward(int spd){
   LeftTrack(MOTOR_B_FWD, spd);
 }
 
-void Head(int dir) { // Function to adjust heading #TODO: improve to adjust heading based on IMU
+void Head(int dir) { // Function to adjust heading #TODO: improve to adjust heading based on IMU; #TODO: Update DISTANCE_NORTH and DISTANCE_EAST to reflect distance change when turning
   // Use the fact that the integer respresentation of each direction is incremented by one for each cardinal direction going CW 
   int degCW = (dir - CURRENT_DIRECTION) * 90; 
   if (degCW < 0) {
@@ -96,7 +96,6 @@ void TurnRight(int spd){
 }
 
 // Low-level
-
 void RightTrack(int dir, int spd){
   if (spd > MAX_SPEED)
   {

@@ -17,66 +17,112 @@ void AddToPath(struct Tile* newTile){ // Function to add the next path point to 
   return;
 }
 
+bool Center() { // Function to travel to the center of the current tile. Returns TRUE when the center has been reached.
+  double distN = 0, distE = 0;
+ 
+  distN = 0.5 * TILE_DISTANCE - DISTANCE_NORTH;
+  distE = 0.5 * TILE_DISTANCE - DISTANCE_EAST;
 
-void Navigate(){ // Function to adjust path direction and speed as indicated by the path list. Heads to center of next target tile at a speed relative to its distance from the tile.
-  double distToTile = 0, speedRatio = MAX_SPEED/TILE_DISTANCE;
-
-  // If we have no objectives presently #TODO
-  if (PATH_HEAD == NULL) {
-    Stop(); // #TODO change this to whatever speed we determine is useful
-    return;
+  // Adjust heading if one direction has been satisfied
+  if (distN == 0 && (CURRENT_DIRECTION == NORTH || CURRENT_DIRECTION == SOUTH)) {
+    if (distE > 0) {
+      Head(EAST);
+    } else if (distE < 0) {
+      Head(WEST);
+    } else {
+      Stop();
+    }
+  } else if (distE == 0 && (CURRENT_DIRECTION == EAST || CURRENT_DIRECTION == WEST)) {
+    if (distN > 0) {
+      Head(NORTH);
+    } else if (distN < 0) {
+      Head(SOUTH);
+    } else {
+      Stop();
+    }
   }
+
+  // Determine what way to head to be centered
+  if (CURRENT_DIRECTION == NORTH) {
+    if (distN > 0) {
+      Forward(MAX_SPEED);
+    } else if (distN < 0) {
+      Reverse(MAX_SPEED);
+    }
+  } else if (CURRENT_DIRECTION == SOUTH) {
+    if (distN < 0) {
+      Forward(MAX_SPEED);
+    } else if (distN > 0) {
+      Reverse(MAX_SPEED);
+    }
+  } else if (CURRENT_DIRECTION == EAST) {
+    if (distE > 0) {
+      Forward(MAX_SPEED);
+    } else if (distE < 0) {
+      Reverse(MAX_SPEED);
+    }
+  } else if (CURRENT_DIRECTION == WEST) {
+    if (distE < 0) {
+      Forward(MAX_SPEED);
+    } else if (distE > 0) {
+      Reverse(MAX_SPEED);
+    }
+  }
+
+  // Are we centered?
+  if (distN == 0 && distE == 0) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool Navigate() { // Checks to verify we are on the right path towards the next pathpoint. Returns TRUE if following, FALSE if Path list is empty.
+  if (PATH_HEAD == NULL) {
+    return false;
+  }
+  
+  UpdateCourseLocation();
+
+  int dir; // For storing direction we should be travelling
 
   // Determine row/column difference; note that any given next step will be a straight line from where we presently are.
   int rowDiff = (*PATH_HEAD->tile).row - (*CURRENT_TILE).row;
   int colDiff = (*PATH_HEAD->tile).col - (*CURRENT_TILE).col;
 
-  // Adjust heading
-   if (rowDiff == 0 && colDiff == 0) { // if we are already on the correct tile, navigate to the center
-    if (CURRENT_DIRECTION == NORTH) {
-      distToTile = 0.5 * TILE_DISTANCE - DISTANCE_NORTH;
-    } else if (CURRENT_DIRECTION == SOUTH) {
-      distToTile = 0.5 * TILE_DISTANCE + DISTANCE_NORTH;
-    } else if (CURRENT_DIRECTION == EAST) {
-      distToTile = 0.5 * TILE_DISTANCE - DISTANCE_EAST;
-    } else if (CURRENT_DIRECTION == WEST) {
-      distToTile = 0.5 * TILE_DISTANCE + DISTANCE_EAST;
-    }
-    Serial.println(distToTile);
-    if (abs(distToTile) < 10) {
-      PathPointReached();
-    }
-   } else if (rowDiff == 0) { // If we are already in the correct row and just need to go across a column
-    if (colDiff < 0) {
-      Head(WEST);
-      colDiff = -1 * colDiff;
-      distToTile = DISTANCE_EAST;
-    } else {
-      Head(EAST);
-      distToTile = (TILE_DISTANCE - DISTANCE_EAST);
-    }
-    distToTile += (colDiff - 0.5) * TILE_DISTANCE;
-  } else if (colDiff == 0) { // If we are already in the correct column and just need to go up/down a row
-    if (rowDiff < 0) {
-      Head(SOUTH);
-      rowDiff = -1 * rowDiff;
-      distToTile = DISTANCE_NORTH;
-    } else {
-      Head(NORTH);
-      distToTile = (TILE_DISTANCE - DISTANCE_NORTH);
-    }
-    distToTile += (rowDiff - 0.5) * TILE_DISTANCE;
+  // If we've reached the target tile, pop the target off and center ourselves
+  if (rowDiff == 0 && colDiff == 0) {
+    while(!Center);
+    PathPointReached();
+    return true;
   }
 
+  // Determine direction to head
+  if (rowDiff == 0) { // If we are already in the correct row and just need to go across a column
+    if (colDiff < 0) {
+      dir = WEST;
+    } else {
+      dir = EAST;
+    }
+  } else if (colDiff == 0) { // If we are already in the correct column and just need to go up/down a row
+    if (rowDiff < 0) {
+      dir = SOUTH;
+    } else {
+      dir = NORTH;
+    }
+  }
 
-  // Head toward target at speed relative to the distance from the target tile
-  //Forward(int(distToTile * speedRatio));
-  Forward(MAX_SPEED);
-  return;
+  if (CURRENT_DIRECTION == dir) { // If we are already in the right direction, go forward
+    Forward(MAX_SPEED);
+  } else { // Adjust heading otherwise
+    Head(dir);
+  }
 }
 
-bool NewTile(){ // Function to determine if a new tile has been reached
-
+void UpdateCourseLocation(){ // Function to update the location on the course grid
+  // Update distance we have travelled
+  ReadEncoders();
+  
   // Determine if we are now on a new tile
   if (abs(DISTANCE_NORTH) > TILE_DISTANCE) {
     if (CURRENT_DIRECTION == NORTH) {
@@ -94,10 +140,8 @@ bool NewTile(){ // Function to determine if a new tile has been reached
       CURRENT_TILE = &COURSE[(*CURRENT_TILE).row - 1][(*CURRENT_TILE).col];
       DISTANCE_EAST += TILE_DISTANCE;
     }
-  } else {
-    return false;
-  }
-  return true; // we either incremented N-S or E-W, or we would've returned false at this point
+  } 
+  return;
 }
 
 void PathPointReached(){ // Function to pop the target off the list

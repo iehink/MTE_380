@@ -1,11 +1,15 @@
  // Encoder constants
 int ENCODER_1_PIN = 2, ENCODER_2_PIN = 18; // Pinouts - must be 2, 3, 18, 19, 20, or 21 (viable pins for interrupts)
 int ENCODER_1, ENCODER_2; // To track when the encoders receive pulses
+double ENCODER_1_RATIO = 2.4, ENCODER_2_RATIO = 2.4; // [mm/encoder pulse] #TODO - determine actual ratios
+
 
 // IR sensors
 SharpIR IRLeft(SharpIR::GP2Y0A02YK0F, A3);
 SharpIR IRRight(SharpIR::GP2Y0A02YK0F, A4);
 SharpIR IRFront(SharpIR::GP2Y0A21YK0F, A5);
+double IR_LEFT_RATIO = 1, IR_RIGHT_RATIO = 1, IR_FRONT_RATIO = 1; // [mm/value] #TODO - determine actual ratios
+double IR_SENSOR_DISTANCE = 30; // distance from center of device to IR sensor
 
 // Accelerometer
 MMA8452Q accel;
