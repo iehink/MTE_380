@@ -38,7 +38,7 @@ void Test1(){ // Test tile selection + navigation
   }
 }
 
-void Test2() {
+void Test2() { // Test to set the robot to drive in a box (for calibrating Head and Forward functions)
   bool buttonPressed = false;
   
   Stop();
@@ -58,7 +58,14 @@ void Test2() {
   }
 
   Head(EAST);
-  Stop();
+  
+  while(!buttonPressed){
+    if (digitalRead(4) == HIGH) {
+      buttonPressed = true;
+    }
+  }
+  
+  buttonPressed = false;
 
   while(DISTANCE_EAST < 100) {
     Forward(MAX_SPEED);
@@ -66,14 +73,30 @@ void Test2() {
   }
 
   Head(SOUTH);
-  Stop();
+  while(!buttonPressed){
+    if (digitalRead(4) == HIGH) {
+      buttonPressed = true;
+    }
+  }
+  
+  buttonPressed = false;
 
   while(DISTANCE_NORTH > 0) {
     Forward(MAX_SPEED);
     ReadEncoders();
   }
 
-  Head(WEST);
+  Head(EAST);
+  Head(WEST); // Verify turning left is fine
+
+  while(!buttonPressed){
+    if (digitalRead(4) == HIGH) {
+      buttonPressed = true;
+    }
+  }
+  
+  buttonPressed = false;
+  
   while(DISTANCE_EAST > 0){
     Forward(MAX_SPEED);
     ReadEncoders();

@@ -62,20 +62,20 @@ void Turn (int degCW) { // Function to turn the device degCW degrees clockwise a
   ReadEncoders(); // Update distance value first so we don't upset that measurement
 
   double distPerDeg = 4.03;
-  double turnDist = ReadEncoder1()/2.0;
+  double turnDist = (ReadEncoder1() + ReadEncoder2())/2.0;
   
   degCW = degCW%360;
 
   if (degCW <= 180) {
     while(turnDist < distPerDeg*degCW){
       TurnRight(TURN_SPEED);
-      turnDist += ReadEncoder1();
+      turnDist += (ReadEncoder1() + ReadEncoder2())/2.0;
       delay(100);
     }
   } else {
     while(turnDist < distPerDeg*(360 - degCW)){
       TurnLeft(TURN_SPEED);
-      turnDist += ReadEncoder1();
+      turnDist += (ReadEncoder1() + ReadEncoder2())/2.0;
       delay(100);
     }
   }

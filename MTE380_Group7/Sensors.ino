@@ -24,7 +24,6 @@ void InitAccelerometer() {
 
   if (accel.begin() == false) {
     Serial.println("Accelerometer not connected. Please check connections and read the hookup guide.");
-    while (1);
   }
 }
 
