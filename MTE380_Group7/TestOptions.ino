@@ -1,7 +1,7 @@
 void Test1(){
   bool buttonPressed = false;
   SelectPath(&COURSE[0][4]);
-  
+
   Stop();
   while(!buttonPressed){
     if (digitalRead(4) == HIGH) {
@@ -11,7 +11,7 @@ void Test1(){
       Serial.println((*PATH_HEAD->tile).col);
     }
   }
-  
+
   buttonPressed = false;
 
   while (PATH_HEAD != NULL) {
@@ -21,16 +21,16 @@ void Test1(){
 
 void Test2() {
   bool buttonPressed = false;
-  
+
   Stop();
   while(!buttonPressed){
     if (digitalRead(4) == HIGH) {
       buttonPressed = true;
     }
   }
-  
+
   buttonPressed = false;
-  
+
   CURRENT_DIRECTION = NORTH;
   while (DISTANCE_NORTH < 200) {
     Forward(200);
@@ -68,7 +68,7 @@ void Test2() {
 void Test3() {
   int testX = 0, testY = 0, testZ = 0;
   PathPoint* testPoint;
-  
+
   for (int x = 0; x <= 5; x++) {
     for (int y = 0; y <= 5; y++) {
       if ((*CURRENT_TILE).row == x && (*CURRENT_TILE).col == y) {
@@ -91,12 +91,12 @@ void Test3() {
   Serial.read();
   Serial.println(testX);
   Serial.println(testY);
-  
+
   SelectPath(&COURSE[testX][testY]);
   COURSE[testX][testY].goal = POSSIBILITY;
 
   testPoint = PATH_HEAD;
-  
+
   while(testPoint != PATH_TAIL) {
     Serial.print((*testPoint->tile).row);
     Serial.print(", ");
@@ -126,17 +126,17 @@ void BasicEncoderTest(){
     RightTrack(1, 250);
   }/*
   bool buttonPressed = false;
-  
+
   Stop();
   while(!buttonPressed){
     if (digitalRead(4) == HIGH) {
       buttonPressed = true;
     }
   }
-  
+
   buttonPressed = false;
   delay(200);
-  
+
   while(!buttonPressed){
     if (digitalRead(4) == HIGH) {
       buttonPressed = true;
@@ -147,5 +147,5 @@ void BasicEncoderTest(){
     Serial.println(ReadEncoderRight());
     delay(3000);
   }
- */ 
+ */
 }

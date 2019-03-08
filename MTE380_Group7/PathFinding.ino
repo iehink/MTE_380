@@ -82,14 +82,18 @@ bool Navigate() { // Checks to verify we are on the right path towards the next 
     return false;
   }
   
-  UpdateCourseLocation();
-
+  UpdateCourseLocation(); // If we have identified a new tile, then check what we should do after this tile
   int dir; // For storing direction we should be travelling
 
   // Determine row/column difference; note that any given next step will be a straight line from where we presently are.
   int rowDiff = (*PATH_HEAD->tile).row - (*CURRENT_TILE).row;
   int colDiff = (*PATH_HEAD->tile).col - (*CURRENT_TILE).col;
 
+  Serial.print("ROW DIFF COL DIFF: ");
+  Serial.print(rowDiff);
+  Serial.print(" ");
+  Serial.println(colDiff);
+  
   // If we've reached the target tile, pop the target off and center ourselves
   if (rowDiff == 0 && colDiff == 0) {
     while(!Center);
@@ -106,42 +110,49 @@ bool Navigate() { // Checks to verify we are on the right path towards the next 
     }
   } else if (colDiff == 0) { // If we are already in the correct column and just need to go up/down a row
     if (rowDiff < 0) {
-      dir = SOUTH;
-    } else {
       dir = NORTH;
+    } else {
+      dir = SOUTH;
     }
   }
 
   if (CURRENT_DIRECTION == dir) { // If we are already in the right direction, go forward
     Forward(MAX_SPEED);
-  } else { // Adjust heading otherwise
+  } else { // Go to the center of the current tile and adjust heading otherwise
+    while(!Center);
     Head(dir);
   }
+
+  return true;
 }
 
-void UpdateCourseLocation(){ // Function to update the location on the course grid
+bool UpdateCourseLocation(){ // Function to update the location on the course grid. Returns true if a new tile has been reached.
   // Update distance we have travelled
   ReadEncoders();
   
   // Determine if we are now on a new tile
   if (abs(DISTANCE_NORTH) > TILE_DISTANCE) {
     if (CURRENT_DIRECTION == NORTH) {
-      CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col + 1];
+      CURRENT_TILE = &COURSE[(*CURRENT_TILE).row - 1][(*CURRENT_TILE).col];
       DISTANCE_NORTH -= TILE_DISTANCE;
+      return true;
     } else if (CURRENT_DIRECTION == SOUTH) {
-      CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col - 1];
+      CURRENT_TILE = &COURSE[(*CURRENT_TILE).row + 1][(*CURRENT_TILE).col];
       DISTANCE_NORTH += TILE_DISTANCE;
+      return true;
     }
   } else if (abs(DISTANCE_EAST) > TILE_DISTANCE) {
     if (CURRENT_DIRECTION == EAST) {
-      CURRENT_TILE = &COURSE[(*CURRENT_TILE).row + 1][(*CURRENT_TILE).col];
+      CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col + 1];
       DISTANCE_EAST -= TILE_DISTANCE;
+      return true;
     } else if (CURRENT_DIRECTION == WEST) {
-      CURRENT_TILE = &COURSE[(*CURRENT_TILE).row - 1][(*CURRENT_TILE).col];
+      CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col - 1];
       DISTANCE_EAST += TILE_DISTANCE;
+      return true;
     }
   } 
-  return;
+  return false;
 }
 
 void PathPointReached(){ // Function to pop the target off the list

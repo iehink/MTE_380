@@ -47,9 +47,9 @@ int NORTH = 1, EAST = 2, SOUTH = 3, WEST = 4; // Directional constants; KEEP THE
 
 // Define the course and tile meanings
 Tile COURSE[6][6];
-int UNK = 0, FLAT = 1, SAND = 2, GRAVEL = 3, WATER = 4; 
+int UNK = 0, FLAT = 1, SAND = 2, GRAVEL = 3, WATER = 4;
 
-/* Path planning will be optimized by: 
+/* Path planning will be optimized by:
  * 1) Taking the fewest number of turns (since that is the most prone to throw our trajectory off), and
  * 2) Prioritizing unknown (UNK) tiles - the sum of each route will be taken, and the lowest score will be preferable.
  * Therefore, weightings for desire to avoid tiles/find tiles should be taken into account for the global variable definitions of tile types.
@@ -75,7 +75,7 @@ void setup() {
   InitEncoders();
 
   InitAccelerometer();
-  
+
   // Set up COURSE matrix
   for (int x = 0; x < 6; x++) {
     for (int y = 0; y < 6; y++) {
@@ -83,7 +83,7 @@ void setup() {
       COURSE[x][y].col = y+1;
     }
   }
-  
+
   // Define starting position #TODO - update to actual expected starting position
   STARTING_TILE = &COURSE[3][3];
   CURRENT_TILE = STARTING_TILE;
@@ -98,27 +98,27 @@ void loop() {
   if(TEST) {
     BasicEncoderTest();
   }
-  else { /*  
+  else { /*
     // Variables to keep track of expected distance measurements to be received from the IR sensors
     double leftIRDist = 0, rightIRDist = 0;
-    
+
     // Production loop #TODO implement front IR scanner to handle when we're gonna hit a wall (maybe)
     while (CheckGoals() < 5) {
       // Scan for targets (note that ScanLongIR will update the path as required)
       //leftIRDist = ScanLongIR(IR_LEFT_PIN, IR_LEFT_RATIO, leftIRDist);
-      //rightIRDist = ScanLongIR(IR_RIGHT_PIN, IR_RIGHT_RATIO, rightIRDist); 
-  
+      //rightIRDist = ScanLongIR(IR_RIGHT_PIN, IR_RIGHT_RATIO, rightIRDist);
+
       // Update navigation
       Navigate();
-  
+
       // If we have not identified the current tile, attempt to do so now #TODO: decide if we want to continue doing this after finding food
       if((*CURRENT_TILE).type == UNK){
         IDTile();
-      }    
+      }
     }
-  
+
     SelectPath(STARTING_TILE);
-  
+
     while(true){
       //just keep trucking til you're home
       Navigate();

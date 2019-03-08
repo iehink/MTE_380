@@ -59,17 +59,17 @@ double ReadEncoders(){
       Serial.println("ENCODER Left LAGGING");
     }
   }
-  
+
   // Update distance travelled
   if (CURRENT_DIRECTION == NORTH) {
-    DISTANCE_NORTH += distance; 
+    DISTANCE_NORTH += distance;
   } else if (CURRENT_DIRECTION == SOUTH) {
     DISTANCE_NORTH -= distance;
   } else if (CURRENT_DIRECTION == EAST) {
     DISTANCE_EAST += distance;
   } else {
     DISTANCE_EAST -= distance;
-  } 
+  }
   return distance;
 }
 
@@ -94,7 +94,7 @@ double ReadEncoderLeft(){ // Returns distance and resets encoder values
   // Store current encoder value and immediately clear it (to minimize misses of rotations)
   int encoder = ENCODER_LEFT;
   ENCODER_LEFT = 0;
-  
+
   // Return distance conversion
   return /*ENCODER_LEFT_RATIO **/ encoder;
 }
@@ -103,7 +103,7 @@ double ReadEncoderRight(){ // Returns distance and resets encoder values
   // Store current encoder value and immediately clear it (to minimize misses of rotations)
   int encoder = ENCODER_RIGHT;
   ENCODER_RIGHT = 0;
-  
+
   // Return distance conversion
   return /*ENCODER_RIGHT_RATIO **/ encoder;
 }
@@ -120,7 +120,7 @@ int ReadIR(SharpIR sensor){
   {
     sum += sensor.getDistance();
   }
-  return sum / number_of_readings;  
+  return sum / number_of_readings;
 }
 
 
@@ -134,7 +134,7 @@ double ScanLongIR(int IR_Pin, double ratio, double dist){
   if (abs(newDist - dist) > threshold) {
     int numTiles, i;
     struct Tile tile;
-    
+
     // Use a multiplier to minimize repetitiveness of the code, since one is just the opposite of the other
     if(IR_Pin == IR_LEFT_PIN) { // left IR sensor picked up something interesting
       i = 1;
@@ -145,7 +145,7 @@ double ScanLongIR(int IR_Pin, double ratio, double dist){
     numTiles = floor((newDist + IR_SENSOR_DISTANCE)/TILE_DISTANCE);
 
     // Determine where new target tile is
-    if (CURRENT_DIRECTION == NORTH) { 
+    if (CURRENT_DIRECTION == NORTH) {
       tile.row = (*CURRENT_TILE).row - i*numTiles;
     } else if (CURRENT_DIRECTION == EAST) {
       tile.col = (*CURRENT_TILE).col - i*numTiles;
@@ -157,7 +157,7 @@ double ScanLongIR(int IR_Pin, double ratio, double dist){
 
     COURSE[tile.row][tile.col].goal = POSSIBILITY;
     SelectPath(&COURSE[tile.row][tile.col]);
-    
+
   } else {
     dist = 0.9 * dist + 0.1 * newDist; // Update expectation of sensor reading, weighted towards what it has been previously
   }
