@@ -1,19 +1,13 @@
-/* --------------------------------------------------------------------------------------------------------------------------------------------
- * ********************************************************* Define global variables **********************************************************
- * --------------------------------------------------------------------------------------------------------------------------------------------
- */
-
 // Motor constants
-int MOTOR_A_DIR, MOTOR_A_BRAKE, MOTOR_A_PWM, MOTOR_B_DIR, MOTOR_B_BRAKE, MOTOR_B_PWM; // Motor pinouts; A is right, B is left
-int MOTOR_A_FWD, MOTOR_A_REV, MOTOR_B_REV, MOTOR_B_FWD; // Motor direction constants
+// Right motor:
+int MOTOR_A_DIR = 12, MOTOR_A_BRAKE = 9, MOTOR_A_PWM = 3; // Motor pinouts
+int MOTOR_A_FWD = LOW, MOTOR_A_REV = HIGH; // Motor direction constants
+// Left motor:
+int MOTOR_B_DIR = 13, MOTOR_B_BRAKE = 8, MOTOR_B_PWM = 11; // Motor pinouts
+int MOTOR_B_REV = LOW, MOTOR_B_FWD = HIGH; // Motor direction constants
 double MOTOR_A_SPEED_RATIO = 1, MOTOR_B_SPEED_RATIO = 0.85; // MUST NOT BE GREATER THAN 1
 int CLOCKWISE = 1, COUNTER_CLOCKWISE = 0;
 int MAX_SPEED = 250;
-
-// Pathfinding globals
-int CURRENT_DIRECTION = 1; // To track grid location/direction
-int NORTH = 1, EAST = 2, SOUTH = 3, WEST = 4; // Directional constants; KEEP THESE THE SAME BECAUSE THEIR VALUES ARE USED FOR MATH
-
 
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * ****************************************************** Movement functions are below. ******************************************************
@@ -45,6 +39,12 @@ void Head(int dir) { // Function to adjust heading #TODO: improve to adjust head
   Turn(degCW);
 
   CURRENT_DIRECTION = dir;
+}
+
+void InitMotors() {
+  // Initialize motors
+  analogWrite(MOTOR_A_PWM, 0);
+  analogWrite(MOTOR_B_PWM, 0);
 }
 
 void Reverse(int spd){
@@ -81,8 +81,7 @@ void Turn (int degCW) { // Function to turn the device degCW degrees clockwise a
 
   Stop();
   // reset encoders to not mess with other functions
-  ENCODER_1 = 0;
-  ENCODER_2 = 0;
+  ResetEncoders();
   return;
 }
 
