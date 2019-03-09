@@ -79,8 +79,8 @@ void setup() {
   // Set up COURSE matrix
   for (int x = 0; x < 6; x++) {
     for (int y = 0; y < 6; y++) {
-      COURSE[x][y].row = x+1;
-      COURSE[x][y].col = y+1;
+      COURSE[x][y].row = x;
+      COURSE[x][y].col = y;
     }
   }
 

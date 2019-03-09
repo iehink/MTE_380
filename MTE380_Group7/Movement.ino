@@ -5,10 +5,10 @@ int MOTOR_A_FWD = LOW, MOTOR_A_REV = HIGH; // Motor direction constants
 // Left motor:
 int MOTOR_B_DIR = 13, MOTOR_B_BRAKE = 8, MOTOR_B_PWM = 11; // Motor pinouts
 int MOTOR_B_REV = LOW, MOTOR_B_FWD = HIGH; // Motor direction constants
-double MOTOR_A_SPEED_RATIO = 1, MOTOR_B_SPEED_RATIO = 0.85; // MUST NOT BE GREATER THAN 1
+double MOTOR_A_SPEED_RATIO = 1, MOTOR_B_SPEED_RATIO = 0.75; // MUST NOT BE GREATER THAN 1
 int CLOCKWISE = 1, COUNTER_CLOCKWISE = 0;
 int MAX_SPEED = 250;
-int TURN_SPEED = 200;
+int TURN_SPEED = 230;
 
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * ****************************************************** Movement functions are below. ******************************************************
@@ -44,14 +44,14 @@ void Head(int dir) { // Function to adjust heading #TODO: improve to adjust head
 
 void InitMotors() {
   // Initialize motors
-  analogWrite(MOTOR_A_PWM, 0);
-  analogWrite(MOTOR_B_PWM, 0);
   pinMode(MOTOR_A_DIR, OUTPUT);
   pinMode(MOTOR_B_DIR, OUTPUT);
   pinMode(MOTOR_A_BRAKE, OUTPUT);
   pinMode(MOTOR_B_BRAKE, OUTPUT);
   pinMode(MOTOR_A_PWM, OUTPUT);
   pinMode(MOTOR_B_PWM, OUTPUT);
+  analogWrite(MOTOR_A_PWM, 0);
+  analogWrite(MOTOR_B_PWM, 0);
 }
 
 void Reverse(int spd){
@@ -67,8 +67,8 @@ void Stop(){
 void Turn (int degCW) { // Function to turn the device degCW degrees clockwise and update current direction #TODO
   ReadEncoders(); // Update distance value first so we don't upset that measurement
 
-  double distPerDeg = 4.03;
-  double turnDist = ReadEncoderLeft()/2.0;
+  double distPerDeg = 1.03;
+  double turnDist = ReadEncoderLeft();
   
   degCW = degCW%360;
 
@@ -76,6 +76,7 @@ void Turn (int degCW) { // Function to turn the device degCW degrees clockwise a
     while(turnDist < distPerDeg*degCW){
       TurnRight(TURN_SPEED);
       turnDist += ReadEncoderLeft();
+      Serial.println(turnDist);
       delay(100);
     }
   } else {

@@ -1,7 +1,7 @@
  // Encoder constants
 int ENCODER_LEFT_PIN = 18, ENCODER_RIGHT_PIN = 19; // Pinouts - must be 2, 3, 18, 19, 20, or 21 (viable pins for interrupts)
 int ENCODER_LEFT, ENCODER_RIGHT; // To track when the encoders receive pulses
-double ENCODER_LEFT_RATIO = 2.4, ENCODER_RIGHT_RATIO = 2.4; // [mm/encoder pulse] #TODO - determine actual ratios
+double ENCODER_LEFT_RATIO = 0.9, ENCODER_RIGHT_RATIO = 1.0; // [mm/encoder pulse] #TODO - determine actual ratios
 
 
 // IR sensors
@@ -30,9 +30,9 @@ void InitAccelerometer() {
 void InitEncoders() {
   // Attach interrupts and define encoder starting values
   ENCODER_LEFT = 0;
-  attachInterrupt(digitalPinToInterrupt(ENCODER_LEFT_PIN), EncoderLeft_ISR, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_LEFT_PIN), EncoderLeft_ISR, FALLING);
   ENCODER_RIGHT = 0;
-  attachInterrupt(digitalPinToInterrupt(ENCODER_RIGHT_PIN), EncoderRight_ISR, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_RIGHT_PIN), EncoderRight_ISR, FALLING);
 }
 
 int ReadIRFront(){
@@ -96,7 +96,7 @@ double ReadEncoderLeft(){ // Returns distance and resets encoder values
   ENCODER_LEFT = 0;
 
   // Return distance conversion
-  return /*ENCODER_LEFT_RATIO **/ encoder;
+  return ENCODER_LEFT_RATIO * encoder;
 }
 
 double ReadEncoderRight(){ // Returns distance and resets encoder values
@@ -105,7 +105,7 @@ double ReadEncoderRight(){ // Returns distance and resets encoder values
   ENCODER_RIGHT = 0;
 
   // Return distance conversion
-  return /*ENCODER_RIGHT_RATIO **/ encoder;
+  return ENCODER_RIGHT_RATIO * encoder;
 }
 
 bool ReadHallEffect(){
