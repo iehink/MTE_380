@@ -60,7 +60,19 @@ struct PathPoint* PATH_TAIL = NULL;
 double DISTANCE_NORTH, DISTANCE_EAST; // Distance based on center of nose of robot, as measured from the south-west corner of the current tile [mm].
 double TILE_DISTANCE = 304.8; // length of each tile (1 ft = 304.8mm) #TODO - update with actual measurements/testing
 
+// Variable to note if we are in water or not
+bool inWater;
+
 bool TEST = true;
+
+// Initialize functions
+void InitMotors();
+void InitEncoders();
+void InitAccelerometer();
+void InitTileID();
+double ReadPitch();
+double ReadYaw();
+bool PastCenter();
 
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * ******************************************************** Running code begins below. ********************************************************
@@ -75,6 +87,8 @@ void setup() {
   InitEncoders();
 
   InitAccelerometer();
+
+  InitTileID();
 
   // Set up COURSE matrix
   for (int x = 0; x < 6; x++) {
@@ -96,7 +110,7 @@ void loop() {
   struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
 
   if(TEST) {
-    Test1();
+    IMUTest();
   }
   else { /*
     // Variables to keep track of expected distance measurements to be received from the IR sensors
@@ -123,5 +137,27 @@ void loop() {
       //just keep trucking til you're home
       Navigate();
     } */
+  }
+}
+
+void ProductionLoop(){
+  /* 1. Have we identified the current tile? If no, try to.
+   * 2. Check for objects
+   * 3. Check path
+   * 4. Check straightness of path
+   */
+  // Travel around the course as required
+  Navigate();
+   
+  // ID tile if we don't know it yet
+  if ((*CURRENT_TILE).type == 0) {
+    if (IDTile()) {
+      // LED for testing purposes
+    }
+  }
+
+  // Check surroundings if we are not in water
+  if (!inWater) {
+    Scan();
   }
 }

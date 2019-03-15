@@ -3,13 +3,8 @@ void Test1(){ // Test tile selection + navigation
   SelectPath(&COURSE[0][4]);
   
   Stop();
-  while(!buttonPressed){
-    if (digitalRead(4) == HIGH) {
-      buttonPressed = true;
-    }
-  }
-  
-  buttonPressed = false;
+
+  Button();
 
   while (Navigate()) {
     Serial.print(CURRENT_DIRECTION);
@@ -45,13 +40,8 @@ void Test2() { // Test to set the robot to drive in a box (for calibrating Head 
   bool buttonPressed = false;
   
   Stop();
-  while(!buttonPressed){
-    if (digitalRead(4) == HIGH) {
-      buttonPressed = true;
-    }
-  }
-  
-  buttonPressed = false;
+
+  Button();
   
   CURRENT_DIRECTION = NORTH;
   while (DISTANCE_NORTH < len) {
@@ -61,24 +51,14 @@ void Test2() { // Test to set the robot to drive in a box (for calibrating Head 
   }
 
   Stop(); 
-  while(!buttonPressed){
-    if (digitalRead(4) == HIGH) {
-      buttonPressed = true;
-    }
-  }
-  
-  buttonPressed = false;
+
+  Button();
 
   Head(EAST);
 
   Stop(); 
-  while(!buttonPressed){
-    if (digitalRead(4) == HIGH) {
-      buttonPressed = true;
-    }
-  }
-  
-  buttonPressed = false;
+
+  Button();
 
   while(DISTANCE_EAST < len) {
     Forward(MAX_SPEED);
@@ -86,23 +66,12 @@ void Test2() { // Test to set the robot to drive in a box (for calibrating Head 
   }
 
   Stop(); 
-  while(!buttonPressed){
-    if (digitalRead(4) == HIGH) {
-      buttonPressed = true;
-    }
-  }
-  
-  buttonPressed = false;
+
+  Button();
 
   Head(SOUTH);
-  
-  while(!buttonPressed){
-    if (digitalRead(4) == HIGH) {
-      buttonPressed = true;
-    }
-  }
-  
-  buttonPressed = false;
+
+  Button();
 
   while(DISTANCE_NORTH > 0) {
     Forward(MAX_SPEED);
@@ -110,33 +79,16 @@ void Test2() { // Test to set the robot to drive in a box (for calibrating Head 
   }
   
   Stop(); 
-  while(!buttonPressed){
-    if (digitalRead(4) == HIGH) {
-      buttonPressed = true;
-    }
-  }
-  
-  buttonPressed = false;
+
+  Button();
   
   Head(EAST); // Verify turning left is fine
   
-  while(!buttonPressed){
-    if (digitalRead(4) == HIGH) {
-      buttonPressed = true;
-    }
-  }
-  
-  buttonPressed = false;
+  Button();
   
   Head(WEST);
 
-  while(!buttonPressed){
-    if (digitalRead(4) == HIGH) {
-      buttonPressed = true;
-    }
-  }
-  
-  buttonPressed = false;
+  Button();
   
   while(DISTANCE_EAST > 0){
     Forward(MAX_SPEED);
@@ -144,13 +96,8 @@ void Test2() { // Test to set the robot to drive in a box (for calibrating Head 
   }
   
   Stop(); 
-  while(!buttonPressed){
-    if (digitalRead(4) == HIGH) {
-      buttonPressed = true;
-    }
-  }
-  
-  buttonPressed = false;
+
+  Button();
 
   Head(NORTH);
   if (DISTANCE_NORTH < 0) DISTANCE_NORTH = 0; // fixing weird bug where it goes heckin negative
@@ -242,17 +189,12 @@ void BasicEncoderTest(){
  */
 }
 
-void Test4() {
-  bool buttonPressed = false;
+void EncoderTest() {
   double totalLength = 0;
   
   Stop();
-  while(!buttonPressed){
-    if (digitalRead(4) == HIGH) {
-      buttonPressed = true;
-    }
-  }
-  buttonPressed = false;
+
+  Button();
 
   while(totalLength < 210) {
     Forward(175);
@@ -260,4 +202,23 @@ void Test4() {
     Serial.println(totalLength);
   }
   Stop();
+}
+
+void IMUTest() {
+  int test = 0;
+  Button();
+
+  while (test <= 1000) {
+    Forward(150);
+    test++;
+  }
+}
+
+void Button() {
+  bool buttonPressed = false;
+  while(!buttonPressed){
+    if (digitalRead(4) == HIGH) {
+      buttonPressed = true;
+    }
+  }
 }

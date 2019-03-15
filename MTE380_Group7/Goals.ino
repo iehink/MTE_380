@@ -4,15 +4,69 @@ int PEOPLE = 1, LOST = 2, FOOD = 3, FIRE = 4, DELIVER = 5, POSSIBILITY = 6; //, 
 // Variable to keep track of where the people are
 struct Tile* peopleTile;
 
+// Indicators for tile identification
+double WATER_THRESHOLD_ANGLE = 55, NOT_FLAT_THRESHOLD_ANGLE = 30, BUMP_ANGLE = 10; // degrees
+int notFlat;
+bool sandOrGravel;
+
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * **************************************************** Goal-handling functions are below. ****************************************************
  * --------------------------------------------------------------------------------------------------------------------------------------------
  */
- // Function to attempt to identify the current tile. Returns TRUE when tile is identified and identity has been stored in COURSE matrix. #TODO
-bool IDTile(){
+
+bool IDTile(){ // Function to attempt to identify the current tile. Returns TRUE when tile is identified and identity has been stored in COURSE matrix. #TODO
+  if (ReadPitch() >= WATER_THRESHOLD_ANGLE && inWater) { // if we're leaving water, note it
+    inWater = false;
+  }
+  
+  // if IMU says angle is that of descending into the pit that's supposed to be water;
+  if (-ReadPitch() >= WATER_THRESHOLD_ANGLE || inWater) {
+    (*CURRENT_TILE).type = WATER;
+    inWater = true;
+  } else if (ReadPitch() >= NOT_FLAT_THRESHOLD_ANGLE) {
+    sandOrGravel = true;
+    return false;
+  } else if (notFlat >= 10) {
+    (*CURRENT_TILE).type = GRAVEL;
+  } else if (PastCenter()) {
+    if (sandOrGravel) {
+      (*CURRENT_TILE).type = SAND;
+    } else {
+      (*CURRENT_TILE).type = FLAT;
+    }
+  } else {
+    if (ReadPitch() >= BUMP_ANGLE || ReadYaw() >= BUMP_ANGLE) {
+      notFlat++;
+    }
+    return false;
+  }
+
+  // one of the identification conditions has been met; reset notFlat counter to zero and return true
+  notFlat = 0;
+  sandOrGravel = false;
   return true;
 }
- 
+
+void InitTileID(){
+  notFlat = 0;
+  inWater = false;
+  sandOrGravel = false;
+}
+
+bool PastCenter(){ // Function to identify if we have reached the center of the tile. Returns true if at or past center in direction travelled, false otherwise.
+  if (CURRENT_DIRECTION == EAST && DISTANCE_EAST >= TILE_DISTANCE/2.0) {
+    return true;
+  } else if (CURRENT_DIRECTION == WEST && DISTANCE_EAST <= TILE_DISTANCE/2.0) {
+    return true;
+  } else if (CURRENT_DIRECTION == NORTH && DISTANCE_NORTH >= TILE_DISTANCE/2.0) {
+    return true;
+  } else if (CURRENT_DIRECTION == SOUTH && DISTANCE_NORTH <= TILE_DISTANCE/2.0) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 int CheckGoals(){ // Returns number of goals remaining to complete.
   int completedGoals = 0;
   
@@ -66,6 +120,9 @@ int CheckGoals(){ // Returns number of goals remaining to complete.
 
 // Function to search the current tile for any goal and identify what goal is. Returns TRUE if it found a goal and updates goal of tile as suitable. #TODO
 bool LookForGoal(){
+  if (Fiyah()) {
+    (*CURRENT_TILE).goal = FIRE;
+  }
   /*  if (the fire sensor says there's fire) {
    *    (*CURRENT_TILE).goal = FIRE;
    *  }

@@ -10,6 +10,7 @@ int CLOCKWISE = 1, COUNTER_CLOCKWISE = 0;
 int MAX_SPEED = 250;
 int TURN_SPEED = 230;
 
+
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * ****************************************************** Movement functions are below. ******************************************************
  * --------------------------------------------------------------------------------------------------------------------------------------------
@@ -25,9 +26,29 @@ void Brake(int brakePin, bool brake){
   }
 }
 
-void Forward(int spd){
-  RightTrack(MOTOR_A_FWD, spd);
-  LeftTrack(MOTOR_B_FWD, spd);
+void Forward(int spd) {
+  double spdR = spd, spdL = spd;
+
+  // adjust speed tracks must rotate at based on gyro readings
+  spdR -= (CardinalToDegrees(CURRENT_DIRECTION) - ReadYaw());
+  spdL += (CardinalToDegrees(CURRENT_DIRECTION) - ReadYaw());
+  
+  RightTrack(MOTOR_A_FWD, spdR);
+  LeftTrack(MOTOR_B_FWD, spdL);
+}
+
+double CardinalToDegrees(int heading){ // Function to convert directional heading (NORTH, SOUTH, etc) to degrees heading manageable by gyroscope
+  if (heading == NORTH) {
+    return 0; 
+  } else if (heading == EAST) {
+    return 90;
+  } else if (heading == SOUTH) {
+    return 180;
+  } else if (heading == WEST) {
+    return 270;
+  } else {
+    return -1;
+  }
 }
 
 void Head(int dir) { // Function to adjust heading #TODO: improve to adjust heading based on IMU; #TODO: Update DISTANCE_NORTH and DISTANCE_EAST to reflect distance change when turning

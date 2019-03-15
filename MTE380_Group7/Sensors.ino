@@ -78,6 +78,10 @@ void ResetEncoders() {
   ENCODER_RIGHT = 0;
 }
 
+void Scan() { // Function to check surroundings for anything and add targets to path as required
+  
+}
+
 /* ------------------------------------------------------------------------------------------------------------------------------
  * ********************************************* Low Level Functions are below. *************************************************
  * ------------------------------------------------------------------------------------------------------------------------------
@@ -113,6 +117,18 @@ bool ReadHallEffect(){
   return !digitalRead(52);
 }
 
+double ReadPitch(){ // #TODO return degrees pitch
+  return 30;
+}
+
+double ReadYaw(){ // #TODO return degrees yaw
+  return CardinalToDegrees(CURRENT_DIRECTION); // temporary so that speed adjustments based on gyro do nothing
+}
+
+double ReadRoll(){ // #TODO return degrees roll
+  return 30;
+}
+
 int ReadIR(SharpIR sensor){
   int number_of_readings = 5;
   int sum = 0;
@@ -123,6 +139,9 @@ int ReadIR(SharpIR sensor){
   return sum / number_of_readings;
 }
 
+bool Fiyah() { // Function to check flame sensor to see if there is fiyah in front of it
+  
+}
 
 /*
 // Scanning function to check long-range IR and add tiles to the target path if the sensors pick things up #TODO - could be optimized to find things when turning
