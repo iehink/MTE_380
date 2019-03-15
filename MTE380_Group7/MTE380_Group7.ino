@@ -81,6 +81,7 @@ bool PastCenter();
 void setup() {
   // Begin serial comms for testing
   Serial.begin(9600);
+  pinMode(4, INPUT); // Button
 
   InitMotors();
 
@@ -107,10 +108,10 @@ void setup() {
 }
 
 void loop() {
-  struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
+  //struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
 
   if(TEST) {
-    IMUTest();
+    EncoderTest();
   }
   else { /*
     // Variables to keep track of expected distance measurements to be received from the IR sensors

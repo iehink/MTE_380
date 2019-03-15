@@ -1,10 +1,10 @@
 // Motor constants
 // Right motor:
 int MOTOR_A_DIR = 12, MOTOR_A_BRAKE = 9, MOTOR_A_PWM = 3; // Motor pinouts
-int MOTOR_A_FWD = LOW, MOTOR_A_REV = HIGH; // Motor direction constants
+int MOTOR_A_FWD = HIGH, MOTOR_A_REV = LOW; // Motor direction constants
 // Left motor:
 int MOTOR_B_DIR = 13, MOTOR_B_BRAKE = 8, MOTOR_B_PWM = 11; // Motor pinouts
-int MOTOR_B_REV = LOW, MOTOR_B_FWD = HIGH; // Motor direction constants
+int MOTOR_B_REV = HIGH, MOTOR_B_FWD = LOW; // Motor direction constants
 double MOTOR_A_SPEED_RATIO = 1, MOTOR_B_SPEED_RATIO = 0.75; // MUST NOT BE GREATER THAN 1
 int CLOCKWISE = 1, COUNTER_CLOCKWISE = 0;
 int MAX_SPEED = 250;
@@ -146,7 +146,6 @@ void RightTrack(int dir, int spd){
 }
 
 void LeftTrack(int dir, int spd){
-  Serial.println(digitalRead(MOTOR_B_DIR));
   if (spd > MAX_SPEED)
   {
     spd = MAX_SPEED;
@@ -161,9 +160,7 @@ void LeftTrack(int dir, int spd){
   }
   else // If we're changing directions, we need to stop first
   { 
-    Serial.println(dir);
     Brake(MOTOR_B_BRAKE, true);
     digitalWrite(MOTOR_B_DIR, dir);
-    Serial.println(digitalRead(MOTOR_B_DIR));
   }
 }

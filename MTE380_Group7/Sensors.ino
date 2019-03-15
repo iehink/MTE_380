@@ -1,7 +1,7 @@
  // Encoder constants
-int ENCODER_LEFT_PIN = 18, ENCODER_RIGHT_PIN = 19; // Pinouts - must be 2, 3, 18, 19, 20, or 21 (viable pins for interrupts)
+int ENCODER_LEFT_PIN = 2, ENCODER_RIGHT_PIN = 18; // Pinouts - must be 2, 3, 18, 19, 20, or 21 (viable pins for interrupts)
 int ENCODER_LEFT, ENCODER_RIGHT; // To track when the encoders receive pulses
-double ENCODER_LEFT_RATIO = 0.9, ENCODER_RIGHT_RATIO = 1.0; // [mm/encoder pulse] #TODO - determine actual ratios
+double ENCODER_LEFT_RATIO = 4.0, ENCODER_RIGHT_RATIO = 4.0; // [mm/encoder pulse] #TODO - determine actual ratios
 
 
 // IR sensors
