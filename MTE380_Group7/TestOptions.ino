@@ -133,16 +133,6 @@ void Test3() {
   Serial.print(", ");
   Serial.print((*testPoint->tile).col);
   Serial.println();
-
-  if (accel.available()) {      // Wait for new data from accelerometer
-    // Acceleration of x, y, and z directions in g units
-    Serial.print(accel.getCalculatedX(), 3);
-    Serial.print("\t");
-    Serial.print(accel.getCalculatedY(), 3);
-    Serial.print("\t");
-    Serial.print(accel.getCalculatedZ(), 3);
-    Serial.println();
-  }
 }
 
 void BasicEncoderTest(){

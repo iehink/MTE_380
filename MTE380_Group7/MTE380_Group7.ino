@@ -14,7 +14,8 @@
 
 // Includes
 #include <SharpIR.h>
-#include "Adafruit_VL53L0X.h"
+#include <MPU6050.h>
+#include <Adafruit_VL53L0X.h>
 #include <SparkFun_MMA8452Q.h>
 #include <Wire.h> // for I2C
 
@@ -69,7 +70,7 @@ bool TEST = true;
 // Initialize functions
 void InitMotors();
 void InitEncoders();
-void InitAccelerometer();
+void InitGyro();
 void InitTileID();
 double ReadPitch();
 double ReadYaw();
@@ -88,7 +89,7 @@ void setup() {
 
   InitEncoders();
 
-  InitAccelerometer();
+  InitMPU();
 
   InitTileID();
 

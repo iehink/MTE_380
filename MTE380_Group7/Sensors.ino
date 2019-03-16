@@ -2,6 +2,10 @@
 int ENCODER_LEFT_PIN = 18, ENCODER_RIGHT_PIN = 19; // Pinouts - must be 2, 3, 18, 19, 20, or 21 (viable pins for interrupts)
 int ENCODER_LEFT, ENCODER_RIGHT; // To track when the encoders receive pulses
 double ENCODER_LEFT_RATIO = 7.9, ENCODER_RIGHT_RATIO = 7.2; // [mm/encoder pulse] #TODO - determine actual ratios
+int gyro_pitch, gyro_roll, gyro_yaw;
+int previous_MPU_interrupt_time;
+
+#define MPU_INTERRUPT_PIN 2
 
 // Distance sensors
 #define LOX_LEFT_ADDRESS 0x30
@@ -17,26 +21,32 @@ Adafruit_VL53L0X lox_left = Adafruit_VL53L0X();
 Adafruit_VL53L0X lox_front = Adafruit_VL53L0X();
 Adafruit_VL53L0X lox_right = Adafruit_VL53L0X();
 
-
 // this holds the measurement
 VL53L0X_RangingMeasurementData_t distance_left;
 VL53L0X_RangingMeasurementData_t distance_front;
 VL53L0X_RangingMeasurementData_t distance_right;
 
-// Accelerometer
-MMA8452Q accel;
+// MPU
+MPU6050 mpu;
 
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * ******************************************************* Sensor functions are below. *******************************************************
  * --------------------------------------------------------------------------------------------------------------------------------------------
  */
-void InitAccelerometer() {
-  // Initialize accelerometer
-  Wire.begin();
-
-  if (accel.begin() == false) {
-    Serial.println("Accelerometer not connected. Please check connections and read the hookup guide.");
+void InitMPU() {
+  while(!mpu.begin(MPU6050_SCALE_2000DPS, MPU6050_RANGE_2G))
+  {
+    Serial.println("Could not find a valid MPU6050 sensor, check wiring!");
+    delay(500);
   }
+  
+  mpu.calibrateGyro();
+  mpu.setThreshold(3);
+
+  gyro_pitch = 0, gyro_roll = 0, gyro_yaw = 0;
+  pinMode(MPU_INTERRUPT_PIN, INPUT);
+  attachInterrupt(digitalPinToInterrupt(MPU_INTERRUPT_PIN), MPU_ISR, RISING);
+  previous_MPU_interrupt_time = millis();
 }
 
 void InitDistanceSensors() {
@@ -142,6 +152,18 @@ void ResetEncoders() {
   ENCODER_RIGHT = 0;
 }
 
+double getPitch(){
+  return gyro_pitch;
+}
+
+double getRoll(){
+  return gyro_roll;
+}
+
+double getYaw(){
+  return gyro_yaw;
+}
+
 /* ------------------------------------------------------------------------------------------------------------------------------
  * ********************************************* Low Level Functions are below. *************************************************
  * ------------------------------------------------------------------------------------------------------------------------------
@@ -152,6 +174,19 @@ void EncoderLeft_ISR(){
 }
 void EncoderRight_ISR(){
   ENCODER_RIGHT++;
+}
+void MPU_ISR(){
+  int current_MPU_interrupt_time = millis();
+  int time_step = current_MPU_interrupt_time - previous_MPU_interrupt_time;
+  // Read normalized values
+  Vector norm = mpu.readNormalizeGyro();
+
+  // Calculate Pitch, Roll and Yaw
+  gyro_pitch = gyro_pitch + norm.YAxis * time_step;
+  gyro_roll = gyro_roll + norm.XAxis * time_step;
+  gyro_yaw = gyro_yaw + norm.ZAxis * time_step;
+
+  previous_MPU_interrupt_time = millis();
 }
 
 double ReadEncoderLeft(){ // Returns distance and resets encoder values
