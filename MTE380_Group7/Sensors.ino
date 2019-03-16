@@ -1,11 +1,15 @@
- // Encoder constants
-int ENCODER_LEFT_PIN = 18, ENCODER_RIGHT_PIN = 19; // Pinouts - must be 2, 3, 18, 19, 20, or 21 (viable pins for interrupts)
-int ENCODER_LEFT, ENCODER_RIGHT; // To track when the encoders receive pulses
-double ENCODER_LEFT_RATIO = 7.9, ENCODER_RIGHT_RATIO = 7.2; // [mm/encoder pulse] #TODO - determine actual ratios
+// Encoder constants
+// Pinouts - must be 2, 3, 18, 19, 20, or 21 (viable pins for interrupts)
+#define ENCODER_LEFT_PIN 18
+#define ENCODER_RIGHT_PIN 19
+// [mm/encoder pulse] #TODO - determine actual ratios
+#define ENCODER_LEFT_RATIO 7.9
+#define ENCODER_RIGHT_RATIO 7.2
 int gyro_pitch, gyro_roll, gyro_yaw;
 int previous_MPU_interrupt_time;
+int ENCODER_LEFT, ENCODER_RIGHT; // To track when the encoders receive pulses
 
-#define MPU_INTERRUPT_PIN 2
+#define MPU_INTERRUPT_PIN 18
 
 // Distance sensors
 #define LOX_LEFT_ADDRESS 0x30
@@ -39,13 +43,21 @@ void InitMPU() {
     Serial.println("Could not find a valid MPU6050 sensor, check wiring!");
     delay(500);
   }
+
+  mpu.setIntZeroMotionEnabled(false);
+  mpu.setIntMotionEnabled(true);
+  mpu.setIntFreeFallEnabled(false);
+
+  mpu.setMotionDetectionThreshold(3);
+  mpu.setMotionDetectionDuration(100);
+  
   
   mpu.calibrateGyro();
   mpu.setThreshold(3);
 
   gyro_pitch = 0, gyro_roll = 0, gyro_yaw = 0;
   pinMode(MPU_INTERRUPT_PIN, INPUT);
-  attachInterrupt(digitalPinToInterrupt(MPU_INTERRUPT_PIN), MPU_ISR, RISING);
+  attachInterrupt(digitalPinToInterrupt(MPU_INTERRUPT_PIN), MPU_ISR, FALLING);
   previous_MPU_interrupt_time = millis();
 }
 
@@ -73,7 +85,6 @@ void InitDistanceSensors() {
   // initing LOX_LEFT
   if(!lox_left.begin(LOX_LEFT_ADDRESS)) {
     Serial.println(F("Failed to boot left VL53L0X"));
-    while(1);
   }
   delay(10);
 
@@ -84,7 +95,6 @@ void InitDistanceSensors() {
   //initing LOX_FRONT
   if(!lox_front.begin(LOX_FRONT_ADDRESS)) {
     Serial.println(F("Failed to boot front VL53L0X"));
-    while(1);
   }
   delay(10);
 
@@ -95,7 +105,6 @@ void InitDistanceSensors() {
   //initing LOX_RIGHT
   if(!lox_right.begin(LOX_RIGHT_ADDRESS)) {
     Serial.println(F("Failed to boot right VL53L0X"));
-    while(1);
   }
 }
 
@@ -161,6 +170,11 @@ double getRoll(){
 }
 
 double getYaw(){
+  Serial.println(previous_MPU_interrupt_time);
+  Serial.println(mpu.getIntStatus());
+  Serial.println((mpu.readActivites()).isInactivity);
+  
+  Serial.println((mpu.readActivites()).isActivity);
   return gyro_yaw;
 }
 
