@@ -18,9 +18,13 @@ int ENCODER_LEFT, ENCODER_RIGHT; // To track when the encoders receive pulses
 #define LOX_RIGHT_ADDRESS 0x32
 
 #define SHT_LOX_LEFT 8
-
 #define SHT_LOX_FRONT 7
 #define SHT_LOX_RIGHT 6
+
+// Distances to edges of tank
+#define FRONT_TO_NOSE 80
+#define LEFT_TO_EDGE 56
+#define RIGHT_TO_EDGE 60
 
 // objects for the vl53l0x
 Adafruit_VL53L0X lox_left = Adafruit_VL53L0X();
@@ -46,20 +50,10 @@ void InitMPU() {
     delay(500);
   }
   
-  mpu.setIntZeroMotionEnabled(false);
-  mpu.setIntMotionEnabled(true);
-  mpu.setIntFreeFallEnabled(false);
-
-  mpu.setMotionDetectionThreshold(3);
-  mpu.setMotionDetectionDuration(100);
-  
   mpu.calibrateGyro();
   mpu.setThreshold(3);
 
   gyro_pitch = 0, gyro_roll = 0, gyro_yaw = 0;
-  pinMode(MPU_INTERRUPT_PIN, INPUT);
-  attachInterrupt(digitalPinToInterrupt(MPU_INTERRUPT_PIN), MPU_ISR, RISING);
-  previous_MPU_interrupt_time = millis();
 }
 
 void InitDistanceSensors() {
@@ -83,7 +77,7 @@ void InitDistanceSensors() {
   digitalWrite(SHT_LOX_FRONT, LOW);
   digitalWrite(SHT_LOX_RIGHT, LOW);
 
-  // initing LOX_LEFT
+  // initializing LOX_LEFT
   if(!lox_left.begin(LOX_LEFT_ADDRESS)) {
     Serial.println(F("Failed to boot left VL53L0X"));
   }
@@ -93,20 +87,21 @@ void InitDistanceSensors() {
   digitalWrite(SHT_LOX_FRONT, HIGH);
   delay(10);
 
-  //initing LOX_FRONT
+  //initializing LOX_FRONT
   if(!lox_front.begin(LOX_FRONT_ADDRESS)) {
     Serial.println(F("Failed to boot front VL53L0X"));
   }
   delay(10);
 
   // activating LOX_RIGHT
-  digitalWrite(SHT_LOX_FRONT, HIGH);
+  digitalWrite(SHT_LOX_RIGHT, HIGH);
   delay(10);
 
-  //initing LOX_RIGHT
+  //initializing LOX_RIGHT
   if(!lox_right.begin(LOX_RIGHT_ADDRESS)) {
     Serial.println(F("Failed to boot right VL53L0X"));
   }
+  Serial.println("Complete");
 }
 
 void InitEncoders() {

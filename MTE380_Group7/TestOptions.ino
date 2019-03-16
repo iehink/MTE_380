@@ -224,7 +224,12 @@ void TOFTest(){
 }
 
 void SimpleTOFTest() {
-  Serial.println(ReadDistanceFront());
+  Serial.print("Time of Flight Sensors: ");
+  Serial.print(ReadDistanceLeft());
+  Serial.print(" ");
+  Serial.print(ReadDistanceFront());
+  Serial.print(" ");
+  Serial.println(ReadDistanceRight());
 }
 
 void Button() {

@@ -85,15 +85,21 @@ void setup() {
   Serial.begin(9600);
   pinMode(4, INPUT); // Button
 
-  //InitMotors();
+  InitMotors();
 
-  //InitEncoders();
+  InitEncoders();
 
-  //InitDistanceSensors();
-
+  Serial.println("Encoders intialized.");
+  
   InitMPU();
 
-  //InitTileID();
+  Serial.println("MPU intialized.");
+
+  InitTileID();
+
+  InitDistanceSensors();
+
+  Serial.println("Distance sensors intialized.");
 
   // Set up COURSE matrix
   for (int x = 0; x < 6; x++) {
@@ -106,7 +112,7 @@ void setup() {
   // Define starting position #TODO - update to actual expected starting position
   STARTING_TILE = &COURSE[3][3];
   CURRENT_TILE = STARTING_TILE;
-  CURRENT_DIRECTION = EAST;
+  CURRENT_DIRECTION = NORTH;
   DISTANCE_NORTH = 150;
   DISTANCE_EAST = 200;
 }
@@ -115,11 +121,7 @@ void loop() {
   //struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
 
   if(TEST) {
-    while(1) {
-      //MPU_ISR();
-      Serial.println(getYaw());
-      //Serial.println(getYaw());
-    }
+    SimpleTOFTest();
   }
   else { /*
     // Variables to keep track of expected distance measurements to be received from the IR sensors
