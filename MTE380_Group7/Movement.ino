@@ -6,7 +6,10 @@ int MOTOR_A_FWD = HIGH, MOTOR_A_REV = LOW; // Motor direction constants
 int MOTOR_B_DIR = 13, MOTOR_B_BRAKE = 8, MOTOR_B_PWM = 11; // Motor pinouts
 int MOTOR_B_REV = HIGH, MOTOR_B_FWD = LOW; // Motor direction constants
 
-double MOTOR_A_SPEED_RATIO = 1, MOTOR_B_SPEED_RATIO = 0.6; // MUST NOT BE GREATER THAN 1
+double MOTOR_A_SPEED_RATIO = 1, MOTOR_B_SPEED_RATIO = 1; //0.6; // MUST NOT BE GREATER THAN 1
+// instead:
+double rightMotorSpeedModifier, leftMotorSpeedModifier;
+
 int CLOCKWISE = 1, COUNTER_CLOCKWISE = 0;
 int MAX_SPEED = 250;
 int TURN_SPEED = 230;
@@ -28,11 +31,11 @@ void Brake(int brakePin, bool brake){
 }
 
 void Forward(int spd) {
-  double spdR = spd, spdL = spd;
+  double spdR = spd + rightMotorSpeedModifier, spdL = spd + leftMotorSpeedModifier;
 
-  // adjust speed tracks must rotate at based on gyro readings
-  spdR -= (CardinalToDegrees(CURRENT_DIRECTION) - ReadYaw());
-  spdL += (CardinalToDegrees(CURRENT_DIRECTION) - ReadYaw());
+  // adjust motor speed modifiers based on gyro readings
+  rightMotorSpeedModifier -= (CardinalToDegrees(CURRENT_DIRECTION) - ReadYaw());
+  leftMotorSpeedModifier += (CardinalToDegrees(CURRENT_DIRECTION) - ReadYaw());
   
   RightTrack(MOTOR_A_FWD, spdR);
   LeftTrack(MOTOR_B_FWD, spdL);
@@ -74,6 +77,9 @@ void InitMotors() {
   pinMode(MOTOR_B_PWM, OUTPUT);
   analogWrite(MOTOR_A_PWM, 0);
   analogWrite(MOTOR_B_PWM, 0);
+
+  leftMotorSpeedModifier = 0;
+  rightMotorSpeedModifier = 0;
 }
 
 void Reverse(int spd){

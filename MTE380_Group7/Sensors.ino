@@ -5,11 +5,12 @@
 // [mm/encoder pulse] #TODO - determine actual ratios
 #define ENCODER_LEFT_RATIO 7.9
 #define ENCODER_RIGHT_RATIO 7.2
+
 int gyro_pitch, gyro_roll, gyro_yaw;
 int previous_MPU_interrupt_time;
 int ENCODER_LEFT, ENCODER_RIGHT; // To track when the encoders receive pulses
 
-#define MPU_INTERRUPT_PIN 18
+#define MPU_INTERRUPT_PIN 2
 
 // Distance sensors
 #define LOX_LEFT_ADDRESS 0x30
@@ -17,6 +18,7 @@ int ENCODER_LEFT, ENCODER_RIGHT; // To track when the encoders receive pulses
 #define LOX_RIGHT_ADDRESS 0x32
 
 #define SHT_LOX_LEFT 8
+
 #define SHT_LOX_FRONT 7
 #define SHT_LOX_RIGHT 6
 
@@ -43,7 +45,7 @@ void InitMPU() {
     Serial.println("Could not find a valid MPU6050 sensor, check wiring!");
     delay(500);
   }
-
+  
   mpu.setIntZeroMotionEnabled(false);
   mpu.setIntMotionEnabled(true);
   mpu.setIntFreeFallEnabled(false);
@@ -51,13 +53,12 @@ void InitMPU() {
   mpu.setMotionDetectionThreshold(3);
   mpu.setMotionDetectionDuration(100);
   
-  
   mpu.calibrateGyro();
   mpu.setThreshold(3);
 
   gyro_pitch = 0, gyro_roll = 0, gyro_yaw = 0;
   pinMode(MPU_INTERRUPT_PIN, INPUT);
-  attachInterrupt(digitalPinToInterrupt(MPU_INTERRUPT_PIN), MPU_ISR, FALLING);
+  attachInterrupt(digitalPinToInterrupt(MPU_INTERRUPT_PIN), MPU_ISR, RISING);
   previous_MPU_interrupt_time = millis();
 }
 
@@ -161,15 +162,15 @@ void ResetEncoders() {
   ENCODER_RIGHT = 0;
 }
 
-double getPitch(){
+double ReadPitch(){
   return gyro_pitch;
 }
 
-double getRoll(){
+double ReadRoll(){
   return gyro_roll;
 }
 
-double getYaw(){
+double ReadYaw(){
   Serial.println(previous_MPU_interrupt_time);
   Serial.println(mpu.getIntStatus());
   Serial.println((mpu.readActivites()).isInactivity);
@@ -237,18 +238,6 @@ int ReadDistance(Adafruit_VL53L0X sensor, VL53L0X_RangingMeasurementData_t measu
     }
   }
   return sum / number_of_readings;
-}
-
-double ReadPitch() {
-  return 0;
-}
-
-double ReadYaw() {
-  return 0;
-}
-
-double ReadRoll() {
-  return 0;
 }
 
 bool Fiyah() { // Function to return whether or not the flame sensor is picking up fiyah

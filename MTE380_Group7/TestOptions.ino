@@ -200,14 +200,18 @@ void EncoderTest() {
   }
 }
 
-void IMUTest() {
+void IMUTest() { // Can it go straight?
   int test = 0;
+  CURRENT_DIRECTION = NORTH;
   
   Button();
 
-  while (test <= 5000) {
+  while (test <= 2000) {
     Forward(250);
     test++;
+    Serial.print(leftMotorSpeedModifier);
+    Serial.print(" ");
+    Serial.println(rightMotorSpeedModifier);
   }
 }
 
@@ -217,6 +221,10 @@ void TOFTest(){
   while(ReadDistanceFront() > 10) {
     Forward(175);
   }
+}
+
+void SimpleTOFTest() {
+  Serial.println(ReadDistanceFront());
 }
 
 void Button() {
