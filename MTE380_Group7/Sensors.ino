@@ -1,15 +1,27 @@
  // Encoder constants
-int ENCODER_LEFT_PIN = 2, ENCODER_RIGHT_PIN = 18; // Pinouts - must be 2, 3, 18, 19, 20, or 21 (viable pins for interrupts)
+int ENCODER_LEFT_PIN = 18, ENCODER_RIGHT_PIN = 19; // Pinouts - must be 2, 3, 18, 19, 20, or 21 (viable pins for interrupts)
 int ENCODER_LEFT, ENCODER_RIGHT; // To track when the encoders receive pulses
-double ENCODER_LEFT_RATIO = 4.0, ENCODER_RIGHT_RATIO = 4.0; // [mm/encoder pulse] #TODO - determine actual ratios
+double ENCODER_LEFT_RATIO = 0.9, ENCODER_RIGHT_RATIO = 1.0; // [mm/encoder pulse] #TODO - determine actual ratios
+
+// Distance sensors
+#define LOX_LEFT_ADDRESS 0x30
+#define LOX_FRONT_ADDRESS 0x31
+#define LOX_RIGHT_ADDRESS 0x32
+
+#define SHT_LOX_LEFT 8
+#define SHT_LOX_FRONT 7
+#define SHT_LOX_RIGHT 6
+
+// objects for the vl53l0x
+Adafruit_VL53L0X lox_left = Adafruit_VL53L0X();
+Adafruit_VL53L0X lox_front = Adafruit_VL53L0X();
+Adafruit_VL53L0X lox_right = Adafruit_VL53L0X();
 
 
-// IR sensors
-SharpIR IRLeft(SharpIR::GP2Y0A02YK0F, A3);
-SharpIR IRRight(SharpIR::GP2Y0A02YK0F, A4);
-SharpIR IRFront(SharpIR::GP2Y0A21YK0F, A5);
-double IR_LEFT_RATIO = 1, IR_RIGHT_RATIO = 1, IR_FRONT_RATIO = 1; // [mm/value] #TODO - determine actual ratios
-double IR_SENSOR_DISTANCE = 30; // distance from center of device to IR sensor
+// this holds the measurement
+VL53L0X_RangingMeasurementData_t distance_left;
+VL53L0X_RangingMeasurementData_t distance_front;
+VL53L0X_RangingMeasurementData_t distance_right;
 
 // Accelerometer
 MMA8452Q accel;
@@ -27,6 +39,56 @@ void InitAccelerometer() {
   }
 }
 
+void InitDistanceSensors() {
+  pinMode(SHT_LOX_LEFT, OUTPUT);
+  pinMode(SHT_LOX_FRONT, OUTPUT);
+  pinMode(SHT_LOX_RIGHT, OUTPUT);
+
+  digitalWrite(SHT_LOX_LEFT, LOW);
+  digitalWrite(SHT_LOX_FRONT, LOW);
+  digitalWrite(SHT_LOX_RIGHT, LOW);
+  delay(10);
+  
+  // all unreset
+  digitalWrite(SHT_LOX_LEFT, HIGH);
+  digitalWrite(SHT_LOX_FRONT, HIGH);
+  digitalWrite(SHT_LOX_RIGHT, HIGH);
+  delay(10);
+
+  // activating LOX_LEFT
+  digitalWrite(SHT_LOX_LEFT, HIGH);
+  digitalWrite(SHT_LOX_FRONT, LOW);
+  digitalWrite(SHT_LOX_RIGHT, LOW);
+
+  // initing LOX_LEFT
+  if(!lox_left.begin(LOX_LEFT_ADDRESS)) {
+    Serial.println(F("Failed to boot left VL53L0X"));
+    while(1);
+  }
+  delay(10);
+
+  // activating LOX_FRONT
+  digitalWrite(SHT_LOX_FRONT, HIGH);
+  delay(10);
+
+  //initing LOX_FRONT
+  if(!lox_front.begin(LOX_FRONT_ADDRESS)) {
+    Serial.println(F("Failed to boot front VL53L0X"));
+    while(1);
+  }
+  delay(10);
+
+  // activating LOX_RIGHT
+  digitalWrite(SHT_LOX_FRONT, HIGH);
+  delay(10);
+
+  //initing LOX_RIGHT
+  if(!lox_right.begin(LOX_RIGHT_ADDRESS)) {
+    Serial.println(F("Failed to boot right VL53L0X"));
+    while(1);
+  }
+}
+
 void InitEncoders() {
   // Attach interrupts and define encoder starting values
   ENCODER_LEFT = 0;
@@ -35,16 +97,16 @@ void InitEncoders() {
   attachInterrupt(digitalPinToInterrupt(ENCODER_RIGHT_PIN), EncoderRight_ISR, FALLING);
 }
 
-int ReadIRFront(){
-  return ReadIR(IRFront);
+int ReadDistanceLeft(){
+  return ReadDistance(lox_left, distance_left);
 }
 
-int ReadIRLeft(){
-  return ReadIR(IRLeft);
+int ReadDistanceFront(){
+  return ReadDistance(lox_front, distance_front);
 }
 
-int ReadIRRight(){
-  return ReadIR(IRRight);
+int ReadDistanceRight(){
+  return ReadDistance(lox_right, distance_right);
 }
 
 double ReadEncoders(){
@@ -76,10 +138,6 @@ double ReadEncoders(){
 void ResetEncoders() {
   ENCODER_LEFT = 0;
   ENCODER_RIGHT = 0;
-}
-
-void Scan() { // Function to check surroundings for anything and add targets to path as required
-  
 }
 
 /* ------------------------------------------------------------------------------------------------------------------------------
@@ -117,31 +175,19 @@ bool ReadHallEffect(){
   return !digitalRead(52);
 }
 
-double ReadPitch(){ // #TODO return degrees pitch
-  return 30;
-}
-
-double ReadYaw(){ // #TODO return degrees yaw
-  return CardinalToDegrees(CURRENT_DIRECTION); // temporary so that speed adjustments based on gyro do nothing
-}
-
-double ReadRoll(){ // #TODO return degrees roll
-  return 30;
-}
-
-int ReadIR(SharpIR sensor){
+int ReadDistance(Adafruit_VL53L0X sensor, VL53L0X_RangingMeasurementData_t measurement){
   int number_of_readings = 5;
   int sum = 0;
   for(int i = 0; i < number_of_readings; i++)
   {
-    sum += sensor.getDistance();
+    sensor.rangingTest(&measurement, false);
+    if(measurement.RangeStatus != 4) {     // if not out of range
+      sum += measurement.RangeMilliMeter;
+    }
   }
   return sum / number_of_readings;
 }
 
-bool Fiyah() { // Function to check flame sensor to see if there is fiyah in front of it
-  
-}
 
 /*
 // Scanning function to check long-range IR and add tiles to the target path if the sensors pick things up #TODO - could be optimized to find things when turning

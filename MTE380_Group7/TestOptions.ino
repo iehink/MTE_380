@@ -205,7 +205,7 @@ void IMUTest() {
 void TOFTest(){
   Button();
   
-  while(ReadIRFront() > 10) {
+  while(ReadDistanceFront() > 10) {
     Forward(175);
   }
 }

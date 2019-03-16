@@ -14,6 +14,7 @@
 
 // Includes
 #include <SharpIR.h>
+#include "Adafruit_VL53L0X.h"
 #include <SparkFun_MMA8452Q.h>
 #include <Wire.h> // for I2C
 
@@ -159,6 +160,6 @@ void ProductionLoop(){
 
   // Check surroundings if we are not in water
   if (!inWater) {
-    Scan();
+    //Scan();
   }
 }
