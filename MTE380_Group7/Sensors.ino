@@ -1,7 +1,7 @@
  // Encoder constants
 int ENCODER_LEFT_PIN = 18, ENCODER_RIGHT_PIN = 19; // Pinouts - must be 2, 3, 18, 19, 20, or 21 (viable pins for interrupts)
 int ENCODER_LEFT, ENCODER_RIGHT; // To track when the encoders receive pulses
-double ENCODER_LEFT_RATIO = 0.9, ENCODER_RIGHT_RATIO = 1.0; // [mm/encoder pulse] #TODO - determine actual ratios
+double ENCODER_LEFT_RATIO = 7.9, ENCODER_RIGHT_RATIO = 7.2; // [mm/encoder pulse] #TODO - determine actual ratios
 
 // Distance sensors
 #define LOX_LEFT_ADDRESS 0x30
@@ -92,9 +92,11 @@ void InitDistanceSensors() {
 void InitEncoders() {
   // Attach interrupts and define encoder starting values
   ENCODER_LEFT = 0;
-  attachInterrupt(digitalPinToInterrupt(ENCODER_LEFT_PIN), EncoderLeft_ISR, FALLING);
+  pinMode(ENCODER_LEFT_PIN, INPUT);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_LEFT_PIN), EncoderLeft_ISR, CHANGE);
   ENCODER_RIGHT = 0;
-  attachInterrupt(digitalPinToInterrupt(ENCODER_RIGHT_PIN), EncoderRight_ISR, FALLING);
+  pinMode(ENCODER_RIGHT_PIN, INPUT);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_RIGHT_PIN), EncoderRight_ISR, CHANGE);
 }
 
 int ReadDistanceLeft(){
@@ -188,6 +190,21 @@ int ReadDistance(Adafruit_VL53L0X sensor, VL53L0X_RangingMeasurementData_t measu
   return sum / number_of_readings;
 }
 
+double ReadPitch() {
+  return 0;
+}
+
+double ReadYaw() {
+  return 0;
+}
+
+double ReadRoll() {
+  return 0;
+}
+
+bool Fiyah() { // Function to return whether or not the flame sensor is picking up fiyah
+  return true;
+}
 
 /*
 // Scanning function to check long-range IR and add tiles to the target path if the sensors pick things up #TODO - could be optimized to find things when turning

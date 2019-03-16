@@ -5,7 +5,8 @@ int MOTOR_A_FWD = HIGH, MOTOR_A_REV = LOW; // Motor direction constants
 // Left motor:
 int MOTOR_B_DIR = 13, MOTOR_B_BRAKE = 8, MOTOR_B_PWM = 11; // Motor pinouts
 int MOTOR_B_REV = HIGH, MOTOR_B_FWD = LOW; // Motor direction constants
-double MOTOR_A_SPEED_RATIO = 1, MOTOR_B_SPEED_RATIO = 0.75; // MUST NOT BE GREATER THAN 1
+
+double MOTOR_A_SPEED_RATIO = 1, MOTOR_B_SPEED_RATIO = 0.6; // MUST NOT BE GREATER THAN 1
 int CLOCKWISE = 1, COUNTER_CLOCKWISE = 0;
 int MAX_SPEED = 250;
 int TURN_SPEED = 230;

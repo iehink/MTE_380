@@ -175,18 +175,37 @@ void BasicEncoderTest(){
  */
 }
 
+void EncoderHighLow() { // While you hold the button, encoder digital values will be printed and the wheels will turn
+  Stop();
+  while(digitalRead(4) == HIGH){
+    Forward(170);
+    Serial.print(digitalRead(ENCODER_LEFT_PIN));
+    Serial.print(" ");
+    Serial.println(digitalRead(ENCODER_RIGHT_PIN));
+  }
+}
+
 void EncoderTest() {
   double totalLength = 0;
-  
-  //Button();
 
-  while (true) {
-    Serial.println(digitalRead(ENCODER_LEFT_PIN));
-  }
-  
+  Serial.println("Right Encoder");
+  Serial.println(ReadEncoderRight());
+  Button();
+
   while(totalLength < 210) {
-    Forward(225);
+    Forward(MAX_SPEED);
     totalLength += ReadEncoderRight();
+    Serial.println(totalLength);
+  }
+
+  totalLength = 0;
+  Serial.println("Left Encoder");
+  Serial.println(ReadEncoderLeft());
+  Button();
+   
+  while(totalLength < 210) {
+    Forward(MAX_SPEED);
+    totalLength += ReadEncoderLeft();
     Serial.println(totalLength);
   }
 }
