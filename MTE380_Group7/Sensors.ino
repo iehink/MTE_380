@@ -5,26 +5,20 @@
 // [mm/encoder pulse] #TODO - determine actual ratios
 #define ENCODER_LEFT_RATIO 7.9
 #define ENCODER_RIGHT_RATIO 7.2
-
-int gyro_pitch, gyro_roll, gyro_yaw;
+double gyro_pitch, gyro_roll, gyro_yaw;
 int previous_MPU_interrupt_time;
-int ENCODER_LEFT, ENCODER_RIGHT; // To track when the encoders receive pulses
-
-#define MPU_INTERRUPT_PIN 2
+int encoder_left, encoder_right; // To track when the encoders receive pulses
 
 // Distance sensors
 #define LOX_LEFT_ADDRESS 0x30
 #define LOX_FRONT_ADDRESS 0x31
 #define LOX_RIGHT_ADDRESS 0x32
 
-#define SHT_LOX_LEFT 8
-#define SHT_LOX_FRONT 7
-#define SHT_LOX_RIGHT 6
+#define SHT_LOX_LEFT 22
+#define SHT_LOX_FRONT 24
+#define SHT_LOX_RIGHT 26
 
-// Distances to edges of tank
-#define FRONT_TO_NOSE 80
-#define LEFT_TO_EDGE 56
-#define RIGHT_TO_EDGE 60
+#define INTEGRATION_TIMESTEP 0.01
 
 // objects for the vl53l0x
 Adafruit_VL53L0X lox_left = Adafruit_VL53L0X();
@@ -51,7 +45,7 @@ void InitMPU() {
   }
   
   mpu.calibrateGyro();
-  mpu.setThreshold(3);
+  mpu.setThreshold(1);
 
   gyro_pitch = 0, gyro_roll = 0, gyro_yaw = 0;
 }
@@ -76,12 +70,17 @@ void InitDistanceSensors() {
   digitalWrite(SHT_LOX_LEFT, HIGH);
   digitalWrite(SHT_LOX_FRONT, LOW);
   digitalWrite(SHT_LOX_RIGHT, LOW);
+  delay(10);
+  
+  Serial.println("TEST1");
 
   // initializing LOX_LEFT
   if(!lox_left.begin(LOX_LEFT_ADDRESS)) {
     Serial.println(F("Failed to boot left VL53L0X"));
   }
   delay(10);
+
+  Serial.println("TEST2");
 
   // activating LOX_FRONT
   digitalWrite(SHT_LOX_FRONT, HIGH);
@@ -101,15 +100,14 @@ void InitDistanceSensors() {
   if(!lox_right.begin(LOX_RIGHT_ADDRESS)) {
     Serial.println(F("Failed to boot right VL53L0X"));
   }
-  Serial.println("Complete");
 }
 
 void InitEncoders() {
   // Attach interrupts and define encoder starting values
-  ENCODER_LEFT = 0;
+  encoder_left = 0;
   pinMode(ENCODER_LEFT_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(ENCODER_LEFT_PIN), EncoderLeft_ISR, CHANGE);
-  ENCODER_RIGHT = 0;
+  encoder_right = 0;
   pinMode(ENCODER_RIGHT_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(ENCODER_RIGHT_PIN), EncoderRight_ISR, CHANGE);
 }
@@ -153,25 +151,34 @@ double ReadEncoders(){
 }
 
 void ResetEncoders() {
-  ENCODER_LEFT = 0;
-  ENCODER_RIGHT = 0;
+  encoder_left = 0;
+  encoder_right = 0;
 }
 
-double ReadPitch(){
+double ReadPitch() {
   return gyro_pitch;
 }
 
-double ReadRoll(){
+double ReadRoll() {
   return gyro_roll;
 }
 
-double ReadYaw(){
-  Serial.println(previous_MPU_interrupt_time);
-  Serial.println(mpu.getIntStatus());
-  Serial.println((mpu.readActivites()).isInactivity);
-  
-  Serial.println((mpu.readActivites()).isActivity);
+double ReadYaw() {
   return gyro_yaw;
+}
+
+bool Fiyah() { // Function to return whether or not the flame sensor is picking up fiyah
+  return true;
+}
+
+void ReadMPU(){
+  // Read normalized values
+  Vector norm = mpu.readNormalizeGyro();
+
+  // Calculate Pitch, Roll and Yaw
+  gyro_pitch = gyro_pitch + norm.YAxis * INTEGRATION_TIMESTEP;
+  gyro_roll = gyro_roll + norm.XAxis * INTEGRATION_TIMESTEP;
+  gyro_yaw = gyro_yaw + norm.ZAxis * INTEGRATION_TIMESTEP;
 }
 
 /* ------------------------------------------------------------------------------------------------------------------------------
@@ -180,29 +187,16 @@ double ReadYaw(){
  */
 // Interrupts
 void EncoderLeft_ISR(){
-  ENCODER_LEFT++;
+  encoder_left++;
 }
 void EncoderRight_ISR(){
-  ENCODER_RIGHT++;
-}
-void MPU_ISR(){
-  int current_MPU_interrupt_time = millis();
-  int time_step = current_MPU_interrupt_time - previous_MPU_interrupt_time;
-  // Read normalized values
-  Vector norm = mpu.readNormalizeGyro();
-
-  // Calculate Pitch, Roll and Yaw
-  gyro_pitch = gyro_pitch + norm.YAxis * time_step;
-  gyro_roll = gyro_roll + norm.XAxis * time_step;
-  gyro_yaw = gyro_yaw + norm.ZAxis * time_step;
-
-  previous_MPU_interrupt_time = millis();
+  encoder_right++;
 }
 
 double ReadEncoderLeft(){ // Returns distance and resets encoder values
   // Store current encoder value and immediately clear it (to minimize misses of rotations)
-  int encoder = ENCODER_LEFT;
-  ENCODER_LEFT = 0;
+  int encoder = encoder_left;
+  encoder_left = 0;
 
   // Return distance conversion
   return ENCODER_LEFT_RATIO * encoder;
@@ -210,8 +204,8 @@ double ReadEncoderLeft(){ // Returns distance and resets encoder values
 
 double ReadEncoderRight(){ // Returns distance and resets encoder values
   // Store current encoder value and immediately clear it (to minimize misses of rotations)
-  int encoder = ENCODER_RIGHT;
-  ENCODER_RIGHT = 0;
+  int encoder = encoder_right;
+  encoder_right = 0;
 
   // Return distance conversion
   return ENCODER_RIGHT_RATIO * encoder;
@@ -233,10 +227,6 @@ int ReadDistance(Adafruit_VL53L0X sensor, VL53L0X_RangingMeasurementData_t measu
     }
   }
   return sum / number_of_readings;
-}
-
-bool Fiyah() { // Function to return whether or not the flame sensor is picking up fiyah
-  return true;
 }
 
 /*

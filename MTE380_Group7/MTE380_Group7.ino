@@ -45,11 +45,19 @@ struct PathPoint {
 int CURRENT_DIRECTION; // To track grid location/direction
 struct Tile* CURRENT_TILE; // Pointer to tile in COURSE array that we are currently on
 struct Tile* STARTING_TILE; // Pointer to tile in COURSE array that we started on
-int NORTH = 1, EAST = 2, SOUTH = 3, WEST = 4; // Directional constants; KEEP THESE THE SAME BECAUSE THEIR VALUES ARE USED FOR MATH
+// Directional constants; KEEP THESE THE SAME BECAUSE THEIR VALUES ARE USED FOR MATH
+#define NORTH 1
+#define EAST 2
+#define SOUTH 3
+#define WEST 4
 
 // Define the course and tile meanings
 Tile COURSE[6][6];
-int UNK = 0, FLAT = 1, SAND = 2, GRAVEL = 3, WATER = 4;
+#define UNK 0
+#define FLAT 1
+#define SAND 2
+#define GRAVEL 3
+#define WATER 4
 
 /* Path planning will be optimized by:
  * 1) Taking the fewest number of turns (since that is the most prone to throw our trajectory off), and
@@ -60,12 +68,13 @@ struct PathPoint* PATH_HEAD = NULL;
 struct PathPoint* PATH_TAIL = NULL;
 
 double DISTANCE_NORTH, DISTANCE_EAST; // Distance based on center of nose of robot, as measured from the south-west corner of the current tile [mm].
-double TILE_DISTANCE = 304.8; // length of each tile (1 ft = 304.8mm) #TODO - update with actual measurements/testing
+#define TILE_DISTANCE 304.8 // length of each tile (1 ft = 304.8mm) #TODO - update with actual measurements/testing
 
 // Variable to note if we are in water or not
 bool inWater;
 
-bool TEST = true;
+#define TEST true
+#define LOOP_RUNTIME 10 // milliseconds
 
 // Initialize functions
 void InitMotors();
@@ -86,20 +95,18 @@ void setup() {
   pinMode(4, INPUT); // Button
 
   InitMotors();
+  Serial.println("Motors initialized.");
 
   InitEncoders();
-
   Serial.println("Encoders intialized.");
-  
-  InitMPU();
-
-  Serial.println("MPU intialized.");
-
-  InitTileID();
 
   InitDistanceSensors();
-
   Serial.println("Distance sensors intialized.");
+
+  //InitMPU();
+  Serial.println("MPU initialized.");
+
+  //InitTileID();
 
   // Set up COURSE matrix
   for (int x = 0; x < 6; x++) {
@@ -112,16 +119,19 @@ void setup() {
   // Define starting position #TODO - update to actual expected starting position
   STARTING_TILE = &COURSE[3][3];
   CURRENT_TILE = STARTING_TILE;
-  CURRENT_DIRECTION = NORTH;
+  CURRENT_DIRECTION = EAST;
   DISTANCE_NORTH = 150;
   DISTANCE_EAST = 200;
 }
 
 void loop() {
+  int loopStartTime = millis();
+  Serial.println("test");
+  //ReadMPU();
   //struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
 
   if(TEST) {
-    SimpleTOFTest();
+    //Serial.println(ReadYaw());
   }
   else { /*
     // Variables to keep track of expected distance measurements to be received from the IR sensors
@@ -148,6 +158,10 @@ void loop() {
       //just keep trucking til you're home
       Navigate();
     } */
+  }
+  int delayTime = (LOOP_RUNTIME) - (millis() - loopStartTime);
+  if (delayTime > 0) {
+    delay(delayTime);
   }
 }
 
