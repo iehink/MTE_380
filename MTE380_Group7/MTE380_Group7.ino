@@ -41,6 +41,10 @@ struct PathPoint {
  * ********************************************************* Define global variables **********************************************************
  * --------------------------------------------------------------------------------------------------------------------------------------------
  */
+// Encoder values [mm/encoder pulse] #TODO - determine actual ratios
+#define ENCODER_LEFT_RATIO 7.9
+#define ENCODER_RIGHT_RATIO 7.2
+ 
 // Pathfinding globals
 int CURRENT_DIRECTION; // To track grid location/direction
 struct Tile* CURRENT_TILE; // Pointer to tile in COURSE array that we are currently on
@@ -92,18 +96,18 @@ bool PastCenter();
 void setup() {
   // Begin serial comms for testing
   Serial.begin(9600);
-  //pinMode(4, INPUT); // Button
+  pinMode(4, INPUT); // Button
 
-  //InitMotors();
+  InitMotors();
   Serial.println("Motors initialized.");
 
-  //InitEncoders();
+  InitEncoders();
   Serial.println("Encoders intialized.");
 
-  //InitDistanceSensors();
+  InitDistanceSensors();
   Serial.println("Distance sensors intialized.");
 
-  InitMPU();
+  //InitMPU();
   Serial.println("MPU initialized.");
 
   //InitTileID();
@@ -119,7 +123,7 @@ void setup() {
   // Define starting position #TODO - update to actual expected starting position
   STARTING_TILE = &COURSE[3][3];
   CURRENT_TILE = STARTING_TILE;
-  CURRENT_DIRECTION = EAST;
+  CURRENT_DIRECTION = NORTH;
   DISTANCE_NORTH = 150;
   DISTANCE_EAST = 200;
 }
@@ -130,7 +134,9 @@ void loop() {
   //struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
 
   if(TEST) {
-    SimpleTOFTest();
+    //EncoderHighLow();
+    //EncoderTurning();
+    TestStructureIDing();
     //Serial.println(ReadYaw());
   }
   else { /*

@@ -2,9 +2,7 @@
 // Pinouts - must be 2, 3, 18, 19, 20, or 21 (viable pins for interrupts)
 #define ENCODER_LEFT_PIN 18
 #define ENCODER_RIGHT_PIN 19
-// [mm/encoder pulse] #TODO - determine actual ratios
-#define ENCODER_LEFT_RATIO 7.9
-#define ENCODER_RIGHT_RATIO 7.2
+
 double gyro_pitch, gyro_roll, gyro_yaw;
 int previous_MPU_interrupt_time;
 int encoder_left, encoder_right; // To track when the encoders receive pulses
@@ -14,9 +12,13 @@ int encoder_left, encoder_right; // To track when the encoders receive pulses
 #define LOX_FRONT_ADDRESS 0x31
 #define LOX_RIGHT_ADDRESS 0x32
 
-#define SHT_LOX_LEFT 22
-#define SHT_LOX_FRONT 24
-#define SHT_LOX_RIGHT 26
+#define SHT_LOX_LEFT 24
+#define SHT_LOX_FRONT 26
+#define SHT_LOX_RIGHT 28
+
+#define FRONT_TO_NOSE 80
+#define LEFT_TO_EDGE 56
+#define RIGHT_TO_EDGE 60
 
 #define INTEGRATION_TIMESTEP 0.01
 
@@ -161,7 +163,8 @@ double ReadRoll() {
 }
 
 double ReadYaw() {
-  return gyro_yaw;
+  //return gyro_yaw;
+  return 0;
 }
 
 bool Fiyah() { // Function to return whether or not the flame sensor is picking up fiyah

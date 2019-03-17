@@ -95,22 +95,27 @@ void Stop(){
 void Turn (int degCW) { // Function to turn the device degCW degrees clockwise and update current direction #TODO
   ReadEncoders(); // Update distance value first so we don't upset that measurement
 
-  double distPerDeg = 1.03;
-  double turnDist = ReadEncoderLeft();
+  // WE ARE USING ENCODER RIGHT FOR THIS BECAUSE IT SEEMS MORE CONSISTENT
+
+  double distPerDeg = ENCODER_LEFT_RATIO / (5.1 * 90 / (abs(degCW))); // ENCODER_RIGHT_RATIO / 4.9; // [mm/encoder pulse] / [deg]
+  double turnDist = ReadEncoderLeft(); //ReadEncoderRight();
+
+  while (degCW < 0) {
+    degCW += 360;
+  }
   
   degCW = degCW%360;
 
   if (degCW <= 180) {
     while(turnDist < distPerDeg*degCW){
       TurnRight(TURN_SPEED);
-      turnDist += ReadEncoderLeft();
-      Serial.println(turnDist);
+      turnDist += ReadEncoderLeft(); //ReadEncoderRight();
       delay(100);
     }
   } else {
     while(turnDist < distPerDeg*(360 - degCW)){
       TurnLeft(TURN_SPEED);
-      turnDist += ReadEncoderLeft();
+      turnDist += ReadEncoderLeft(); //ReadEncoderRight();
       delay(100);
     }
   }
