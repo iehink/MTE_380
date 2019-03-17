@@ -43,7 +43,8 @@ void InitMPU() {
     Serial.println("Could not find a valid MPU6050 sensor, check wiring!");
     delay(500);
   }
-  
+
+  //mpu.setSleepEnabled(false);
   mpu.calibrateGyro();
   mpu.setThreshold(1);
 
@@ -71,16 +72,12 @@ void InitDistanceSensors() {
   digitalWrite(SHT_LOX_FRONT, LOW);
   digitalWrite(SHT_LOX_RIGHT, LOW);
   delay(10);
-  
-  Serial.println("TEST1");
 
   // initializing LOX_LEFT
   if(!lox_left.begin(LOX_LEFT_ADDRESS)) {
     Serial.println(F("Failed to boot left VL53L0X"));
   }
   delay(10);
-
-  Serial.println("TEST2");
 
   // activating LOX_FRONT
   digitalWrite(SHT_LOX_FRONT, HIGH);

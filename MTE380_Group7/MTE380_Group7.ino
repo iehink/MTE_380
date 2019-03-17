@@ -92,18 +92,18 @@ bool PastCenter();
 void setup() {
   // Begin serial comms for testing
   Serial.begin(9600);
-  pinMode(4, INPUT); // Button
+  //pinMode(4, INPUT); // Button
 
-  InitMotors();
+  //InitMotors();
   Serial.println("Motors initialized.");
 
-  InitEncoders();
+  //InitEncoders();
   Serial.println("Encoders intialized.");
 
-  InitDistanceSensors();
+  //InitDistanceSensors();
   Serial.println("Distance sensors intialized.");
 
-  //InitMPU();
+  InitMPU();
   Serial.println("MPU initialized.");
 
   //InitTileID();
@@ -126,11 +126,11 @@ void setup() {
 
 void loop() {
   int loopStartTime = millis();
-  Serial.println("test");
   //ReadMPU();
   //struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
 
   if(TEST) {
+    SimpleTOFTest();
     //Serial.println(ReadYaw());
   }
   else { /*
