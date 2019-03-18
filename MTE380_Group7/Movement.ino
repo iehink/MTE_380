@@ -14,6 +14,8 @@ int CLOCKWISE = 1, COUNTER_CLOCKWISE = 0;
 int MAX_SPEED = 250;
 int TURN_SPEED = 230;
 
+bool turnLeft = false, turnRight = false, forward = false;
+
 
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * ****************************************************** Movement functions are below. ******************************************************
@@ -34,10 +36,10 @@ void Forward(int spd) {
   double spdR = spd + rightMotorSpeedModifier, spdL = spd + leftMotorSpeedModifier;
   double angleDiff = CardinalToDegrees(CURRENT_DIRECTION) - ReadYaw();
 
-  while (angleDiff > 180) {
+  if (angleDiff > 180) {
     angleDiff -= 360;
   }
-  while (angleDiff < -180) {
+  if (angleDiff < -180) {
     angleDiff += 360;
   }
   
@@ -63,38 +65,14 @@ double CardinalToDegrees(int heading){ // Function to convert directional headin
   }
 }
 
-void Head(int dir) { // Function to adjust heading #TODO: improve to adjust heading based on IMU; #TODO: Update DISTANCE_NORTH and DISTANCE_EAST to reflect distance change when turning
-  // Use the fact that the integer respresentation of each direction is incremented by one for each cardinal direction going CW 
-  int degCW = (dir - CURRENT_DIRECTION) * 90; 
-  if (degCW < 0) {
-    degCW += 360;
-  }
-  
-  TurnGyro(degCW);
-
-  CURRENT_DIRECTION = dir;
-  
-  //Older function above
-  /*
-  double angleDiff = CardinalToDegrees(dir) - ReadYaw();
-  double TOL = 1;
-
-  Serial.println(angleDiff);
-  Button();
-  
-  while(angleDiff > TOL || angleDiff < -TOL) {
-    if (angleDiff < 0 && angleDiff > -180) {
-      TurnLeft(TURN_SPEED);
-    } else {
-      TurnRight(TURN_SPEED);
-    }
-    angleDiff = CardinalToDegrees(dir) - ReadYaw();
+bool Head(int dir) { // Function to adjust heading #TODO: Update DISTANCE_NORTH and DISTANCE_EAST to reflect distance change when turning
+  if (TurnGyro(CardinalToDegrees(dir))) {
+    CURRENT_DIRECTION = dir; 
+    ResetEncoders(); 
+    return true;
   }
 
-  CURRENT_DIRECTION = dir;
-  
-  return;
-  */
+  return false;
 }
 
 void InitMotors() {
@@ -110,6 +88,18 @@ void InitMotors() {
 
   leftMotorSpeedModifier = 0;
   rightMotorSpeedModifier = 0;
+}
+
+void Move() { // Function to act on the current state of global variables
+  if (turnRight) {
+    TurnRight(TURN_SPEED);
+  } else if (turnLeft) {
+    TurnLeft (TURN_SPEED);
+  } else if (forward) {
+    Forward (MAX_SPEED);
+  } else {
+    Stop();
+  }
 }
 
 void Reverse(int spd){
@@ -156,48 +146,24 @@ void Turn (int degCW) { // Function to turn the device degCW degrees clockwise a
   return;
 }
 
-void TurnGyro (int degCW) {
-  int loopStartTime = millis(), delayTime;
-  ReadMPU();
-  
-  double goal = ReadYaw() + degCW;
-  double angleDiff = degCW;
+bool TurnGyro (double heading) { // Takes degrees heading (with North as 0 degrees, heading CW, e.g. east is 90) and sets turning accordingly
+  double angleDiff = heading - ReadYaw();
   double TOL = 0.5;
 
-  while (goal < 0) {
-    goal += 360;
-  }
-  while (goal > 360) {
-    goal -= 360;
-  }
-
-  Serial.println(goal);
-  Serial.println(angleDiff);
-  Button();
-
-  if (degCW > 0) {
-    TurnRight(TURN_SPEED);
-    TurnRight(TURN_SPEED);
+  if ((angleDiff > 0 && angleDiff <= 180) || (angleDiff < -180)) {
+    turnRight = true;
+  } else {
+    turnLeft = true;
   }
 
-  if (degCW < 0) {
-    TurnLeft(TURN_SPEED);
-    TurnLeft(TURN_SPEED);
+  if (angleDiff > -TOL && angleDiff < TOL) {
+    Stop();
+    turnRight = false;
+    turnLeft = false;
+    return true;
   }
 
-  while (angleDiff < -TOL || angleDiff > TOL) {
-    loopStartTime = millis();
-    ReadMPU();
-    angleDiff = goal - ReadYaw();
-    Serial.println(angleDiff);  
-    delayTime = (LOOP_RUNTIME) - (millis() - loopStartTime);
-    Serial.println(delayTime);
-    if (delayTime > 0) {
-      delay(delayTime);
-    }
-  }
-
-  Stop();
+  return false;
 }
 
 void TurnLeft(int spd){
@@ -219,16 +185,13 @@ void RightTrack(int dir, int spd){
 
   spd = int(spd * MOTOR_A_SPEED_RATIO);
   
-  if (digitalRead(MOTOR_A_DIR) == dir)
-  {
-    Brake(MOTOR_A_BRAKE, false);
-    analogWrite(MOTOR_A_PWM, spd);
-  }
-  else // If we're changing directions, we need to stop first
-  { 
+  if (digitalRead(MOTOR_A_DIR) != dir) { // If we're changing directions, we need to stop first
     Brake(MOTOR_A_BRAKE, true);
     digitalWrite(MOTOR_A_DIR, dir);
   }
+  
+  Brake(MOTOR_A_BRAKE, false);
+  analogWrite(MOTOR_A_PWM, spd);
 }
 
 void LeftTrack(int dir, int spd){
@@ -239,14 +202,11 @@ void LeftTrack(int dir, int spd){
 
   spd = int(spd * MOTOR_B_SPEED_RATIO);
 
-  if (digitalRead(MOTOR_B_DIR) == dir)
-  {
-    Brake(MOTOR_B_BRAKE, false);
-    analogWrite(MOTOR_B_PWM, spd);
-  }
-  else // If we're changing directions, we need to stop first
-  { 
+  if (digitalRead(MOTOR_B_DIR) != dir) { // If we're changing directions, we need to stop first
     Brake(MOTOR_B_BRAKE, true);
     digitalWrite(MOTOR_B_DIR, dir);
   }
+  
+  Brake(MOTOR_B_BRAKE, false);
+  analogWrite(MOTOR_B_PWM, spd);
 }

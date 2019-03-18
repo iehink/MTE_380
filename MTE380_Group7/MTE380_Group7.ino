@@ -80,6 +80,8 @@ bool inWater;
 #define TEST true
 #define LOOP_RUNTIME 10 // milliseconds
 
+bool btnState = false;
+
 // Initialize functions
 void InitMotors();
 void InitEncoders();
@@ -124,23 +126,27 @@ void setup() {
   STARTING_TILE = &COURSE[3][3];
   CURRENT_TILE = STARTING_TILE;
   CURRENT_DIRECTION = NORTH;
-  DISTANCE_NORTH = 150;
-  DISTANCE_EAST = 200;
+  DISTANCE_NORTH = 0;
+  DISTANCE_EAST = 0;
 }
 
 void loop() {
   int loopStartTime = millis();
   ReadMPU();
   //struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
-
+  
+  while(!btnState) {
+    Stop();
+    Button();
+  }
+  
   if(TEST) {
     //EncoderHighLow();
     //EncoderTurning();
     //TestStructureIDing();
-    //BoxTest();
     Button();
-    Head(EAST);
-    Serial.println(ReadYaw());
+    BoxTest();
+    Move();
     //SimpleDistanceSensorTest();
   }
   else { /*
@@ -170,7 +176,7 @@ void loop() {
     } */
   }
   int delayTime = (LOOP_RUNTIME) - (millis() - loopStartTime);
-  Serial.println(delayTime);
+  //Serial.println(delayTime);
   if (delayTime > 0) {
     delay(delayTime);
   }
