@@ -2,8 +2,9 @@
  * ***************************************************** Pathfinding functions are below. *****************************************************
  * --------------------------------------------------------------------------------------------------------------------------------------------
  */
-void AddToPath(struct Tile* newTile){ // Function to add the next path point to the path list #TODO - could optimize to head to closer points first
-  struct PathPoint* nextTile = (struct PathPoint*) malloc(sizeof(struct PathPoint));
+void AddToPath(struct Tile* newTile){ // Function to add the next path point to the path list
+  //struct PathPoint* nextTile = (struct PathPoint*) malloc(sizeof(struct PathPoint));
+  PathPoint* nextTile = new PathPoint;
   nextTile->tile = newTile;
   nextTile->next = NULL;
   
@@ -18,7 +19,9 @@ void AddToPath(struct Tile* newTile){ // Function to add the next path point to 
 }
 
 bool Center() { // Function to travel to the center of the current tile. Returns TRUE when the center has been reached.
+  return true;
   double distN = 0, distE = 0;
+  bool dirSatisfied = false;
  
   distN = 0.5 * TILE_DISTANCE - DISTANCE_NORTH;
   distE = 0.5 * TILE_DISTANCE - DISTANCE_EAST;
@@ -26,46 +29,56 @@ bool Center() { // Function to travel to the center of the current tile. Returns
   // Adjust heading if one direction has been satisfied
   if (distN == 0 && (CURRENT_DIRECTION == NORTH || CURRENT_DIRECTION == SOUTH)) {
     if (distE > 0) {
-      Head(EAST);
+      if (Head(EAST)) {
+        dirSatisfied = true;
+      }
     } else if (distE < 0) {
-      Head(WEST);
+      if (Head(WEST)) {
+        dirSatisfied = true;
+      }
     } else {
       Stop();
     }
   } else if (distE == 0 && (CURRENT_DIRECTION == EAST || CURRENT_DIRECTION == WEST)) {
     if (distN > 0) {
-      Head(NORTH);
+      if (Head(NORTH)) {
+        dirSatisfied = true;
+      }
     } else if (distN < 0) {
-      Head(SOUTH);
+      if (Head(SOUTH)) {
+        dirSatisfied = true;
+      }
     } else {
       Stop();
     }
   }
 
   // Determine what way to head to be centered
-  if (CURRENT_DIRECTION == NORTH) {
-    if (distN > 0) {
-      Forward(MAX_SPEED);
-    } else if (distN < 0) {
-      Reverse(MAX_SPEED);
-    }
-  } else if (CURRENT_DIRECTION == SOUTH) {
-    if (distN < 0) {
-      Forward(MAX_SPEED);
-    } else if (distN > 0) {
-      Reverse(MAX_SPEED);
-    }
-  } else if (CURRENT_DIRECTION == EAST) {
-    if (distE > 0) {
-      Forward(MAX_SPEED);
-    } else if (distE < 0) {
-      Reverse(MAX_SPEED);
-    }
-  } else if (CURRENT_DIRECTION == WEST) {
-    if (distE < 0) {
-      Forward(MAX_SPEED);
-    } else if (distE > 0) {
-      Reverse(MAX_SPEED);
+  if (dirSatisfied) {
+    if (CURRENT_DIRECTION == NORTH) {
+      if (distN > 0) {
+        Forward(MAX_SPEED);
+      } else if (distN < 0) {
+        Reverse(MAX_SPEED);
+      }
+    } else if (CURRENT_DIRECTION == SOUTH) {
+      if (distN < 0) {
+        Forward(MAX_SPEED);
+      } else if (distN > 0) {
+        Reverse(MAX_SPEED);
+      }
+    } else if (CURRENT_DIRECTION == EAST) {
+      if (distE > 0) {
+        Forward(MAX_SPEED);
+      } else if (distE < 0) {
+        Reverse(MAX_SPEED);
+      }
+    } else if (CURRENT_DIRECTION == WEST) {
+      if (distE < 0) {
+        Forward(MAX_SPEED);
+      } else if (distE > 0) {
+        Reverse(MAX_SPEED);
+      }
     }
   }
 
@@ -77,53 +90,39 @@ bool Center() { // Function to travel to the center of the current tile. Returns
   }
 }
 
-bool Navigate() { // Checks to verify we are on the right path towards the next pathpoint. Returns TRUE if following, FALSE if Path list is empty.
+int Navigate() { // Checks to verify we are on the right path towards the next pathpoint. Returns direction to head, 0 if we need to center, -1 if there is no path.
   if (PATH_HEAD == NULL) {
-    return false;
+    return -1;
   }
   
-  UpdateCourseLocation(); // If we have identified a new tile, then check what we should do after this tile
-  int dir; // For storing direction we should be travelling
+  if (forward && !UpdateCourseLocation()) { // If we have identified a new tile, then check what we should do after this tile
+    return CURRENT_DIRECTION;
+  }
 
   // Determine row/column difference; note that any given next step will be a straight line from where we presently are.
   int rowDiff = (*PATH_HEAD->tile).row - (*CURRENT_TILE).row;
   int colDiff = (*PATH_HEAD->tile).col - (*CURRENT_TILE).col;
-
-  Serial.print("ROW DIFF COL DIFF: ");
-  Serial.print(rowDiff);
-  Serial.print(" ");
-  Serial.println(colDiff);
   
   // If we've reached the target tile, pop the target off and center ourselves
   if (rowDiff == 0 && colDiff == 0) {
-    while(!Center);
     PathPointReached();
-    return true;
+    return 0;
   }
 
   // Determine direction to head
   if (rowDiff == 0) { // If we are already in the correct row and just need to go across a column
     if (colDiff < 0) {
-      dir = WEST;
+      return WEST;
     } else {
-      dir = EAST;
+      return EAST;
     }
   } else if (colDiff == 0) { // If we are already in the correct column and just need to go up/down a row
     if (rowDiff < 0) {
-      dir = NORTH;
+      return NORTH;
     } else {
-      dir = SOUTH;
+      return SOUTH;
     }
   }
-
-  if (CURRENT_DIRECTION == dir) { // If we are already in the right direction, go forward
-    Forward(MAX_SPEED);
-  } else { // Go to the center of the current tile and adjust heading otherwise
-    while(!Center);
-    Head(dir);
-  }
-
-  return true;
 }
 
 bool UpdateCourseLocation(){ // Function to update the location on the course grid. Returns true if a new tile has been reached.
@@ -155,12 +154,16 @@ bool UpdateCourseLocation(){ // Function to update the location on the course gr
   return false;
 }
 
+void UpdateDistance() { // Function to update DISTANCE_NORTH and DISTANCE_EAST as required
+  return;
+}
+
 void PathPointReached(){ // Function to pop the target off the list
   struct PathPoint* temp = new PathPoint;
 
   // Store that the tile is being removed from the path
   (*PATH_HEAD->tile).pathTarget = false;
-
+  
   // Remove the tile from the list
   temp = PATH_HEAD;
   PATH_HEAD = PATH_HEAD->next;
@@ -178,28 +181,28 @@ void SelectPath(struct Tile* target){ // Function to determine the optimal path 
   (*target).pathTarget = true;
   
   // Determine the tile it will be travelling from
-  struct Tile prevTile;
+  struct Tile* prevTile;
   
   if (PATH_TAIL == NULL) {
-    prevTile = *CURRENT_TILE;
+    prevTile = CURRENT_TILE;
     AddToPath(CURRENT_TILE); // Ensure alignment to center of tile before we begin travelling to the target
   } else {
-    prevTile = *PATH_TAIL->tile;
+    prevTile = PATH_TAIL->tile;
   }
   
   // Determine best route to get to the new target tile from the previous tile
-  if (prevTile.col - (*target).col == 0 || prevTile.row - (*target).row == 0) { // if the target is in the same column as the previous target already or the same row
+  if ((*prevTile).col - (*target).col == 0 || (*prevTile).row - (*target).row == 0) { // if the target is in the same column as the previous target already or the same row
     AddToPath(target);
     return;
   } else { // determine potential corners and calculate best path
-    struct Tile corner[2];
-    corner[0] = COURSE[(*target).row][prevTile.col];
-    corner[1] = COURSE[prevTile.row][(*target).col];
+    struct Tile* corner[2];
+    corner[0] = &COURSE[(*target).row][(*prevTile).col];
+    corner[1] = &COURSE[(*prevTile).row][(*target).col];
     int total[2] = {0,0};
 
     for (int i = 0; i < 2; i++) { // for both corner options
       // Break down into starting and ending row and column for loop usage
-      int rowStart = corner[i].row, colStart = corner[i].col;
+      int rowStart = (*corner[i]).row, colStart = (*corner[i]).col;
       int rowEnd = rowStart, colEnd = colStart;
 
       // Determine which row is less, target or corner, and assign rowStart and End accordingly
@@ -225,14 +228,14 @@ void SelectPath(struct Tile* target){ // Function to determine the optimal path 
       }
 
       // Add the corner tile type as well (omitted from previous calculations)
-      total[i] += corner[i].type;
+      total[i] += (*corner[i]).type;
     }
 
     // Make path choice #TODO: optimize to prefer direction it will be facing
-    if (total[1] < total[2]) {
-      AddToPath(&corner[1]);
+    if (total[1] <= total[2]) {
+      AddToPath(corner[1]);
     } else {
-      AddToPath(&corner[2]);
+      AddToPath(corner[2]);
     }
 
     AddToPath(target);

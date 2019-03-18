@@ -123,11 +123,11 @@ void setup() {
   }
 
   // Define starting position #TODO - update to actual expected starting position
-  STARTING_TILE = &COURSE[3][3];
+  STARTING_TILE = &COURSE[5][3];
   CURRENT_TILE = STARTING_TILE;
   CURRENT_DIRECTION = NORTH;
-  DISTANCE_NORTH = 0;
-  DISTANCE_EAST = 0;
+  DISTANCE_NORTH = 200;
+  DISTANCE_EAST = 150;
 }
 
 void loop() {
@@ -141,12 +141,12 @@ void loop() {
   }
   
   if(TEST) {
+    //Serial.println((*PATH_HEAD->tile).row);
     //EncoderHighLow();
     //EncoderTurning();
     //TestStructureIDing();
-    Button();
-    BoxTest();
-    Move();
+    NavToTile();
+    //Test3();
     //SimpleDistanceSensorTest();
   }
   else { /*
@@ -176,7 +176,7 @@ void loop() {
     } */
   }
   int delayTime = (LOOP_RUNTIME) - (millis() - loopStartTime);
-  //Serial.println(delayTime);
+  Serial.println(delayTime);
   if (delayTime > 0) {
     delay(delayTime);
   }

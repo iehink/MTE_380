@@ -1,36 +1,28 @@
 int state = 0;
   
-void Test1(){ // Test tile selection + navigation
-  bool buttonPressed = false;
-  SelectPath(&COURSE[0][4]);
-
-  Button();
-
-  while (Navigate()) {
-    Serial.print(CURRENT_DIRECTION);
-    Serial.print(" ");
-    Serial.print((*CURRENT_TILE).row);
-    Serial.print(" ");
-    Serial.println((*CURRENT_TILE).col);
-    //Serial.println(DISTANCE_NORTH);
-    /*
-    if (PATH_HEAD != NULL) {
-      Serial.print((*PATH_HEAD->tile).row);
-      Serial.print((*PATH_HEAD->tile).col);
-      Serial.print(" ");
-      if (PATH_HEAD->next != NULL) {
-        Serial.print((*PATH_HEAD->next->tile).row);
-        Serial.print((*PATH_HEAD->next->tile).col);
-        Serial.print(" ");
-        if (PATH_HEAD->next->next != NULL) {
-          Serial.print((*PATH_HEAD->next->next->tile).row);
-          Serial.print((*PATH_HEAD->next->next->tile).col);
-          Serial.println(" ");
-        }
-      }
-    }
-    */
+void NavToTile(){ // Test tile selection + navigation
+  if (state == 0) {
+    SelectPath(&COURSE[2][4]);
+    state = 1;
+    Serial.println("what");
   }
+
+  int dir = Navigate();
+
+  if (dir == CURRENT_DIRECTION || dir == -1) {
+    forward = true;
+  } else if (dir == 0) {
+    //Center();
+  } else {
+    Head(dir);
+  }
+  
+  //Move();
+  
+  Serial.print("Goal Row: ");
+  Serial.println((*PATH_HEAD->tile).row);
+  Serial.print("Goal Col: ");
+  Serial.println((*PATH_HEAD->tile).col);
 }
 
 void BoxTest() { // Test to set the robot to drive in a box (for calibrating Head and Forward functions) -> multiple button presses reqd
@@ -136,6 +128,34 @@ void Test3() {
   Serial.print(", ");
   Serial.print((*testPoint->tile).col);
   Serial.println();
+
+  testX = 1;
+  while (testX == 1) {
+    Serial.print("Pop? 1 = yes, 0 = no ");
+  
+    while (!Serial.available()){}
+    testX = Serial.parseInt();
+    Serial.read();
+
+    if (testX == 1) {
+      PathPointReached();
+    }
+    
+    // print all
+    testPoint = PATH_HEAD;
+    
+    while(testPoint != NULL && testPoint != PATH_TAIL) {
+      Serial.print((*testPoint->tile).row);
+      Serial.print(", ");
+      Serial.print((*testPoint->tile).col);
+      Serial.print("\t");
+      testPoint = testPoint -> next;
+    }
+    Serial.print((*testPoint->tile).row);
+    Serial.print(", ");
+    Serial.print((*testPoint->tile).col);
+    Serial.println();
+  }
 }
 
 void BasicEncoderTest(){
