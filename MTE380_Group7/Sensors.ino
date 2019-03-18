@@ -163,8 +163,8 @@ double ReadRoll() {
 }
 
 double ReadYaw() {
-  //return gyro_yaw;
-  return 0;
+  return gyro_yaw;
+  //return 0;
 }
 
 bool Fiyah() { // Function to return whether or not the flame sensor is picking up fiyah

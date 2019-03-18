@@ -318,6 +318,15 @@ void TestStructureIDing(){
   Serial.println(degCW+degCCW);
 }
 
+void SimpleIMUTest() {
+  Serial.print("Yaw: ");
+  Serial.print(ReadYaw());
+  Serial.print(" Pitch: ");
+  Serial.print(ReadPitch());
+  Serial.print(" Roll: ");
+  Serial.println(ReadRoll());
+}
+
 void Button() {
   bool buttonPressed = false;
 

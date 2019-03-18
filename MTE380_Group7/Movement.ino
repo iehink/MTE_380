@@ -126,6 +126,26 @@ void Turn (int degCW) { // Function to turn the device degCW degrees clockwise a
   return;
 }
 
+void TurnGyro (int degCW) {
+  int goal = ReadYaw() + degCW;
+
+  while (goal < 0) {
+    goal += 360;
+  }
+
+  goal = goal%360;
+  
+  while (ReadYaw() < goal) {
+    TurnRight(TURN_SPEED);
+  }  
+  
+  while (ReadYaw() > goal) {
+    TurnLeft(TURN_SPEED);
+  }
+
+  Stop();
+}
+
 void TurnLeft(int spd){
   RightTrack(MOTOR_A_FWD, spd);
   LeftTrack(MOTOR_B_REV, spd);

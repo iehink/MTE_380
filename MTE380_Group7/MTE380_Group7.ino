@@ -107,7 +107,7 @@ void setup() {
   InitDistanceSensors();
   Serial.println("Distance sensors intialized.");
 
-  //InitMPU();
+  InitMPU();
   Serial.println("MPU initialized.");
 
   //InitTileID();
@@ -136,8 +136,9 @@ void loop() {
   if(TEST) {
     //EncoderHighLow();
     //EncoderTurning();
-    TestStructureIDing();
+    //TestStructureIDing();
     //Serial.println(ReadYaw());
+    SimpleIMUTest();
   }
   else { /*
     // Variables to keep track of expected distance measurements to be received from the IR sensors
