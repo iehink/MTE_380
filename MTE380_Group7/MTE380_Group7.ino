@@ -78,9 +78,9 @@ double DISTANCE_NORTH, DISTANCE_EAST; // Distance based on center of nose of rob
 bool inWater;
 
 #define TEST true
-#define LOOP_RUNTIME 10 // milliseconds
-
-int loopCount;
+#define LOOP_RUNTIME 20 // milliseconds
+int loopCount = 0;
+bool btnState = false;
 
 // Initialize functions
 void InitMotors();
@@ -126,16 +126,20 @@ void setup() {
   STARTING_TILE = &COURSE[3][3];
   CURRENT_TILE = STARTING_TILE;
   CURRENT_DIRECTION = NORTH;
-  DISTANCE_NORTH = 150;
-  DISTANCE_EAST = 200;
-  loopCount = 0;
+  DISTANCE_NORTH = 0;
+  DISTANCE_EAST = 0;
 }
 
 void loop() {
   int loopStartTime = millis();
   ReadMPU();
   //struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
-
+  
+  while(!btnState) {
+    Stop();
+    Button();
+  }
+  
   if(TEST) {
     if (loopCount >= 100) {
       Serial.print("LEFT: ");
@@ -149,10 +153,9 @@ void loop() {
     //EncoderHighLow();
     //EncoderTurning();
     //TestStructureIDing();
-    //BoxTest();
-    //Button();
-    //Head(EAST);
-    //Serial.println(ReadYaw());
+    Button();
+    BoxTest();
+    Move();
     //SimpleDistanceSensorTest();
   }
   else { /*

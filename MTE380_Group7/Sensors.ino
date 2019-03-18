@@ -20,7 +20,7 @@ int encoder_left, encoder_right; // To track when the encoders receive pulses
 #define LEFT_TO_EDGE 56
 #define RIGHT_TO_EDGE 60
 
-#define INTEGRATION_TIMESTEP 0.01
+#define INTEGRATION_TIMESTEP 0.02
 
 // objects for the vl53l0x
 Adafruit_VL53L0X_MTE380 lox_left = Adafruit_VL53L0X_MTE380();

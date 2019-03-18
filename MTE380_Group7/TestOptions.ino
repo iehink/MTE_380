@@ -1,3 +1,5 @@
+int state = 0;
+  
 void Test1(){ // Test tile selection + navigation
   bool buttonPressed = false;
   SelectPath(&COURSE[0][4]);
@@ -32,62 +34,63 @@ void Test1(){ // Test tile selection + navigation
 }
 
 void BoxTest() { // Test to set the robot to drive in a box (for calibrating Head and Forward functions) -> multiple button presses reqd
-  DISTANCE_NORTH = 0;
-  DISTANCE_EAST = 0;
   double len = 210;
-  bool buttonPressed = false;
 
-  Button();
-  
-  CURRENT_DIRECTION = NORTH;
-  while (DISTANCE_NORTH < len) {
-    Forward(200);
-    ReadEncoders();
-    Serial.println(DISTANCE_NORTH);
+  Serial.println(state);
+
+  if (state == 0) {
+    if (DISTANCE_NORTH < len) {
+      forward = true;
+      ReadEncoders();
+    } else {
+      state++;
+    }
+  } else if (state == 1) {
+    if (Head(EAST)) {
+      state++;
+    }
+  } else if (state == 2) {
+    if (DISTANCE_EAST < len) {
+      forward = true;
+      ReadEncoders();
+    } else {
+      state++;
+    }
+  } else if (state == 3) {
+    if (Head(SOUTH)) {
+      state++;
+    }
+  } else if (state == 4) {
+    if (DISTANCE_NORTH > 0) {
+      forward = true;
+      ReadEncoders();
+    } else {
+      forward = false;
+      state++;
+    }
+  } else if (state == 5) {
+    if (Head(EAST)) {
+      state++;
+    }
+  } else if (state == 6) {
+    if (Head(WEST)) {
+      state++;
+    }
+  } else if (state == 7) {
+    if (DISTANCE_EAST > 0) {
+      forward = true;
+      ReadEncoders();
+    } else {
+      forward = false;
+      state++;
+    }
+  } else {  
+    if (Head(NORTH)) {
+      state = 0;
+    }
+    if (DISTANCE_NORTH < 0) DISTANCE_NORTH = 0; // fixing weird bug where it goes heckin negative
+    if (DISTANCE_EAST < 0) DISTANCE_EAST = 0; // fixing weird bug where it goes heckin negative
   }
-
-  Button();
-
-  Head(EAST);
-
-  Button();
-
-  while(DISTANCE_EAST < len) {
-    Forward(MAX_SPEED);
-    ReadEncoders();
-  }
-
-  Button();
-
-  Head(SOUTH);
-
-  Button();
-
-  while(DISTANCE_NORTH > 0) {
-    Forward(MAX_SPEED);
-    ReadEncoders();
-  }
-  
-  Button();
-  
-  Head(EAST); // Verify turning left is fine
-  
-  Button();
-  
-  Head(WEST);
-
-  Button();
-  
-  while(DISTANCE_EAST > 0){
-    Forward(MAX_SPEED);
-    ReadEncoders();
-  }
-  
-  Button();
-
-  Head(NORTH);
-  if (DISTANCE_NORTH < 0) DISTANCE_NORTH = 0; // fixing weird bug where it goes heckin negative
-  if (DISTANCE_EAST < 0) DISTANCE_EAST = 0; // fixing weird bug where it goes heckin negative
 }
 
 void Test3() {
@@ -336,13 +339,12 @@ void SimpleDistanceSensorTest() {
   Serial.println(ReadDistanceRight());
 }
 
-void Button() {
-  bool buttonPressed = false;
-
-  Stop();
-  while(!buttonPressed){
-    if (digitalRead(4) == HIGH) {
-      buttonPressed = true;
+void Button() { // Swaps btnState whenever the button is pressed
+  while (digitalRead(4) == HIGH) {
+    if (btnState) {
+      btnState = false;
+    } else {
+      btnState = true;
     }
   }
 }
