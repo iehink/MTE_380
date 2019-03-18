@@ -15,7 +15,7 @@
 // Includes
 #include <SharpIR.h>
 #include <MPU6050.h>
-#include <Adafruit_VL53L0X.h>
+#include <Adafruit_VL53L0X_MTE380.h>
 #include <SparkFun_MMA8452Q.h>
 #include <Wire.h> // for I2C
 
@@ -80,6 +80,8 @@ bool inWater;
 #define TEST true
 #define LOOP_RUNTIME 10 // milliseconds
 
+int loopCount;
+
 // Initialize functions
 void InitMotors();
 void InitEncoders();
@@ -126,6 +128,7 @@ void setup() {
   CURRENT_DIRECTION = NORTH;
   DISTANCE_NORTH = 150;
   DISTANCE_EAST = 200;
+  loopCount = 0;
 }
 
 void loop() {
@@ -134,13 +137,22 @@ void loop() {
   //struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
 
   if(TEST) {
+    if (loopCount >= 100) {
+      Serial.print("LEFT: ");
+      Serial.println(ReadDistanceLeft());
+      Serial.print("FRONT: ");
+      Serial.println(ReadDistanceFront());
+      Serial.print("RIGHT: ");
+      Serial.println(ReadDistanceRight());
+      loopCount = 0;
+    }
     //EncoderHighLow();
     //EncoderTurning();
     //TestStructureIDing();
     //BoxTest();
-    Button();
-    Head(EAST);
-    Serial.println(ReadYaw());
+    //Button();
+    //Head(EAST);
+    //Serial.println(ReadYaw());
     //SimpleDistanceSensorTest();
   }
   else { /*
@@ -170,10 +182,11 @@ void loop() {
     } */
   }
   int delayTime = (LOOP_RUNTIME) - (millis() - loopStartTime);
-  Serial.println(delayTime);
+  //Serial.println(delayTime);
   if (delayTime > 0) {
     delay(delayTime);
   }
+  loopCount++;
 }
 
 void ProductionLoop(){
