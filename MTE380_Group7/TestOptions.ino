@@ -31,7 +31,7 @@ void Test1(){ // Test tile selection + navigation
   }
 }
 
-void Test2() { // Test to set the robot to drive in a box (for calibrating Head and Forward functions) -> multiple button presses reqd
+void BoxTest() { // Test to set the robot to drive in a box (for calibrating Head and Forward functions) -> multiple button presses reqd
   DISTANCE_NORTH = 0;
   DISTANCE_EAST = 0;
   double len = 210;

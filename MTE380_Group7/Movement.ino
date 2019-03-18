@@ -32,10 +32,18 @@ void Brake(int brakePin, bool brake){
 
 void Forward(int spd) {
   double spdR = spd + rightMotorSpeedModifier, spdL = spd + leftMotorSpeedModifier;
+  double angleDiff = CardinalToDegrees(CURRENT_DIRECTION) - ReadYaw();
 
+  while (angleDiff > 180) {
+    angleDiff -= 360;
+  }
+  while (angleDiff < -180) {
+    angleDiff += 360;
+  }
+  
   // adjust motor speed modifiers based on gyro readings
-  rightMotorSpeedModifier -= (CardinalToDegrees(CURRENT_DIRECTION) - ReadYaw());
-  leftMotorSpeedModifier += (CardinalToDegrees(CURRENT_DIRECTION) - ReadYaw());
+  rightMotorSpeedModifier -= angleDiff;
+  leftMotorSpeedModifier += angleDiff;
   
   RightTrack(MOTOR_A_FWD, spdR);
   LeftTrack(MOTOR_B_FWD, spdL);
@@ -61,10 +69,32 @@ void Head(int dir) { // Function to adjust heading #TODO: improve to adjust head
   if (degCW < 0) {
     degCW += 360;
   }
-
-  Turn(degCW);
+  
+  TurnGyro(degCW);
 
   CURRENT_DIRECTION = dir;
+  
+  //Older function above
+  /*
+  double angleDiff = CardinalToDegrees(dir) - ReadYaw();
+  double TOL = 1;
+
+  Serial.println(angleDiff);
+  Button();
+  
+  while(angleDiff > TOL || angleDiff < -TOL) {
+    if (angleDiff < 0 && angleDiff > -180) {
+      TurnLeft(TURN_SPEED);
+    } else {
+      TurnRight(TURN_SPEED);
+    }
+    angleDiff = CardinalToDegrees(dir) - ReadYaw();
+  }
+
+  CURRENT_DIRECTION = dir;
+  
+  return;
+  */
 }
 
 void InitMotors() {
@@ -127,20 +157,44 @@ void Turn (int degCW) { // Function to turn the device degCW degrees clockwise a
 }
 
 void TurnGyro (int degCW) {
-  int goal = ReadYaw() + degCW;
+  int loopStartTime = millis(), delayTime;
+  ReadMPU();
+  
+  double goal = ReadYaw() + degCW;
+  double angleDiff = degCW;
+  double TOL = 0.5;
 
   while (goal < 0) {
     goal += 360;
   }
+  while (goal > 360) {
+    goal -= 360;
+  }
 
-  goal = goal%360;
-  
-  while (ReadYaw() < goal) {
+  Serial.println(goal);
+  Serial.println(angleDiff);
+  Button();
+
+  if (degCW > 0) {
     TurnRight(TURN_SPEED);
-  }  
-  
-  while (ReadYaw() > goal) {
+    TurnRight(TURN_SPEED);
+  }
+
+  if (degCW < 0) {
     TurnLeft(TURN_SPEED);
+    TurnLeft(TURN_SPEED);
+  }
+
+  while (angleDiff < -TOL || angleDiff > TOL) {
+    loopStartTime = millis();
+    ReadMPU();
+    angleDiff = goal - ReadYaw();
+    Serial.println(angleDiff);  
+    delayTime = (LOOP_RUNTIME) - (millis() - loopStartTime);
+    Serial.println(delayTime);
+    if (delayTime > 0) {
+      delay(delayTime);
+    }
   }
 
   Stop();

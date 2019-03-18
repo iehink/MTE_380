@@ -137,9 +137,11 @@ void loop() {
     //EncoderHighLow();
     //EncoderTurning();
     //TestStructureIDing();
-    //Serial.println(ReadYaw());
-    SimpleIMUTest();
-    SimpleDistanceSensorTest();
+    //BoxTest();
+    Button();
+    Head(EAST);
+    Serial.println(ReadYaw());
+    //SimpleDistanceSensorTest();
   }
   else { /*
     // Variables to keep track of expected distance measurements to be received from the IR sensors

@@ -155,16 +155,23 @@ void ResetEncoders() {
 }
 
 double ReadPitch() {
-  return gyro_pitch;
-}
-
-double ReadRoll() {
   return gyro_roll;
 }
 
+double ReadRoll() {
+  return gyro_pitch;
+}
+
 double ReadYaw() {
-  return gyro_yaw;
-  //return 0;
+  // Convert to deg CW 
+  double yaw = -gyro_yaw;
+  while (yaw < 0) {
+    yaw += 360;
+  }
+  while (yaw > 360) {
+    yaw -= 360;
+  }
+  return yaw;
 }
 
 bool Fiyah() { // Function to return whether or not the flame sensor is picking up fiyah
