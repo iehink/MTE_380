@@ -15,7 +15,7 @@
 // Includes
 #include <SharpIR.h>
 #include <MPU6050.h>
-#include <Adafruit_VL53L0X.h>
+#include <Adafruit_VL53L0X_MTE380.h>
 #include <SparkFun_MMA8452Q.h>
 #include <Wire.h> // for I2C
 
@@ -78,8 +78,8 @@ double DISTANCE_NORTH, DISTANCE_EAST; // Distance based on center of nose of rob
 bool inWater;
 
 #define TEST true
-#define LOOP_RUNTIME 10 // milliseconds
-
+#define LOOP_RUNTIME 20 // milliseconds
+int loopCount = 0;
 bool btnState = false;
 
 // Initialize functions
@@ -141,7 +141,6 @@ void loop() {
   }
   
   if(TEST) {
-    //Serial.println((*PATH_HEAD->tile).row);
     //EncoderHighLow();
     //EncoderTurning();
     //TestStructureIDing();
@@ -180,6 +179,7 @@ void loop() {
   if (delayTime > 0) {
     delay(delayTime);
   }
+  loopCount++;
 }
 
 void ProductionLoop(){

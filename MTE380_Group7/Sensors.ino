@@ -20,12 +20,12 @@ int encoder_left, encoder_right; // To track when the encoders receive pulses
 #define LEFT_TO_EDGE 56
 #define RIGHT_TO_EDGE 60
 
-#define INTEGRATION_TIMESTEP 0.01
+#define INTEGRATION_TIMESTEP 0.02
 
 // objects for the vl53l0x
-Adafruit_VL53L0X lox_left = Adafruit_VL53L0X();
-Adafruit_VL53L0X lox_front = Adafruit_VL53L0X();
-Adafruit_VL53L0X lox_right = Adafruit_VL53L0X();
+Adafruit_VL53L0X_MTE380 lox_left = Adafruit_VL53L0X_MTE380();
+Adafruit_VL53L0X_MTE380 lox_front = Adafruit_VL53L0X_MTE380();
+Adafruit_VL53L0X_MTE380 lox_right = Adafruit_VL53L0X_MTE380();
 
 // this holds the measurement
 VL53L0X_RangingMeasurementData_t distance_left;
@@ -99,6 +99,10 @@ void InitDistanceSensors() {
   if(!lox_right.begin(LOX_RIGHT_ADDRESS)) {
     Serial.println(F("Failed to boot right VL53L0X"));
   }
+
+  lox_left.startMeasurement();
+  lox_front.startMeasurement();
+  lox_right.startMeasurement();
 }
 
 void InitEncoders() {
@@ -223,17 +227,14 @@ bool ReadHallEffect(){
   return !digitalRead(52);
 }
 
-int ReadDistance(Adafruit_VL53L0X sensor, VL53L0X_RangingMeasurementData_t measurement){
-  int number_of_readings = 5;
-  int sum = 0;
-  for(int i = 0; i < number_of_readings; i++)
-  {
-    sensor.rangingTest(&measurement, false);
+int ReadDistance(Adafruit_VL53L0X_MTE380 sensor, VL53L0X_RangingMeasurementData_t measurement){
+  if (sensor.DataReady()) {
+    sensor.getData(&measurement);
     if(measurement.RangeStatus != 4) {     // if not out of range
-      sum += measurement.RangeMilliMeter;
+      return measurement.RangeMilliMeter;
     }
   }
-  return sum / number_of_readings;
+  return -1;
 }
 
 /*
