@@ -130,7 +130,7 @@ void setup() {
 
 void loop() {
   int loopStartTime = millis();
-  //ReadMPU();
+  ReadMPU();
   //struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
 
   if(TEST) {
@@ -139,6 +139,7 @@ void loop() {
     //TestStructureIDing();
     //Serial.println(ReadYaw());
     SimpleIMUTest();
+    SimpleDistanceSensorTest();
   }
   else { /*
     // Variables to keep track of expected distance measurements to be received from the IR sensors
@@ -167,6 +168,7 @@ void loop() {
     } */
   }
   int delayTime = (LOOP_RUNTIME) - (millis() - loopStartTime);
+  Serial.println(delayTime);
   if (delayTime > 0) {
     delay(delayTime);
   }

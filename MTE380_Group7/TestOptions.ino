@@ -327,6 +327,15 @@ void SimpleIMUTest() {
   Serial.println(ReadRoll());
 }
 
+void SimpleDistanceSensorTest() {
+  Serial.print("Left: ");
+  Serial.print(ReadDistanceLeft());
+  Serial.print(" Front: ");
+  Serial.print(ReadDistanceFront());
+  Serial.print(" Right: ");
+  Serial.println(ReadDistanceRight());
+}
+
 void Button() {
   bool buttonPressed = false;
 
