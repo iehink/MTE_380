@@ -3,7 +3,7 @@
 #define ENCODER_LEFT_PIN 18
 #define ENCODER_RIGHT_PIN 19
 
-double gyro_pitch, gyro_roll, gyro_yaw;
+double gyro_pitch, gyro_roll, gyro_yaw, accel_vel, accel_dist;
 int previous_MPU_interrupt_time;
 int encoder_left, encoder_right; // To track when the encoders receive pulses
 
@@ -76,11 +76,14 @@ void InitDistanceSensors() {
   digitalWrite(SHT_LOX_RIGHT, LOW);
   delay(10);
 
+  Serial.println("test");
+
   // initializing LOX_LEFT
   if(!lox_left.begin(LOX_LEFT_ADDRESS)) {
     Serial.println(F("Failed to boot left VL53L0X"));
   }
   delay(10);
+  Serial.println("test");
 
   // activating LOX_FRONT
   digitalWrite(SHT_LOX_FRONT, HIGH);
@@ -177,12 +180,24 @@ bool Fiyah() { // Function to return whether or not the flame sensor is picking 
 
 void ReadMPU(){
   // Read normalized values
-  Vector norm = mpu.readNormalizeGyro();
+  Vector normGyro = mpu.readNormalizeGyro();
 
   // Calculate Pitch, Roll and Yaw
-  gyro_pitch = gyro_pitch + norm.YAxis * INTEGRATION_TIMESTEP;
-  gyro_roll = gyro_roll + norm.XAxis * INTEGRATION_TIMESTEP;
-  gyro_yaw = gyro_yaw + norm.ZAxis * INTEGRATION_TIMESTEP;
+  gyro_pitch = gyro_pitch + normGyro.YAxis * INTEGRATION_TIMESTEP;
+  gyro_roll = gyro_roll + normGyro.XAxis * INTEGRATION_TIMESTEP;
+  gyro_yaw = gyro_yaw + normGyro.ZAxis * INTEGRATION_TIMESTEP;
+
+  Vector normAccel = mpu.readNormalizeAccel();
+
+  accel_vel = accel_vel + normAccel.XAxis * INTEGRATION_TIMESTEP;
+  accel_dist = accel_dist + accel_vel * INTEGRATION_TIMESTEP;
+
+  Serial.print("A: ");
+  Serial.print(normAccel.XAxis);
+  Serial.print(", V: ");
+  Serial.print(accel_vel);
+  Serial.print(", D: ");
+  Serial.print(accel_dist);
 }
 
 void ReadTOF() {
