@@ -21,6 +21,8 @@ int encoder_left, encoder_right; // To track when the encoders receive pulses
 
 #define INTEGRATION_TIMESTEP 0.02
 
+#define FLAME_SENSOR_DIN 42
+
 // objects for the vl53l0x
 Adafruit_VL53L0X_MTE380 lox_left = Adafruit_VL53L0X_MTE380();
 Adafruit_VL53L0X_MTE380 lox_front = Adafruit_VL53L0X_MTE380();
@@ -114,6 +116,10 @@ void InitEncoders() {
   attachInterrupt(digitalPinToInterrupt(ENCODER_RIGHT_PIN), EncoderRight_ISR, CHANGE);
 }
 
+void InitFlame() {
+  pinMode(FLAME_SENSOR_DIN, INPUT);
+}
+
 double ReadEncoders(){
   double encL = ReadEncoderLeft(), encR = ReadEncoderRight();
   double distance = (encL + encR)/2; // average what each encoder thinks
@@ -166,7 +172,7 @@ double ReadYaw() {
 }
 
 bool Fiyah() { // Function to return whether or not the flame sensor is picking up fiyah
-  return false;
+  return (digitalRead(FLAME_SENSOR_DIN));
 }
 
 void ReadMPU(){

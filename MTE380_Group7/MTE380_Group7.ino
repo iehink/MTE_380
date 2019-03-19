@@ -122,6 +122,9 @@ void setup() {
   InitMPU();
   Serial.println("MPU initialized.");
 
+  InitFlame();
+  Serial.println("Flame sensor initialized.");
+
   //InitTileID();
 
   // Set up COURSE matrix
@@ -156,11 +159,12 @@ void loop() {
     //EncoderTurning();
     //TestStructureIDing();
     //NavToTile();
-    TestGoalSearching();
+    //TestGoalSearching();
     //DistanceTest();
     //BoxTest();
     //Test3();
     //SimpleDistanceSensorTest();
+    Serial.println(Fiyah());
   }
   else { /*
     // Variables to keep track of expected distance measurements to be received from the IR sensors
