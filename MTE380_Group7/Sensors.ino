@@ -230,6 +230,35 @@ int ReadDistance(Adafruit_VL53L0X_MTE380 sensor, VL53L0X_RangingMeasurementData_
   return -1;
 }
 
+void UpdateWallDistance(){
+  double distNorthToWall = ((*CURRENT_TILE).row + 1) * TILE_DISTANCE - DISTANCE_NORTH;
+  double distEastToWall = (5 - (*CURRENT_TILE).col + 1) * TILE_DISTANCE - DISTANCE_EAST;
+  double distWestToWall = ((*CURRENT_TILE).col) * TILE_DISTANCE + DISTANCE_EAST;
+  double distSouthToWall = (5 - (*CURRENT_TILE).row) * TILE_DISTANCE + DISTANCE_NORTH;
+  
+  if (CURRENT_DIRECTION == NORTH) {
+    front_to_wall = distNorthToWall;
+    right_to_wall = distEastToWall;
+    left_to_wall = distWestToWall;
+  } else if (CURRENT_DIRECTION == EAST) {
+    front_to_wall = distEastToWall;
+    right_to_wall = distSouthToWall;
+    left_to_wall = distNorthToWall;
+  } else if (CURRENT_DIRECTION == SOUTH) {
+    front_to_wall = distSouthToWall;
+    right_to_wall = distWestToWall;
+    left_to_wall = distEastToWall;
+  } else if (CURRENT_DIRECTION == WEST) {
+    front_to_wall = distWestToWall;
+    right_to_wall = distNorthToWall;
+    left_to_wall = distSouthToWall;
+  }
+
+  // Since the TOF aren't working well, 
+  left_to_wall = left_dist;
+  right_to_wall = right_dist;
+}
+
 /*
 // Scanning function to check long-range IR and add tiles to the target path if the sensors pick things up #TODO - could be optimized to find things when turning
 double ScanLongIR(int IR_Pin, double ratio, double dist){

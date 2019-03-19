@@ -1,6 +1,6 @@
 // Define goal array and goal meanings
 bool GOAL[6] = {false, false, false, false, false, false}; // 0th array unused, array indices correspond to values listed below
-int PEOPLE = 1, LOST = 2, FOOD = 3, FIRE = 4, DELIVER = 5, POSSIBILITY = 6, NONE = 7; 
+int PEOPLE = 1, LOST = 2, FOOD = 3, FIRE = 4, DELIVER = 5, POSSIBILITY = 6, STRUCTURE = 7, NONE = 8; 
 // Variable to keep track of where the people are
 struct Tile* peopleTile;
 
@@ -13,7 +13,9 @@ bool sandOrGravel;
 double SIZE_ID_DIST = FRONT_TO_NOSE + 80; // Distance at which to begin scanning [mm]
 double right_scan_limit = 0, left_scan_limit = 0;
 bool scanning_complete = false, scanning = false;
+int scan_off_count = 0, scan_count = 0;
 int scan_state = 0;
+int scan_dir = 0; // 1 = right, 2 = left
 double object_size = 0;
 
 /* --------------------------------------------------------------------------------------------------------------------------------------------
@@ -125,8 +127,7 @@ int CheckGoals(){ // Returns number of goals remaining to complete.
   return completedGoals;
 }
 
-// Function to search the current tile for any goal and identify what goal is. Returns TRUE if it found a goal and updates goal of tile as suitable. #TODO
-bool LookForGoal(){
+bool LookForGoal(){ // Function to search the current tile for any goal and identify what goal is. Returns TRUE if it found a goal and updates goal of tile as suitable. #TODO
   if (!scanning && front_dist > SIZE_ID_DIST) {
     forward = true;
     return false;
@@ -202,6 +203,76 @@ void ScanSize() {
     Serial.println("Error!");
     scan_state = 0;
   }
+}
+
+int IDGoal(double objLen) {
+  double LEN_TOL = 40;
+  
+  if (abs(objLen - BIG_STRUCT_LEN) < LEN_TOL) {
+    return PEOPLE;
+  } else if (abs(objLen - SMALL_STRUCT_LEN) < LEN_TOL) {
+    return LOST;
+  } else if (abs(objLen - STRUCT_WIDTH) < LEN_TOL) {
+    return STRUCTURE;
+  } else {
+    return NONE;
+  }
+}
+
+double FindLength() { // returns a goal to assign
+  double TOL = 50, objLen = 0; 
+  int SCAN_TOL = 20;
+
+  if (scan_state == 0) {
+    if (abs(right_dist - right_to_wall) > TOL) {
+      if (scan_dir == 2) {
+        scan_count = 0;
+      }
+      scan_dir = 1;
+      scan_count++;
+      if (scan_count > SCAN_TOL) {
+        scan_count = 0;
+        scan_state = 1;
+        scanning = true;
+      }
+    } else if (abs(left_dist - left_to_wall) > TOL) {
+      if (scan_dir == 1) {
+        scan_count = 0;
+      }
+      scan_dir = 2;
+      scan_count++;
+      if (scan_count > SCAN_TOL) {
+        scan_count = 0;
+        scan_state = 2;
+        scanning = true;
+      }
+    }
+  } else if (scan_state == 1) {
+    if (scan_off_count > SCAN_TOL) {
+      objLen = scan_count * LOOP_RUNTIME / TIME_PER_MM;
+      scan_count = 0;
+      scan_off_count = 0;
+      scan_state = 0;
+      scanning_complete = true;
+      return objLen;
+    } else if (abs(right_dist - right_to_wall) < TOL) {
+      scan_off_count++;
+    } 
+    scan_count ++;
+  } else if (scan_state == 2) {
+    if (scan_off_count > SCAN_TOL) {
+      objLen = scan_count * LOOP_RUNTIME / TIME_PER_MM;
+      scan_count = 0;
+      scan_off_count = 0;
+      scan_state = 0;
+      scanning_complete = true;
+      return objLen;
+    } else if (abs(left_dist - left_to_wall) < TOL) {
+      scan_off_count++;
+    } 
+    scan_count ++;
+  }
+  return -1;
 }
 
 // Function to search a sand tile for food. Returns TRUE (and acknowledges food) if food is found. #TODO

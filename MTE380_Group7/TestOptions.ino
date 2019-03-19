@@ -5,12 +5,16 @@ void TestGoalSearching() {
     Serial.println((*CURRENT_TILE).goal);
     btnState = false;
   }
+
+  Serial.println(scan_state);
+  
   Move();
 }
   
 void NavToTile(){ // Test tile selection + navigation
   if (state == 0) {
-    SelectPath(&COURSE[2][4]);
+    SelectPath(&COURSE[1][2]);
+    COURSE[1][2].goal = POSSIBILITY;
     state = 1;
   }
 
@@ -18,11 +22,12 @@ void NavToTile(){ // Test tile selection + navigation
 
   if (dir == CURRENT_DIRECTION || dir == -1) {
     forward = true;
-    turn_left = false;
-    turn_right = false;
   } else if (dir == 0) {
+    forward = false;
+    Move();
+    return; // cut it off rn
     if ((*CURRENT_TILE).goal == POSSIBILITY) {
-      
+      LookForGoal();
     } else {
       Center();
     }
@@ -295,6 +300,41 @@ void DistanceTest() {
   }
 
   Move();
+}
+
+void TravelTest() {
+  double len = FindLength();
+  forward = true;
+  Serial.println(left_dist);
+  Serial.println(len);
+  Serial.println(scan_state);
+  /*if (scanning_complete) {
+    Serial.println(IDGoal(len));
+    Stop();
+    btnState = false;
+  }
+*/
+  /*
+  if (!scanning) {
+    Navigate();
+  } else {
+    forward = 1;
+    if (scanning_complete) {
+      IDGoal(len);
+      if (scan_dir == 1) {
+        if (Head(CardinalToDegrees(CURRENT_DIRECTION) + 90)) {
+          forward = true;
+          
+        }
+      } else if (scan_dir == 2) {
+        if (Head(CardinalToDegrees(CURRENT_DIRECTION) - 90)) {
+          
+        }
+      }
+    }
+  }
+  */
+  //Move();
 }
 
 void Button() { // Swaps btnState whenever the button is pressed
