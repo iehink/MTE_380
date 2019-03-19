@@ -96,6 +96,9 @@ bool inWater;
 
 #define FRONT_TO_NOSE 80
 
+#define FAN_RUN_SPEED 250
+#define FAN_STOP_SPEED 0
+
 bool btnState = false;
 
 // Initialize functions
@@ -127,6 +130,9 @@ void setup() {
 
   InitMPU();
   Serial.println("MPU initialized.");
+
+  InitFlame();
+  Serial.println("Flame sensor initialized.");
 
   //InitTileID();
 

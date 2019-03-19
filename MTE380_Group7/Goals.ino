@@ -18,6 +18,8 @@ int scan_state = 0;
 int scan_dir = 0; // 1 = right, 2 = left
 double object_size = 0;
 
+#define FAN_PWM 6
+
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * **************************************************** Goal-handling functions are below. ****************************************************
  * --------------------------------------------------------------------------------------------------------------------------------------------
@@ -278,4 +280,12 @@ double FindLength() { // returns a goal to assign
 // Function to search a sand tile for food. Returns TRUE (and acknowledges food) if food is found. #TODO
 bool SearchSand(){
   return false;
+}
+
+void InitFan() {
+  pinMode(FAN_PWM, OUTPUT);
+}
+
+void RunFan(int fanSpeed) {
+  analogWrite(FAN_PWM, fanSpeed);
 }
