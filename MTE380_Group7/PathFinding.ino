@@ -179,6 +179,8 @@ void UpdateDistance() { // Function to update DISTANCE_NORTH and DISTANCE_EAST a
   } else {
     Serial.println("Error - no direction specified");
   }
+
+  front_to_wall -= distanceTravelled;
   
   return;
 }

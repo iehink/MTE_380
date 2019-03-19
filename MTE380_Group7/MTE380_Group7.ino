@@ -81,6 +81,12 @@ bool turn_left = false, turn_right = false, forward = false;
 
 // Distance sensor readings
 double left_dist = 0, right_dist = 0, front_dist = 0;
+double right_to_wall = 0, left_to_wall = 0, front_to_wall = 0;
+
+// Structure dimensions
+#define STRUCT_WIDTH 127 //mm
+#define SMALL_STRUCT_LEN 63 //mm
+#define BIG_STRUCT_LEN 191 //mm
 
 // Variable to note if we are in water or not
 bool inWater;
@@ -139,7 +145,7 @@ void setup() {
   }
 
   // Define starting position #TODO - update to actual expected starting position
-  STARTING_TILE = &COURSE[5][3];
+  STARTING_TILE = &COURSE[4][3];
   CURRENT_TILE = STARTING_TILE;
   CURRENT_DIRECTION = NORTH;
   DISTANCE_NORTH = 0;
@@ -155,6 +161,8 @@ void loop() {
   while(!btnState) {
     Stop();
     Button();
+    left_to_wall = left_dist;
+    right_to_wall = right_dist;
   }
   
   if(TEST) {
@@ -163,17 +171,12 @@ void loop() {
     //TestStructureIDing();
     //NavToTile();
     //TestGoalSearching();
+    //TravelTest();
     //DistanceTest();
     //BoxTest();
     //Test3();
-    //SimpleDistanceSensorTest();
-    //Serial.println(Fiyah());
-    //Serial.print("LEFT: ");
-    //Serial.print(left_dist);
-    //Serial.print(", FRONT: ");
-    //Serial.print(front_dist);
-    //Serial.print(", RIGHT: ");
-    //Serial.println(right_dist);
+    TurnGyro(90);
+    Move();
   }
   else { /*
     // Variables to keep track of expected distance measurements to be received from the IR sensors
@@ -216,7 +219,7 @@ void ProductionLoop(){
    */
   // Travel around the course as required
   Navigate();
-   
+  
   // ID tile if we don't know it yet
   if ((*CURRENT_TILE).type == 0) {
     if (IDTile()) {
