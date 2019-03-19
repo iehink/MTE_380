@@ -19,6 +19,9 @@ void AddToPath(struct Tile* newTile){ // Function to add the next path point to 
 }
 
 bool Center() { // Function to travel to the center of the current tile. Returns TRUE when the center has been reached.
+  forward = false;
+  turnLeft = false;
+  turnRight = false;
   return true;
   double distN = 0, distE = 0;
   bool dirSatisfied = false;
@@ -104,6 +107,11 @@ int Navigate() { // Checks to verify we are on the right path towards the next p
   // Determine row/column difference; note that any given next step will be a straight line from where we presently are.
   int rowDiff = (*PATH_HEAD->tile).row - (*CURRENT_TILE).row;
   int colDiff = (*PATH_HEAD->tile).col - (*CURRENT_TILE).col;
+
+  Serial.print("rowDiff: ");
+  Serial.println(rowDiff);
+  //Serial.print("colDiff: ");
+  //Serial.println(colDiff);
   
   // If we've reached the target tile, pop the target off and center ourselves
   if (rowDiff == 0 && colDiff == 0) {
@@ -159,6 +167,11 @@ void UpdateDistance() { // Function to update DISTANCE_NORTH and DISTANCE_EAST a
   //ReadEncoders(); // possibly useful if they ever actually work?
   double distanceTravelled = (millis() - time_last_called) / TIME_PER_MM;
   time_last_called = millis();
+  if (distanceTravelled > 100) {
+    Serial.println(distanceTravelled);
+    Serial.println(millis());
+    Serial.println(time_last_called);
+  }
  
   if (CURRENT_DIRECTION == NORTH) {
     DISTANCE_NORTH += distanceTravelled;

@@ -74,14 +74,14 @@ struct PathPoint* PATH_TAIL = NULL;
 double DISTANCE_NORTH, DISTANCE_EAST; // Distance based on center of nose of robot, as measured from the south-west corner of the current tile [mm].
 #define TILE_DISTANCE 304.8 // length of each tile (1 ft = 304.8mm) #TODO - update with actual measurements/testing
 double TIME_PER_MM = 3750.0/300.0; // ms/mm DO NOT DEFINE THIS - IT BREAKS EVERYTHING
-int time_last_called = 0; // variable to store the last time UpdateDistance() was called for the purposes of judging distance
+unsigned long time_last_called = 0; // variable to store the last time UpdateDistance() was called for the purposes of judging distance
 
 // Variable to note if we are in water or not
 bool inWater;
 
 #define TEST true
 #define LOOP_RUNTIME 20 // milliseconds
-int loopCount = 0;
+
 bool btnState = false;
 
 // Initialize functions
@@ -179,11 +179,10 @@ void loop() {
     } */
   }
   int delayTime = (LOOP_RUNTIME) - (millis() - loopStartTime);
-  Serial.println(delayTime);
+  //Serial.println(delayTime);
   if (delayTime > 0) {
     delay(delayTime);
   }
-  loopCount++;
 }
 
 void ProductionLoop(){

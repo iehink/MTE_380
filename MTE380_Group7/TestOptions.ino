@@ -8,16 +8,12 @@ void NavToTile(){ // Test tile selection + navigation
 
   int dir = Navigate();
 
-  Serial.println(dir);
-  if(turnLeft) {
-    Serial.println("We're actually trying to do this.");
-  }
-
   if (dir == CURRENT_DIRECTION || dir == -1) {
-    Serial.println("GO FORTH, MY ROBOT");
     forward = true;
+    turnLeft = false;
+    turnRight = false;
   } else if (dir == 0) {
-    //Center();
+    Center();
   } else {
     Head(dir);
   }
