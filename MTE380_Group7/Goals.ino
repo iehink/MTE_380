@@ -16,6 +16,8 @@ bool scanning_complete = false, scanning = false;
 int scan_state = 0;
 double object_size = 0;
 
+#define FAN_PWM 6
+
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * **************************************************** Goal-handling functions are below. ****************************************************
  * --------------------------------------------------------------------------------------------------------------------------------------------
@@ -202,6 +204,14 @@ void ScanSize() {
     Serial.println("Error!");
     scan_state = 0;
   }
+}
+
+void InitFan() {
+  pinMode(FAN_PWM, OUTPUT);
+}
+
+void RunFan(int fanSpeed) {
+  analogWrite(FAN_PWM, fanSpeed);
 }
 
 // Function to search a sand tile for food. Returns TRUE (and acknowledges food) if food is found. #TODO

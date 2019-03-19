@@ -90,6 +90,9 @@ bool inWater;
 
 #define FRONT_TO_NOSE 80
 
+#define FAN_RUN_SPEED 250
+#define FAN_STOP_SPEED 0
+
 bool btnState = false;
 
 // Initialize functions
@@ -164,7 +167,13 @@ void loop() {
     //BoxTest();
     //Test3();
     //SimpleDistanceSensorTest();
-    Serial.println(Fiyah());
+    //Serial.println(Fiyah());
+    //Serial.print("LEFT: ");
+    //Serial.print(left_dist);
+    //Serial.print(", FRONT: ");
+    //Serial.print(front_dist);
+    //Serial.print(", RIGHT: ");
+    //Serial.println(right_dist);
   }
   else { /*
     // Variables to keep track of expected distance measurements to be received from the IR sensors
