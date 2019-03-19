@@ -127,7 +127,7 @@ int CheckGoals(){ // Returns number of goals remaining to complete.
 
 // Function to search the current tile for any goal and identify what goal is. Returns TRUE if it found a goal and updates goal of tile as suitable. #TODO
 bool LookForGoal(){
-  if (!scanning && ReadDistanceFront() > SIZE_ID_DIST) {
+  if (!scanning && front_dist > SIZE_ID_DIST) {
     forward = true;
     return false;
   } else {
@@ -160,7 +160,7 @@ bool LookForGoal(){
 }
 
 void ScanSize() {
-  double heading = ReadYaw(), distance = ReadDistanceFront(), expectedDist = SIZE_ID_DIST / cos(PI/180*heading);
+  double heading = ReadYaw(), distance = front_dist, expectedDist = SIZE_ID_DIST / cos(PI/180*heading);
   double TOL = 20; // [mm] tolerance on distance as compared to expected
   scanning = true;
 

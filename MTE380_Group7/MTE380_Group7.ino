@@ -79,6 +79,9 @@ unsigned long time_last_called = 0; // variable to store the last time UpdateDis
 // Movement commands
 bool turn_left = false, turn_right = false, forward = false;
 
+// Distance sensor readings
+double left_dist = 0, right_dist = 0, front_dist = 0;
+
 // Variable to note if we are in water or not
 bool inWater;
 
@@ -140,6 +143,7 @@ void setup() {
 void loop() {
   int loopStartTime = millis();
   ReadMPU();
+  ReadTOF();
   //struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
   
   while(!btnState) {

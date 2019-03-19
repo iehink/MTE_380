@@ -266,91 +266,6 @@ void IMUTest() { // Can it go straight?
   }
 }
 
-void TOFTest(){
-  Button();
-  
-  while(ReadDistanceFront() > 10) {
-    Forward(175);
-  }
-}
-
-void SimpleTOFTest() {
-  Serial.print("Time of Flight Sensors: ");
-  Serial.print(ReadDistanceLeft());
-  Serial.print(" ");
-  Serial.print(ReadDistanceFront());
-  Serial.print(" ");
-  Serial.println(ReadDistanceRight());
-}
-
-void TestStructureIDing(){
-  int dist = ReadDistanceFront();
-  int prevDist = ReadDistanceFront();
-  int degCW = 0, degCCW = 0;
-  int turnDeg = 10;
-  double TOL = 15;
-  double expectedHyp = 0;
-
-  Serial.println("Testing stucture identification.");
-  
-  Button();
-
-  Serial.println("GO!");
-  
-  while(dist > FRONT_TO_NOSE + 50) {
-    Forward(MAX_SPEED);
-    dist = ReadDistanceFront();
-  }
-  
-  Button();
-
-  prevDist = ReadDistanceFront();
-  
-  do {
-    prevDist = ReadDistanceFront();
-    Turn(turnDeg);
-    degCW += turnDeg;
-    expectedHyp = (FRONT_TO_NOSE + 50) / cos(PI/180*degCW);
-    Serial.print(ReadDistanceFront());
-    Serial.print("mm away, ");
-    Serial.print(degCW);
-    Serial.print(" degrees, expected hypotenuse: ");
-    Serial.println(expectedHyp);
-    dist = ReadDistanceFront();    
-  } while (dist < expectedHyp + TOL);
-
-  Serial.println("Press button to return to facing object");
-  Button();
-
-  Turn(-degCW);
-
-  Button();
-
-  prevDist = ReadDistanceFront();
-  dist = ReadDistanceFront();
-
-  do {
-    prevDist = ReadDistanceFront();
-    Turn(-turnDeg);
-    degCCW += turnDeg;
-    expectedHyp = (FRONT_TO_NOSE + 50) / cos(PI/180*degCCW);
-    Serial.print(ReadDistanceFront());
-    Serial.print("mm away, ");
-    Serial.print(degCCW);
-    Serial.print(" degrees, expected hypotenuse: ");
-    Serial.println(expectedHyp);
-    dist = ReadDistanceFront();
-  } while (dist < expectedHyp + TOL);
-
-  Button();
-
-  Turn(degCCW);
-
-  Button();
-
-  Serial.println(degCW+degCCW);
-}
-
 void SimpleIMUTest() {
   Serial.print("Yaw: ");
   Serial.print(ReadYaw());
@@ -362,11 +277,11 @@ void SimpleIMUTest() {
 
 void SimpleDistanceSensorTest() {
   Serial.print("Left: ");
-  Serial.print(ReadDistanceLeft());
+  Serial.print(left_dist);
   Serial.print(" Front: ");
-  Serial.print(ReadDistanceFront());
+  Serial.print(front_dist);
   Serial.print(" Right: ");
-  Serial.println(ReadDistanceRight());
+  Serial.println(right_dist);
 }
 
 void DistanceTest() {

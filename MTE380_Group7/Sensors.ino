@@ -114,18 +114,6 @@ void InitEncoders() {
   attachInterrupt(digitalPinToInterrupt(ENCODER_RIGHT_PIN), EncoderRight_ISR, CHANGE);
 }
 
-int ReadDistanceLeft(){
-  return ReadDistance(lox_left, distance_left);
-}
-
-int ReadDistanceFront(){
-  return ReadDistance(lox_front, distance_front);
-}
-
-int ReadDistanceRight(){
-  return ReadDistance(lox_right, distance_right);
-}
-
 double ReadEncoders(){
   double encL = ReadEncoderLeft(), encR = ReadEncoderRight();
   double distance = (encL + encR)/2; // average what each encoder thinks
@@ -189,6 +177,12 @@ void ReadMPU(){
   gyro_pitch = gyro_pitch + norm.YAxis * INTEGRATION_TIMESTEP;
   gyro_roll = gyro_roll + norm.XAxis * INTEGRATION_TIMESTEP;
   gyro_yaw = gyro_yaw + norm.ZAxis * INTEGRATION_TIMESTEP;
+}
+
+void ReadTOF() {
+  left_dist = ReadDistance(lox_left, distance_left);
+  right_dist = ReadDistance(lox_right, distance_right);
+  front_dist = ReadDistance(lox_front, distance_front);
 }
 
 /* ------------------------------------------------------------------------------------------------------------------------------
