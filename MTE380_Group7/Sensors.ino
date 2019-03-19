@@ -192,12 +192,12 @@ void ReadMPU(){
   accel_vel = accel_vel + normAccel.XAxis * INTEGRATION_TIMESTEP;
   accel_dist = accel_dist + accel_vel * INTEGRATION_TIMESTEP;
 
-  Serial.print("A: ");
-  Serial.print(normAccel.XAxis);
-  Serial.print(", V: ");
-  Serial.print(accel_vel);
-  Serial.print(", D: ");
-  Serial.print(accel_dist);
+  //Serial.print("A: ");
+  //Serial.print(normAccel.XAxis);
+  //Serial.print(", V: ");
+  //Serial.print(accel_vel);
+  //Serial.print(", D: ");
+  //Serial.print(accel_dist);
 }
 
 void ReadTOF() {

@@ -141,13 +141,25 @@ void setup() {
     for (int y = 0; y < 6; y++) {
       COURSE[x][y].row = x;
       COURSE[x][y].col = y;
+      COURSE[x][y].type = FLAT;
     }
   }
 
+  // Hard Code COURSE tiles
+  COURSE[1][1] = SAND;
+  COURSE[3][2] = SAND;
+  COURSE[4][4] = SAND;
+  COURSE[3][0] = GRAVEL;
+  COURSE[5][4] = GRAVEL;
+  COURSE[1][4] = GRAVEL;
+  COURSE[0][2] = WATER;
+  COURSE[4][1] = WATER;
+  COURSE[2][5] = WATER;
+
   // Define starting position #TODO - update to actual expected starting position
-  STARTING_TILE = &COURSE[4][3];
+  STARTING_TILE = &COURSE[1][5];
   CURRENT_TILE = STARTING_TILE;
-  CURRENT_DIRECTION = NORTH;
+  CURRENT_DIRECTION = WEST;
   DISTANCE_NORTH = 0;
   DISTANCE_EAST = 0;
 }
@@ -175,8 +187,14 @@ void loop() {
     //DistanceTest();
     //BoxTest();
     //Test3();
-    TurnGyro(90);
-    Move();
+    //TurnGyro(90);
+    //Move();
+    Serial.print("LEFT: ");
+    Serial.print(left_dist);
+    Serial.print(", FRONT: ");
+    Serial.print(front_dist);
+    Serial.print(", RIGHT: ");
+    Serial.println(right_dist);
   }
   else { /*
     // Variables to keep track of expected distance measurements to be received from the IR sensors
