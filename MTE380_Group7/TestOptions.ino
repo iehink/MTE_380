@@ -4,12 +4,17 @@ void NavToTile(){ // Test tile selection + navigation
   if (state == 0) {
     SelectPath(&COURSE[2][4]);
     state = 1;
-    Serial.println("what");
   }
 
   int dir = Navigate();
 
+  Serial.println(dir);
+  if(turnLeft) {
+    Serial.println("We're actually trying to do this.");
+  }
+
   if (dir == CURRENT_DIRECTION || dir == -1) {
+    Serial.println("GO FORTH, MY ROBOT");
     forward = true;
   } else if (dir == 0) {
     //Center();
@@ -17,12 +22,7 @@ void NavToTile(){ // Test tile selection + navigation
     Head(dir);
   }
   
-  //Move();
-  
-  Serial.print("Goal Row: ");
-  Serial.println((*PATH_HEAD->tile).row);
-  Serial.print("Goal Col: ");
-  Serial.println((*PATH_HEAD->tile).col);
+  Move();
 }
 
 void BoxTest() { // Test to set the robot to drive in a box (for calibrating Head and Forward functions) -> multiple button presses reqd
@@ -83,6 +83,8 @@ void BoxTest() { // Test to set the robot to drive in a box (for calibrating Hea
     if (DISTANCE_NORTH < 0) DISTANCE_NORTH = 0; // fixing weird bug where it goes heckin negative
     if (DISTANCE_EAST < 0) DISTANCE_EAST = 0; // fixing weird bug where it goes heckin negative
   }
+  
+  Move();
 }
 
 void Test3() {
@@ -359,6 +361,19 @@ void SimpleDistanceSensorTest() {
   Serial.println(ReadDistanceRight());
 }
 
+void DistanceTest() {
+  if (DISTANCE_NORTH < 200) {
+    forward = true;
+    UpdateDistance();
+  } else {
+    forward = false;
+    turnRight = false;
+    turnLeft = false;
+  }
+
+  Move();
+}
+
 void Button() { // Swaps btnState whenever the button is pressed
   while (digitalRead(4) == HIGH) {
     if (btnState) {
@@ -366,5 +381,6 @@ void Button() { // Swaps btnState whenever the button is pressed
     } else {
       btnState = true;
     }
+    time_last_called = millis();
   }
 }

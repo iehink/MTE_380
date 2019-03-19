@@ -95,8 +95,10 @@ int Navigate() { // Checks to verify we are on the right path towards the next p
     return -1;
   }
   
-  if (forward && !UpdateCourseLocation()) { // If we have identified a new tile, then check what we should do after this tile
-    return CURRENT_DIRECTION;
+  if (forward) {
+    if (UpdateCourseLocation()) { // If we have identified a new tile, then check what we should do after this tile
+      return CURRENT_DIRECTION;
+    }
   }
 
   // Determine row/column difference; note that any given next step will be a straight line from where we presently are.
@@ -126,8 +128,7 @@ int Navigate() { // Checks to verify we are on the right path towards the next p
 }
 
 bool UpdateCourseLocation(){ // Function to update the location on the course grid. Returns true if a new tile has been reached.
-  // Update distance we have travelled
-  ReadEncoders();
+  UpdateDistance();
   
   // Determine if we are now on a new tile
   if (abs(DISTANCE_NORTH) > TILE_DISTANCE) {
@@ -155,6 +156,22 @@ bool UpdateCourseLocation(){ // Function to update the location on the course gr
 }
 
 void UpdateDistance() { // Function to update DISTANCE_NORTH and DISTANCE_EAST as required
+  //ReadEncoders(); // possibly useful if they ever actually work?
+  double distanceTravelled = (millis() - time_last_called) / TIME_PER_MM;
+  time_last_called = millis();
+ 
+  if (CURRENT_DIRECTION == NORTH) {
+    DISTANCE_NORTH += distanceTravelled;
+  } else if (CURRENT_DIRECTION == EAST) {
+    DISTANCE_EAST += distanceTravelled;
+  } else if (CURRENT_DIRECTION == SOUTH) {
+    DISTANCE_NORTH -= distanceTravelled;
+  } else if (CURRENT_DIRECTION == WEST) {
+    DISTANCE_EAST -= distanceTravelled;
+  } else {
+    Serial.println("Error - no direction specified");
+  }
+  
   return;
 }
 

@@ -68,7 +68,8 @@ double CardinalToDegrees(int heading){ // Function to convert directional headin
 bool Head(int dir) { // Function to adjust heading #TODO: Update DISTANCE_NORTH and DISTANCE_EAST to reflect distance change when turning
   if (TurnGyro(CardinalToDegrees(dir))) {
     CURRENT_DIRECTION = dir; 
-    ResetEncoders(); 
+    //ResetEncoders(); 
+    time_last_called = millis();
     return true;
   }
 
@@ -148,18 +149,26 @@ void Turn (int degCW) { // Function to turn the device degCW degrees clockwise a
 
 bool TurnGyro (double heading) { // Takes degrees heading (with North as 0 degrees, heading CW, e.g. east is 90) and sets turning accordingly
   double angleDiff = heading - ReadYaw();
-  double TOL = 0.5;
+  double TOL = 2;
 
-  if ((angleDiff > 0 && angleDiff <= 180) || (angleDiff < -180)) {
+  if (angleDiff > 180) {
+    angleDiff -= 360;
+  } else if (angleDiff < -180) {
+    angleDiff = 360;
+  }
+
+  if (angleDiff > 0) {
     turnRight = true;
   } else {
     turnLeft = true;
   }
 
   if (angleDiff > -TOL && angleDiff < TOL) {
+    Serial.println("Stop all the things");
     Stop();
     turnRight = false;
     turnLeft = false;
+    time_last_called = millis(); // Reset timer when a turn is completed
     return true;
   }
 

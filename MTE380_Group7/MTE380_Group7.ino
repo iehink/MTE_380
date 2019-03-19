@@ -73,6 +73,8 @@ struct PathPoint* PATH_TAIL = NULL;
 
 double DISTANCE_NORTH, DISTANCE_EAST; // Distance based on center of nose of robot, as measured from the south-west corner of the current tile [mm].
 #define TILE_DISTANCE 304.8 // length of each tile (1 ft = 304.8mm) #TODO - update with actual measurements/testing
+double TIME_PER_MM = 3750.0/300.0; // ms/mm DO NOT DEFINE THIS - IT BREAKS EVERYTHING
+int time_last_called = 0; // variable to store the last time UpdateDistance() was called for the purposes of judging distance
 
 // Variable to note if we are in water or not
 bool inWater;
@@ -126,8 +128,8 @@ void setup() {
   STARTING_TILE = &COURSE[5][3];
   CURRENT_TILE = STARTING_TILE;
   CURRENT_DIRECTION = NORTH;
-  DISTANCE_NORTH = 200;
-  DISTANCE_EAST = 150;
+  DISTANCE_NORTH = 0;
+  DISTANCE_EAST = 0;
 }
 
 void loop() {
@@ -145,6 +147,8 @@ void loop() {
     //EncoderTurning();
     //TestStructureIDing();
     NavToTile();
+    //DistanceTest();
+    //BoxTest();
     //Test3();
     //SimpleDistanceSensorTest();
   }
