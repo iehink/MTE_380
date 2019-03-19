@@ -1,6 +1,6 @@
 // Define goal array and goal meanings
 bool GOAL[6] = {false, false, false, false, false, false}; // 0th array unused, array indices correspond to values listed below
-int PEOPLE = 1, LOST = 2, FOOD = 3, FIRE = 4, DELIVER = 5, POSSIBILITY = 6; //, NOTHING = 7; #TODO: implement nothing if determined useful
+int PEOPLE = 1, LOST = 2, FOOD = 3, FIRE = 4, DELIVER = 5, POSSIBILITY = 6, NONE = 7; 
 // Variable to keep track of where the people are
 struct Tile* peopleTile;
 
@@ -8,6 +8,13 @@ struct Tile* peopleTile;
 double WATER_THRESHOLD_ANGLE = 55, NOT_FLAT_THRESHOLD_ANGLE = 30, BUMP_ANGLE = 10; // degrees
 int notFlat;
 bool sandOrGravel;
+
+// Scanning globals
+double SIZE_ID_DIST = FRONT_TO_NOSE + 80; // Distance at which to begin scanning [mm]
+double right_scan_limit = 0, left_scan_limit = 0;
+bool scanning_complete = false, scanning = false;
+int scan_state = 0;
+double object_size = 0;
 
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * **************************************************** Goal-handling functions are below. ****************************************************
@@ -120,18 +127,81 @@ int CheckGoals(){ // Returns number of goals remaining to complete.
 
 // Function to search the current tile for any goal and identify what goal is. Returns TRUE if it found a goal and updates goal of tile as suitable. #TODO
 bool LookForGoal(){
-  if (Fiyah()) {
-    (*CURRENT_TILE).goal = FIRE;
+  if (!scanning && ReadDistanceFront() > SIZE_ID_DIST) {
+    forward = true;
+    return false;
+  } else {
+    forward = false;
+    
+    if (!scanning && Fiyah()) {
+      (*CURRENT_TILE).goal = FIRE;
+      return true;
+    } else {
+      ScanSize();
+      if (scanning_complete) {
+        if (object_size > 20) {
+          (*CURRENT_TILE).goal = PEOPLE;
+        } else if (object_size > 10) {
+          (*CURRENT_TILE).goal = LOST;
+        } else {
+          (*CURRENT_TILE).goal = NONE;
+        }
+
+        Serial.println(object_size); 
+        // Reset scanning globals
+        scanning = false;
+        scanning_complete = false; 
+        object_size = 0;
+
+        return true;
+      }
+    }
   }
-  /*  if (the fire sensor says there's fire) {
-   *    (*CURRENT_TILE).goal = FIRE;
-   *  }
-   *  ...
-   *  else {
-   *    (*CURRENT_TILE).goal = NOTHING; // Maybe?
-   *  }
-   *  etc.
-   */
+}
+
+void ScanSize() {
+  double heading = ReadYaw(), distance = ReadDistanceFront(), expectedDist = SIZE_ID_DIST / cos(PI/180*heading);
+  double TOL = 20; // [mm] tolerance on distance as compared to expected
+  scanning = true;
+
+  if (scan_state == 0) {
+    if (abs(distance - expectedDist) < TOL) {
+      TurnGyro(heading + 1);
+    } else {
+      turn_right = false;
+      right_scan_limit = abs(heading - CardinalToDegrees(CURRENT_DIRECTION));      
+      if (right_scan_limit > 180) {
+        right_scan_limit = abs(right_scan_limit - 360);
+      }
+      scan_state = 1;
+    }
+  } else if (scan_state == 1) {
+    if (TurnGyro(CardinalToDegrees(CURRENT_DIRECTION))){
+      scan_state = 2;
+    }
+  } else if (scan_state == 2) {
+    if (abs(distance - expectedDist) < TOL) {
+      TurnGyro(heading - 1);
+    } else {
+      turn_left = false;
+      left_scan_limit = abs(heading - CardinalToDegrees(CURRENT_DIRECTION));
+      if (left_scan_limit > 180) {
+        left_scan_limit = abs(left_scan_limit - 360);
+      }
+      scan_state = 3;
+    }
+  } else if (scan_state == 3) {
+    if (TurnGyro(CardinalToDegrees(CURRENT_DIRECTION))){
+      scan_state = 4;
+    }
+  }  else if (scan_state == 4) {
+    object_size = SIZE_ID_DIST * (tan(PI/180*left_scan_limit) + tan(PI/180*right_scan_limit));
+    scanning_complete = true;
+    scan_state = 0;
+  } else {
+    Serial.println("Error!");
+    scan_state = 0;
+  }
 }
 
 // Function to search a sand tile for food. Returns TRUE (and acknowledges food) if food is found. #TODO

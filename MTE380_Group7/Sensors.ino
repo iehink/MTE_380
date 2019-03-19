@@ -16,7 +16,6 @@ int encoder_left, encoder_right; // To track when the encoders receive pulses
 #define SHT_LOX_FRONT 26
 #define SHT_LOX_RIGHT 28
 
-#define FRONT_TO_NOSE 80
 #define LEFT_TO_EDGE 56
 #define RIGHT_TO_EDGE 60
 
@@ -179,7 +178,7 @@ double ReadYaw() {
 }
 
 bool Fiyah() { // Function to return whether or not the flame sensor is picking up fiyah
-  return true;
+  return false;
 }
 
 void ReadMPU(){

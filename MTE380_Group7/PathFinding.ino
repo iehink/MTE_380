@@ -20,8 +20,8 @@ void AddToPath(struct Tile* newTile){ // Function to add the next path point to 
 
 bool Center() { // Function to travel to the center of the current tile. Returns TRUE when the center has been reached.
   forward = false;
-  turnLeft = false;
-  turnRight = false;
+  turn_left = false;
+  turn_right = false;
   return true;
   double distN = 0, distE = 0;
   bool dirSatisfied = false;
@@ -167,11 +167,6 @@ void UpdateDistance() { // Function to update DISTANCE_NORTH and DISTANCE_EAST a
   //ReadEncoders(); // possibly useful if they ever actually work?
   double distanceTravelled = (millis() - time_last_called) / TIME_PER_MM;
   time_last_called = millis();
-  if (distanceTravelled > 100) {
-    Serial.println(distanceTravelled);
-    Serial.println(millis());
-    Serial.println(time_last_called);
-  }
  
   if (CURRENT_DIRECTION == NORTH) {
     DISTANCE_NORTH += distanceTravelled;

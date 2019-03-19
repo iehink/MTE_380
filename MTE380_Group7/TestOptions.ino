@@ -1,4 +1,12 @@
 int state = 0;
+
+void TestGoalSearching() {
+  if (LookForGoal()) {
+    Serial.println((*CURRENT_TILE).goal);
+    btnState = false;
+  }
+  Move();
+}
   
 void NavToTile(){ // Test tile selection + navigation
   if (state == 0) {
@@ -10,10 +18,14 @@ void NavToTile(){ // Test tile selection + navigation
 
   if (dir == CURRENT_DIRECTION || dir == -1) {
     forward = true;
-    turnLeft = false;
-    turnRight = false;
+    turn_left = false;
+    turn_right = false;
   } else if (dir == 0) {
-    Center();
+    if ((*CURRENT_TILE).goal == POSSIBILITY) {
+      
+    } else {
+      Center();
+    }
   } else {
     Head(dir);
   }
@@ -363,8 +375,8 @@ void DistanceTest() {
     UpdateDistance();
   } else {
     forward = false;
-    turnRight = false;
-    turnLeft = false;
+    turn_right = false;
+    turn_left = false;
   }
 
   Move();

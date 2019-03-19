@@ -14,8 +14,6 @@ int CLOCKWISE = 1, COUNTER_CLOCKWISE = 0;
 int MAX_SPEED = 250;
 int TURN_SPEED = 230;
 
-bool turnLeft = false, turnRight = false, forward = false;
-
 
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * ****************************************************** Movement functions are below. ******************************************************
@@ -92,9 +90,9 @@ void InitMotors() {
 }
 
 void Move() { // Function to act on the current state of global variables
-  if (turnRight) {
+  if (turn_right) {
     TurnRight(TURN_SPEED);
-  } else if (turnLeft) {
+  } else if (turn_left) {
     TurnLeft (TURN_SPEED);
   } else if (forward) {
     Forward (MAX_SPEED);
@@ -148,26 +146,32 @@ void Turn (int degCW) { // Function to turn the device degCW degrees clockwise a
 }
 
 bool TurnGyro (double heading) { // Takes degrees heading (with North as 0 degrees, heading CW, e.g. east is 90) and sets turning accordingly
+  // Correct input if out of 360 deg heading
+  if (heading > 360) {
+    heading -= 360;
+  } else if (heading < -360) {
+    heading += 360;
+  }
+  
   double angleDiff = heading - ReadYaw();
-  double TOL = 2;
+  double TOL = 0.5;
 
   if (angleDiff > 180) {
     angleDiff -= 360;
   } else if (angleDiff < -180) {
-    angleDiff = 360;
+    angleDiff += 360;
   }
 
   if (angleDiff > 0) {
-    turnRight = true;
+    turn_right = true;
   } else {
-    turnLeft = true;
+    turn_left = true;
   }
 
   if (angleDiff > -TOL && angleDiff < TOL) {
-    Serial.println("Stop all the things");
     Stop();
-    turnRight = false;
-    turnLeft = false;
+    turn_right = false;
+    turn_left = false;
     time_last_called = millis(); // Reset timer when a turn is completed
     return true;
   }

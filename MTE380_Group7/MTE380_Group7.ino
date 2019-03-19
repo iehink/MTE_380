@@ -76,11 +76,16 @@ double DISTANCE_NORTH, DISTANCE_EAST; // Distance based on center of nose of rob
 double TIME_PER_MM = 3750.0/300.0; // ms/mm DO NOT DEFINE THIS - IT BREAKS EVERYTHING
 unsigned long time_last_called = 0; // variable to store the last time UpdateDistance() was called for the purposes of judging distance
 
+// Movement commands
+bool turn_left = false, turn_right = false, forward = false;
+
 // Variable to note if we are in water or not
 bool inWater;
 
 #define TEST true
 #define LOOP_RUNTIME 20 // milliseconds
+
+#define FRONT_TO_NOSE 80
 
 bool btnState = false;
 
@@ -146,7 +151,8 @@ void loop() {
     //EncoderHighLow();
     //EncoderTurning();
     //TestStructureIDing();
-    NavToTile();
+    //NavToTile();
+    TestGoalSearching();
     //DistanceTest();
     //BoxTest();
     //Test3();
