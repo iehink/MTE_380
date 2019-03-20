@@ -8,8 +8,12 @@ void NavToTile(){ // Test tile selection + navigation
   }
 
   int dir = Navigate();
-
-  if (dir == CURRENT_DIRECTION || dir == -1) {
+  Serial.println(dir);
+  if (dir == -1) {
+    forward = false;
+    turn_left = false;
+    turn_right = false;
+  } else if (dir == CURRENT_DIRECTION) {
     forward = true;
   } else if (dir == 0) {
     forward = false;
@@ -298,11 +302,15 @@ void TravelTest() {
   forward = true;
 
   if (scanning_complete) {
+    Serial.print("Length: ");
     Serial.println(len);
     forward = false;
     btnState = false;
     scanning_complete = false;
   }
+  Serial.print(left_dist);
+  Serial.print(" is the current scan, this is how far away we think it is: ");
+  Serial.println(object_dist);
   /*if (scanning_complete) {
     Serial.println(IDGoal(len));
     Stop(); 

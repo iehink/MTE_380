@@ -50,13 +50,13 @@ void Forward(int spd) {
 }
 
 double CardinalToDegrees(int heading){ // Function to convert directional heading (NORTH, SOUTH, etc) to degrees heading manageable by gyroscope
-  if (heading == NORTH) {
+  if (heading == STARTING_DIRECTION) {
     return 0; 
-  } else if (heading == EAST) {
+  } else if (heading == (STARTING_DIRECTION+1)%4) {
     return 90;
-  } else if (heading == SOUTH) {
+  } else if (heading == (STARTING_DIRECTION+2)%4) {
     return 180;
-  } else if (heading == WEST) {
+  } else if (heading == (STARTING_DIRECTION+3)%4) {
     return 270;
   } else {
     return -1;

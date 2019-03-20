@@ -319,6 +319,19 @@ void UpdateWallDistance(){
   double distEastToWall = (5 - (*CURRENT_TILE).col + 1) * TILE_DISTANCE - DISTANCE_EAST;
   double distWestToWall = ((*CURRENT_TILE).col) * TILE_DISTANCE + DISTANCE_EAST;
   double distSouthToWall = (5 - (*CURRENT_TILE).row) * TILE_DISTANCE + DISTANCE_NORTH;
+
+  if (distNorthToWall > 800) distNorthToWall = -1;
+  if (distEastToWall > 800) distEastToWall = -1;
+  if (distSouthToWall > 800) distSouthToWall = -1;
+  if (distWestToWall > 800) distWestToWall = -1;
+
+  //Serial.print(distNorthToWall);
+  //Serial.print(", ");
+  //Serial.print(distEastToWall);
+  //Serial.print(", ");
+  //Serial.print(distSouthToWall);
+  //Serial.print(", ");
+  //Serial.println(distWestToWall);
   
   if (CURRENT_DIRECTION == NORTH) {
     front_to_wall = distNorthToWall;

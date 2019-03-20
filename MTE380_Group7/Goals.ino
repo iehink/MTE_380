@@ -14,12 +14,14 @@ double SIZE_ID_DIST = FRONT_TO_NOSE + 80; // Distance at which to begin scanning
 double right_scan_limit = 0, left_scan_limit = 0;
 bool scanning_complete = false, scanning = false;
 int scan_off_count = 0, scan_count = 0;
+int left_scan_off_count = 0, front_scan_off_count = 0, right_scan_off_count = 0;
 int scan_state = 0;
 int scan_dir = 0; // 1 = right, 2 = left
 double object_size = 0, object_dist = 0;
 long unsigned int init_time_scan = millis();
 
 #define FAN_PWM 6
+#define WALL_TOL 100
 
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * **************************************************** Goal-handling functions are below. ****************************************************
@@ -236,10 +238,9 @@ int IDGoal(double objLen) {
 
 double FindLength() { // Uses left TOF to assess size of object being passed
   double TOL = 50, objLen = 0; 
-  int SCAN_TOL = 50;
+  int SCAN_TOL = 5;
 
   if (scan_state == 0) {
-    object_dist = 0;
     /*if (abs(right_dist - right_to_wall) > TOL) {
       if (scan_dir == 2) {
         scan_count = 0;
@@ -281,12 +282,8 @@ double FindLength() { // Uses left TOF to assess size of object being passed
     }
     scan_count ++;
   } else if (scan_state == 2) {
-    if (scan_count <  scan_off_count) {
-      scan_count = 0;
-      scan_off_count = 0;
-      scan_state = 0;
-      object_dist = 0;
-    } else if (scan_off_count > SCAN_TOL) {
+    scan_count++;
+    if (scan_off_count > SCAN_TOL) {
       objLen = (millis() - init_time_scan) / TIME_PER_MM;
       scan_count = 0;
       scan_off_count = 0;
@@ -296,8 +293,13 @@ double FindLength() { // Uses left TOF to assess size of object being passed
     } else if (abs(left_dist - object_dist) > TOL || left_dist == -1) {
       scan_off_count++;
     } else {
-      scan_count++;
       object_dist = (scan_count - 1.0)/(double)scan_count * object_dist + left_dist/(double)scan_count;
+    }
+    if (scan_count <= scan_off_count) {
+      scan_count = 0;
+      scan_off_count = 0;
+      scan_state = 0;
+      object_dist = 0;
     }
   }
   return -1;
@@ -314,4 +316,33 @@ void InitFan() {
 
 void RunFan(int fanSpeed) {
   analogWrite(FAN_PWM, fanSpeed);
+}
+
+bool ObjectOnTile() {
+  if (left_dist < left_to_wall - WALL_TOL || left_dist > left_to_wall + WALL_TOL) left_scan_off_count++;
+  else left_scan_off_count = 0;
+  if (front_dist < front_to_wall - WALL_TOL || front_dist > front_to_wall + WALL_TOL) front_scan_off_count++;
+  else front_scan_off_count = 0;
+  if (right_dist < right_to_wall - WALL_TOL || right_dist > right_to_wall + WALL_TOL) right_scan_off_count++;
+  else right_scan_off_count = 0;
+
+  if (left_scan_off_count > 7) {
+    //Serial.println((int)(left_dist/300.0));
+    /*
+    if (CURRENT_DIRECTION == NORTH) {
+      COURSE[(*CURRENT_TILE).row - (int)(left_dist/300.0)][(*CURRENT_TILE).col].goal = 1;
+    } else if (CURRENT_DIRECTION == EAST) {
+      COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col + (int)(left_dist/300.0)].goal = 1;
+    } else if (CURRENT_DIRECTION == SOUTH) {
+      COURSE[(*CURRENT_TILE).row + (int)(left_dist/300.0)][(*CURRENT_TILE).col].goal = 1;
+    } else if (CURRENT_DIRECTION == WEST) {
+      COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col - (int)(left_dist/300.0)].goal = 1;
+    }*/
+  }
+  if (front_scan_off_count > 7) {
+    //Serial.println((int)(front_dist/300.0));
+  }
+  if (right_scan_off_count > 7) {
+    //Serial.println((int)(right_dist/300.0));
+  }
 }

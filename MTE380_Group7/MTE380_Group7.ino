@@ -46,13 +46,14 @@ struct PathPoint {
  
 // Pathfinding globals
 int CURRENT_DIRECTION; // To track grid location/direction
+int STARTING_DIRECTION;
 struct Tile* CURRENT_TILE; // Pointer to tile in COURSE array that we are currently on
 struct Tile* STARTING_TILE; // Pointer to tile in COURSE array that we started on
 // Directional constants; KEEP THESE THE SAME BECAUSE THEIR VALUES ARE USED FOR MATH
-#define NORTH 1
-#define EAST 2
-#define SOUTH 3
-#define WEST 4
+#define NORTH 0
+#define EAST 1
+#define SOUTH 2
+#define WEST 3
 
 // Define the course and tile meanings
 Tile COURSE[6][6];
@@ -104,10 +105,19 @@ bool btnState = false;
 void InitMotors();
 void InitEncoders();
 void InitGyro();
+void InitDistanceSensors();
+void InitMPU();
+void InitFlame();
 void InitTileID();
 double ReadPitch();
 double ReadYaw();
 bool PastCenter();
+void ReadMPU();
+void ReadTOF();
+void Stop();
+void Button();
+void NavToTile();
+void AddToPath(struct Tile* newTile);
 
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * ******************************************************** Running code begins below. ********************************************************
@@ -156,9 +166,10 @@ void setup() {
   COURSE[2][5].type = WATER;
 
   // Define starting position #TODO - update to actual expected starting position
-  STARTING_TILE = &COURSE[1][0];
+  STARTING_TILE = &COURSE[0][3];
   CURRENT_TILE = STARTING_TILE;
-  CURRENT_DIRECTION = NORTH;
+  CURRENT_DIRECTION = EAST;
+  STARTING_DIRECTION = EAST;
   DISTANCE_NORTH = 0;
   DISTANCE_EAST = 0;
 }
@@ -167,6 +178,7 @@ void loop() {
   int loopStartTime = millis();
   ReadMPU();
   ReadTOF();
+  ObjectOnTile();
   //struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
   
   while(!btnState) {
@@ -181,6 +193,9 @@ void loop() {
     //EncoderTurning();
     //TestStructureIDing();
     NavToTile();
+    //Serial.println(CURRENT_DIRECTION);
+    //Serial.println((*CURRENT_TILE).col);
+    //Serial.println((*CURRENT_TILE).col);
     //TestGoalSearching();
     //TravelTest();
     //DistanceTest();
@@ -236,7 +251,7 @@ void ProductionLoop(){
    * 2. Check for objects
    * 3. Check path
    * 4. Check straightness of path
-   */
+   *//*
   // Travel around the course as required
   Navigate();
   
@@ -250,5 +265,5 @@ void ProductionLoop(){
   // Check surroundings if we are not in water
   if (!inWater) {
     //Scan();
-  }
+  }*/
 }
