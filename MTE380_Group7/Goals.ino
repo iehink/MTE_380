@@ -21,7 +21,7 @@ double object_size = 0, object_dist = 0;
 long unsigned int init_time_scan = millis();
 
 #define FAN_PWM 6
-#define WALL_TOL 100
+#define WALL_TOL 120
 
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * **************************************************** Goal-handling functions are below. ****************************************************
@@ -319,15 +319,28 @@ void RunFan(int fanSpeed) {
 }
 
 bool ObjectOnTile() {
-  if (left_dist < left_to_wall - WALL_TOL || left_dist > left_to_wall + WALL_TOL) left_scan_off_count++;
+  Serial.print("LEFT: ");
+  Serial.print(left_dist);
+  Serial.print(", FRONT: ");
+  Serial.print(front_dist);
+  Serial.print(", RIGHT: ");
+  Serial.println(right_dist);
+  
+  if ((left_dist < left_to_wall - WALL_TOL || left_dist > left_to_wall + WALL_TOL) && left_dist != -1) left_scan_off_count++;
   else left_scan_off_count = 0;
-  if (front_dist < front_to_wall - WALL_TOL || front_dist > front_to_wall + WALL_TOL) front_scan_off_count++;
+  if ((front_dist < front_to_wall - WALL_TOL || front_dist > front_to_wall + WALL_TOL) && front_dist != -1) front_scan_off_count++;
   else front_scan_off_count = 0;
-  if (right_dist < right_to_wall - WALL_TOL || right_dist > right_to_wall + WALL_TOL) right_scan_off_count++;
+  if ((right_dist < right_to_wall - WALL_TOL || right_dist > right_to_wall + WALL_TOL) && right_dist != -1) right_scan_off_count++;
   else right_scan_off_count = 0;
 
-  if (left_scan_off_count > 7) {
-    //Serial.println((int)(left_dist/300.0));
+  if (left_scan_off_count > 15) {
+    Serial.print("LEFT: ");
+    Serial.println(((int)(left_dist/300.0))+1);
+    Serial.print("CROW: ");
+    Serial.println((*CURRENT_TILE).row);
+    Serial.print("CCOL: ");
+    Serial.println((*CURRENT_TILE).col);
+    left_scan_off_count = 0;
     /*
     if (CURRENT_DIRECTION == NORTH) {
       COURSE[(*CURRENT_TILE).row - (int)(left_dist/300.0)][(*CURRENT_TILE).col].goal = 1;
@@ -340,9 +353,16 @@ bool ObjectOnTile() {
     }*/
   }
   if (front_scan_off_count > 7) {
+    //Serial.print("FRONT: ");
     //Serial.println((int)(front_dist/300.0));
   }
-  if (right_scan_off_count > 7) {
-    //Serial.println((int)(right_dist/300.0));
+  if (right_scan_off_count > 15) {
+    Serial.print("RIGHT: ");
+    Serial.println(((int)(right_dist/300.0))+1);
+    Serial.print("CROW: ");
+    Serial.println((*CURRENT_TILE).row);
+    Serial.print("CCOL: ");
+    Serial.println((*CURRENT_TILE).col);
+    right_scan_off_count = 0;
   }
 }

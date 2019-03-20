@@ -240,7 +240,7 @@ void loop() {
     } */
   }
   int delayTime = (LOOP_RUNTIME) - (millis() - loopStartTime);
-  Serial.println(delayTime);
+  //Serial.println(delayTime);
   if (delayTime > 0) {
     delay(delayTime);
   }
