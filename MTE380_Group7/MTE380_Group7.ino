@@ -60,7 +60,7 @@ Tile COURSE[6][6];
 #define FLAT 1
 #define SAND 2
 #define GRAVEL 3
-#define WATER 4
+#define WATER 99
 
 /* Path planning will be optimized by:
  * 1) Taking the fewest number of turns (since that is the most prone to throw our trajectory off), and
@@ -156,7 +156,7 @@ void setup() {
   COURSE[2][5].type = WATER;
 
   // Define starting position #TODO - update to actual expected starting position
-  STARTING_TILE = &COURSE[2][5];
+  STARTING_TILE = &COURSE[1][0];
   CURRENT_TILE = STARTING_TILE;
   CURRENT_DIRECTION = NORTH;
   DISTANCE_NORTH = 0;
@@ -180,9 +180,9 @@ void loop() {
     //EncoderHighLow();
     //EncoderTurning();
     //TestStructureIDing();
-    //NavToTile();
+    NavToTile();
     //TestGoalSearching();
-    TravelTest();
+    //TravelTest();
     //DistanceTest();
     //BoxTest();
     //Test3();

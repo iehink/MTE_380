@@ -193,6 +193,215 @@ void PathPointReached(){ // Function to pop the target off the list
   delete temp;
 }
 
+
+void AdvancedPath(struct Tile* target) {
+    // If the target tile is already being targeted, leave the path alone and log to console for testing purposes #TODO: remove for production
+  if ((*target).pathTarget) {
+    Serial.print("Attempted to target same tile again");
+    return;
+  }
+  
+  // Store that the target tile is being targeted
+  (*target).pathTarget = true;
+  
+  // Determine the tile it will be travelling from
+  struct Tile* prevTile;
+  if (PATH_TAIL == NULL) {
+    prevTile = CURRENT_TILE;
+    AddToPath(CURRENT_TILE); // Ensure alignment to center of tile before we begin travelling to the target
+  } else {
+    prevTile = PATH_TAIL->tile;
+  }
+
+  struct Tile* rowFirstPath[11];
+  struct Tile* colFirstPath[11];
+  int rowIndex = 0, colIndex = 0;
+  int rowFirst = 0, colFirst = 0;
+  struct Tile* tile;
+
+  int avoidLeft = 0, avoidRight = 0;
+
+  int rowDiff = (*CURRENT_TILE).row - (*target).row;
+  int colDiff = (*CURRENT_TILE).col - (*target).col;
+
+  //SPECIAL CASE OF WATER IS YOUR CORNER TILE
+
+  // Determine path for considering the row traversal first 
+  if (rowDiff > 0 && colDiff > 0) { // If you need to go NW
+    // Traverse row first
+    for (int y = (*CURRENT_TILE).col; y >= (*target).col; y--) {
+      // Path along the row
+      if (COURSE[(*CURRENT_TILE).row][y].type == WATER) {
+        // Add the old tile to the row traversal path to make it the turning point
+        rowFirstPath[rowIndex] = &COURSE[(*CURRENT_TILE).row][y + 1];
+        rowIndex++;
+
+        for (int i = -1; i <= 1; i++) {
+          avoidLeft += COURSE[(*CURRENT_TILE).row + 1][y - i].type;
+          avoidRight += COURSE[(*CURRENT_TILE).row - 1][y - i].type;
+        }
+
+        if (avoidLeft < avoidRight) { // Skirt the water to the left
+          rowFirst += avoidLeft;
+          rowFirstPath[rowIndex] = &COURSE[(*CURRENT_TILE).row + 1][y + 1];
+          rowIndex++;
+          rowFirstPath[rowIndex] = &COURSE[(*CURRENT_TILE).row + 1][y];
+          rowIndex++;
+          rowFirstPath[rowIndex] = &COURSE[(*CURRENT_TILE).row + 1][y-1];
+          rowIndex++;
+          rowFirstPath[rowIndex] = &COURSE[(*CURRENT_TILE).row][y-1];
+          rowIndex++;
+        } else { // Skirt the water to the right
+          rowFirst += avoidLeft;
+          rowFirstPath[rowIndex] = &COURSE[(*CURRENT_TILE).row - 1][y + 1];
+          rowIndex++;
+          rowFirstPath[rowIndex] = &COURSE[(*CURRENT_TILE).row - 1][y];
+          rowIndex++;
+          rowFirstPath[rowIndex] = &COURSE[(*CURRENT_TILE).row - 1][y-1];
+          rowIndex++;
+          rowFirstPath[rowIndex] = &COURSE[(*CURRENT_TILE).row][y-1];
+          rowIndex++;
+        }
+
+        avoidLeft = 0;
+        avoidRight = 0;
+      } else {
+        rowFirst += COURSE[(*CURRENT_TILE).row][y].type;
+      }
+    }
+
+    // Path along the column
+    for (int x = (*CURRENT_TILE).row; x >= (*target).row; x--) {
+      if (COURSE[x][(*target).col].type == WATER) { // Row first consideration
+        // Add the old tile to the row traversal path to make it the turning point
+        rowFirstPath[rowIndex] = &COURSE[x-1][(*target).col];
+        rowIndex++;
+
+        for (int i = -1; i <= 1; i++) {
+          avoidLeft += COURSE[x+i][(*target).col - 1].type;
+          avoidRight += COURSE[x+i][(*target).col + 1].type;
+        }
+
+        if (avoidLeft < avoidRight) { // Skirt the water to the left
+          rowFirst += avoidLeft;
+          rowFirstPath[rowIndex] = &COURSE[x+1][(*target).col - 1];
+          rowIndex++;
+          rowFirstPath[rowIndex] = &COURSE[x][(*target).col - 1];
+          rowIndex++;
+          rowFirstPath[rowIndex] = &COURSE[x-1][(*target).col - 1];
+          rowIndex++;
+          rowFirstPath[rowIndex] = &COURSE[x-1][(*target).col];
+          rowIndex++;
+        } else { // Skirt the water to the right
+          rowFirst += avoidRight;
+          rowFirstPath[rowIndex] = &COURSE[x+1][(*target).col + 1];
+          rowIndex++;
+          rowFirstPath[rowIndex] = &COURSE[x][(*target).col + 1];
+          rowIndex++;
+          rowFirstPath[rowIndex] = &COURSE[x-1][(*target).col + 1];
+          rowIndex++;
+          rowFirstPath[rowIndex] = &COURSE[x-1][(*target).col];
+          rowIndex++;
+        }
+
+        avoidLeft = 0;
+        avoidRight = 0;
+      } else {
+        rowFirst += COURSE[x][(*CURRENT_TILE).col].type;
+      }
+    }
+
+
+    // Traverse column first option
+    for (int x = (*CURRENT_TILE).row; x >= (*target).row; x--) { // Column sum
+      if (COURSE[x][(*CURRENT_TILE).col].type == WATER) { // Column first consideration
+        // Add the old tile to the row traversal path to make it the turning point
+        colFirstPath[colIndex] = &COURSE[x-1][(*CURRENT_TILE).col];
+        colIndex++;
+
+        for (int i = -1; i <= 1; i++) {
+          avoidLeft += COURSE[x+i][(*CURRENT_TILE).col - 1].type;
+          avoidRight += COURSE[x+i][(*CURRENT_TILE).col + 1].type;
+        }
+
+        if (avoidLeft < avoidRight) { // Skirt the water to the left
+          colFirst += avoidLeft;
+          colFirstPath[colIndex] = &COURSE[x+1][(*CURRENT_TILE).col - 1];
+          colIndex++;
+          colFirstPath[colIndex] = &COURSE[x][(*CURRENT_TILE).col - 1];
+          colIndex++;
+          colFirstPath[colIndex] = &COURSE[x-1][(*CURRENT_TILE).col - 1];
+          colIndex++;
+          colFirstPath[colIndex] = &COURSE[x-1][(*CURRENT_TILE).col];
+          colIndex++;
+        } else { // Skirt the water to the right
+          colFirst += avoidRight;
+          colFirstPath[colIndex] = &COURSE[x+1][(*CURRENT_TILE).col + 1];
+          colIndex++;
+          colFirstPath[colIndex] = &COURSE[x][(*CURRENT_TILE).col + 1];
+          colIndex++;
+          colFirstPath[colIndex] = &COURSE[x-1][(*CURRENT_TILE).col + 1];
+          colIndex++;
+          colFirstPath[colIndex] = &COURSE[x-1][(*CURRENT_TILE).col];
+          colIndex++;
+        }
+
+        avoidLeft = 0;
+        avoidRight = 0;
+      } else {
+        colFirst += COURSE[x][(*CURRENT_TILE).col].type;
+      }
+    }
+
+    // Path along the row
+    for (int y = (*CURRENT_TILE).col; y > (*target).col; y--) {
+      // Path along the row
+      if (COURSE[(*target).row][y].type == WATER) {
+        // Add the old tile to the row traversal path to make it the turning point
+        colFirstPath[colIndex] = &COURSE[(*target).row][y + 1];
+        colIndex++;
+
+        for (int i = -1; i <= 1; i++) {
+          avoidLeft += COURSE[(*target).row + 1][y - i].type;
+          avoidRight += COURSE[(*target).row - 1][y - i].type;
+        }
+
+        if (avoidLeft < avoidRight) { // Skirt the water to the left
+          colFirst += avoidLeft;
+          colFirstPath[colIndex] = &COURSE[(*target).row + 1][y + 1];
+          colIndex++;
+          colFirstPath[colIndex] = &COURSE[(*target).row + 1][y];
+          colIndex++;
+          colFirstPath[colIndex] = &COURSE[(*target).row + 1][y-1];
+          colIndex++;
+          colFirstPath[colIndex] = &COURSE[(*target).row][y-1];
+          colIndex++;
+        } else { // Skirt the water to the right
+          colFirst += avoidLeft;
+          colFirstPath[colIndex] = &COURSE[(*target).row - 1][y + 1];
+          colIndex++;
+          colFirstPath[colIndex] = &COURSE[(*target).row - 1][y];
+          colIndex++;
+          colFirstPath[colIndex] = &COURSE[(*target).row - 1][y-1];
+          colIndex++;
+          colFirstPath[colIndex] = &COURSE[(*target).row][y-1];
+          colIndex++;
+        }
+
+        avoidLeft = 0;
+        avoidRight = 0;
+      } else {
+        colFirst += COURSE[(*target).row][y].type;
+      }
+    }
+    
+  }
+}
+
+void PathUpdate() {
+  
+}
+
 void SelectPath(struct Tile* target){ // Function to determine the optimal path to a given target tile
   // If the target tile is already being targeted, leave the path alone and log to console for testing purposes #TODO: remove for production
   if ((*target).pathTarget) {
@@ -205,6 +414,7 @@ void SelectPath(struct Tile* target){ // Function to determine the optimal path 
   
   // Determine the tile it will be travelling from
   struct Tile* prevTile;
+  bool avoidingTile = false; // indicator that we're going to need to avoid a tile
   
   if (PATH_TAIL == NULL) {
     prevTile = CURRENT_TILE;
@@ -219,6 +429,8 @@ void SelectPath(struct Tile* target){ // Function to determine the optimal path 
     return;
   } else { // determine potential corners and calculate best path
     struct Tile* corner[2];
+    struct Tile* path1[11];
+    struct Tile* path2[11];
     corner[0] = &COURSE[(*target).row][(*prevTile).col];
     corner[1] = &COURSE[(*prevTile).row][(*target).col];
     int total[2] = {0,0};
@@ -242,9 +454,23 @@ void SelectPath(struct Tile* target){ // Function to determine the optimal path 
         colEnd = (*target).col;
       }
 
+      int type = 0;
+      
       //Sum path option
       for (int x = rowStart; x < rowEnd; x++) {
-         total[i] += COURSE[x][(*target).col].type;
+        type = COURSE[x][(*target).col].type;
+        if (type == WATER) {
+          int sideA = 0, sideB = 0;
+          for (int i = 0; i < 3; i++) {
+            sideA = COURSE[x+1][(*target).col+i].type;
+            sideB = COURSE[x-1][(*target).col+i].type;
+          }
+          if (sideA < sideB) {
+            
+          }
+        } else {
+          total[i] += type;
+        }
       }
       for (int y = colStart; y < colEnd; y++) {
          total[i] += COURSE[(*target).row][y].type;
