@@ -79,7 +79,7 @@ unsigned long time_last_called = 0; // variable to store the last time UpdateDis
 bool turn_left = false, turn_right = false, forward = false;
 
 // Distance sensor readings
-double left_dist = 0, right_dist = 0, front_dist = 0;
+double left_dist = -1, right_dist = -1, front_dist = -1;
 double right_to_wall = 0, left_to_wall = 0, front_to_wall = 0; // The expected distance to the walls
 
 // Structure dimensions
