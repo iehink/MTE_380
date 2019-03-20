@@ -50,10 +50,10 @@ int STARTING_DIRECTION;
 struct Tile* CURRENT_TILE; // Pointer to tile in COURSE array that we are currently on
 struct Tile* STARTING_TILE; // Pointer to tile in COURSE array that we started on
 // Directional constants; KEEP THESE THE SAME BECAUSE THEIR VALUES ARE USED FOR MATH
-#define NORTH 0
-#define EAST 1
-#define SOUTH 2
-#define WEST 3
+#define NORTH 1
+#define EAST 2
+#define SOUTH 3
+#define WEST 4
 
 // Define the course and tile meanings
 Tile COURSE[6][6];
@@ -168,8 +168,8 @@ void setup() {
   // Define starting position #TODO - update to actual expected starting position
   STARTING_TILE = &COURSE[5][4];
   CURRENT_TILE = STARTING_TILE;
-  CURRENT_DIRECTION = NORTH;
   STARTING_DIRECTION = NORTH;
+  CURRENT_DIRECTION = STARTING_DIRECTION;
   DISTANCE_NORTH = 0;
   DISTANCE_EAST = 0;
 }
@@ -178,7 +178,7 @@ void loop() {
   int loopStartTime = millis();
   ReadMPU();
   ReadTOF();
-  ObjectOnTile();
+  //ObjectOnTile();
   //struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
   
   while(!btnState) {

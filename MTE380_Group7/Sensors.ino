@@ -171,7 +171,7 @@ double ReadRoll() {
 
 double ReadYaw() {
   // Convert to deg CW 
-  double yaw = -gyro_yaw;
+  double yaw = -gyro_yaw + STARTING_DIRECTION * 90;
   while (yaw < 0) {
     yaw += 360;
   }

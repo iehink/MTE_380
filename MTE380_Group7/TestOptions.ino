@@ -7,7 +7,11 @@ void NavToTile(){ // Test tile selection + navigation
     AdvancedPath(&COURSE[0][0]);
     state = 1;
   }
-
+  
+  Serial.print((*CURRENT_TILE).row);
+  Serial.print(" ");
+  Serial.println((*CURRENT_TILE).col);
+  
   int dir = Navigate();
   //Serial.println(dir);
   if (dir == -1) {
