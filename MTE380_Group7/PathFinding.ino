@@ -134,6 +134,7 @@ int Navigate() { // Checks to verify we are on the right path towards the next p
 }
 
 bool UpdateCourseLocation(){ // Function to update the location on the course grid. Returns true if a new tile has been reached.
+  bool return_val = false;
   UpdateDistance();
   
   // Determine if we are now on a new tile
@@ -141,24 +142,27 @@ bool UpdateCourseLocation(){ // Function to update the location on the course gr
     if (CURRENT_DIRECTION == NORTH) {
       CURRENT_TILE = &COURSE[(*CURRENT_TILE).row - 1][(*CURRENT_TILE).col];
       DISTANCE_NORTH -= TILE_DISTANCE;
-      return true;
+      return_val = true;
     } else if (CURRENT_DIRECTION == SOUTH) {
       CURRENT_TILE = &COURSE[(*CURRENT_TILE).row + 1][(*CURRENT_TILE).col];
       DISTANCE_NORTH += TILE_DISTANCE;
-      return true;
+      return_val = true;
     }
   } else if (abs(DISTANCE_EAST) > TILE_DISTANCE) {
     if (CURRENT_DIRECTION == EAST) {
       CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col + 1];
       DISTANCE_EAST -= TILE_DISTANCE;
-      return true;
+      return_val = true;
     } else if (CURRENT_DIRECTION == WEST) {
       CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col - 1];
       DISTANCE_EAST += TILE_DISTANCE;
-      return true;
+      return_val = true;
     }
   } 
-  return false;
+  if (return_val) {
+    temporary_stop = true;
+  }
+  return return_val;
 }
 
 void UpdateDistance() { // Function to update DISTANCE_NORTH and DISTANCE_EAST as required
@@ -229,8 +233,8 @@ void AdvancedPath(struct Tile* target) {
 
   //SPECIAL CASE OF WATER IS YOUR CORNER TILE
 
-  Serial.println(rowDiff);
-  Serial.println(colDiff);
+  //Serial.println(rowDiff);
+  //Serial.println(colDiff);
 
   // Determine path for considering the row traversal first 
   if (rowDiff > 0 && colDiff > 0) { // If you need to go NW

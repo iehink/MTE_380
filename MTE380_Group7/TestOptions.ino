@@ -14,7 +14,17 @@ void NavToTile(){ // Test tile selection + navigation
   
   int dir = Navigate();
   //Serial.println(dir);
-  if (dir == -1) {
+  if (temporary_stop) {
+    forward = false;
+    turn_left = false;
+    turn_right = false;
+    if (temporary_stop_counter > 30)
+    {
+      temporary_stop = false;
+      temporary_stop_counter = 0;
+    }
+    temporary_stop_counter++;
+  } else if (dir == -1) {
     forward = false;
     turn_left = false;
     turn_right = false;

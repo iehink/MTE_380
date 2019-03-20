@@ -319,13 +319,6 @@ void RunFan(int fanSpeed) {
 }
 
 bool ObjectOnTile() {
-  Serial.print("LEFT: ");
-  Serial.print(left_dist);
-  Serial.print(", FRONT: ");
-  Serial.print(front_dist);
-  Serial.print(", RIGHT: ");
-  Serial.println(right_dist);
-  
   if ((left_dist < left_to_wall - WALL_TOL || left_dist > left_to_wall + WALL_TOL) && left_dist != -1) left_scan_off_count++;
   else left_scan_off_count = 0;
   if ((front_dist < front_to_wall - WALL_TOL || front_dist > front_to_wall + WALL_TOL) && front_dist != -1) front_scan_off_count++;
@@ -334,23 +327,20 @@ bool ObjectOnTile() {
   else right_scan_off_count = 0;
 
   if (left_scan_off_count > 15) {
-    Serial.print("LEFT: ");
-    Serial.println(((int)(left_dist/300.0))+1);
-    Serial.print("CROW: ");
-    Serial.println((*CURRENT_TILE).row);
-    Serial.print("CCOL: ");
-    Serial.println((*CURRENT_TILE).col);
     left_scan_off_count = 0;
-    /*
     if (CURRENT_DIRECTION == NORTH) {
-      COURSE[(*CURRENT_TILE).row - (int)(left_dist/300.0)][(*CURRENT_TILE).col].goal = 1;
+      COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col - (((int)(left_dist/300.0))+1)].goal = 1;
     } else if (CURRENT_DIRECTION == EAST) {
-      COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col + (int)(left_dist/300.0)].goal = 1;
+      COURSE[(*CURRENT_TILE).row + (((int)(left_dist/300.0))+1)][(*CURRENT_TILE).col].goal = 1;
+      Serial.print("ROW: ");
+      Serial.print((*CURRENT_TILE).row + (((int)(left_dist/300.0))+1));
+      Serial.print(", COL: ");
+      Serial.println((*CURRENT_TILE).col);
     } else if (CURRENT_DIRECTION == SOUTH) {
-      COURSE[(*CURRENT_TILE).row + (int)(left_dist/300.0)][(*CURRENT_TILE).col].goal = 1;
+      COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col + (((int)(left_dist/300.0))+1)].goal = 1;
     } else if (CURRENT_DIRECTION == WEST) {
-      COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col - (int)(left_dist/300.0)].goal = 1;
-    }*/
+      COURSE[(*CURRENT_TILE).row - (((int)(left_dist/300.0))+1)][(*CURRENT_TILE).col].goal = 1;
+    }
   }
   if (front_scan_off_count > 7) {
     //Serial.print("FRONT: ");
