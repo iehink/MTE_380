@@ -2,12 +2,16 @@ int state = 0;
   
 void NavToTile(){ // Test tile selection + navigation
   if (state == 0) {
-    SelectPath(&COURSE[4][3]);
-    COURSE[1][2].goal = POSSIBILITY;
-    //AdvancedPath(&COURSE[1][5]);
+    //SelectPath(&COURSE[5][0]);
+    //COURSE[1][2].goal = POSSIBILITY;
+    AdvancedPath(&COURSE[0][0]);
     state = 1;
   }
-
+  
+  Serial.print((*CURRENT_TILE).row);
+  Serial.print(" ");
+  Serial.println((*CURRENT_TILE).col);
+  
   int dir = Navigate();
   //Serial.println(dir);
   if (temporary_stop) {
@@ -27,10 +31,6 @@ void NavToTile(){ // Test tile selection + navigation
   } else if (dir == CURRENT_DIRECTION) {
     forward = true;
   } else if (dir == 0) {
-    forward = false;
-    Move();
-    btnState = false;
-    return; // cut it off rn
     if ((*CURRENT_TILE).goal == POSSIBILITY) {
       //LookForGoal();
     } else {
