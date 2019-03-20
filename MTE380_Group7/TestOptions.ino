@@ -337,6 +337,34 @@ void TravelTest() {
   Move();
 }
 
+void HeadingTest() {
+  if (state == 0) {
+    if (Head(EAST)) {
+      state = 1;
+      btnState = false;
+    }
+    Move();
+  } else if (state == 1) {
+    if (Head(WEST)) {
+      state = 2;
+      btnState = false;
+    }
+    Move();
+  } else if (state == 2) {
+    if (Head(SOUTH)) {
+      state = 3;
+      btnState = false;
+    }
+    Move();
+  } else if (state == 3) {
+    if (Head(NORTH)) {
+      state = 0;
+      btnState = false;
+    }
+    Move();
+  }
+}
+
 void AlphaTest() {
   int dir = Navigate();
 
