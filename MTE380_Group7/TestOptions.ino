@@ -4,6 +4,7 @@ void NavToTile(){ // Test tile selection + navigation
   if (state == 0) {
     SelectPath(&COURSE[3][3]);
     COURSE[1][2].goal = POSSIBILITY;
+    //AdvancedPath(&COURSE[1][5]);
     state = 1;
   }
 
@@ -121,7 +122,7 @@ void Test3() {
   Serial.println(testX);
   Serial.println(testY);
   
-  SelectPath(&COURSE[testX][testY]);
+  AdvancedPath(&COURSE[testX][testY]);
   COURSE[testX][testY].goal = POSSIBILITY;
 
   testPoint = PATH_HEAD;

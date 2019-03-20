@@ -156,20 +156,20 @@ void setup() {
 
   // Hard Code COURSE tiles
   COURSE[1][1].type = SAND;
-  COURSE[3][2].type = SAND;
+  COURSE[2][3].type = SAND;
   COURSE[4][4].type = SAND;
-  COURSE[3][0].type = GRAVEL;
-  COURSE[5][4].type = GRAVEL;
-  COURSE[1][4].type = GRAVEL;
-  COURSE[0][2].type = WATER;
-  COURSE[4][1].type = WATER;
-  COURSE[2][5].type = WATER;
+  COURSE[0][3].type = GRAVEL;
+  COURSE[3][5].type = GRAVEL;
+  COURSE[4][1].type = GRAVEL;
+  COURSE[2][0].type = WATER;
+  COURSE[1][4].type = WATER;
+  COURSE[5][2].type = WATER;
 
   // Define starting position #TODO - update to actual expected starting position
-  STARTING_TILE = &COURSE[3][0];
+  STARTING_TILE = &COURSE[5][1];
   CURRENT_TILE = STARTING_TILE;
-  CURRENT_DIRECTION = EAST;
-  STARTING_DIRECTION = EAST;
+  CURRENT_DIRECTION = NORTH;
+  STARTING_DIRECTION = NORTH;
   DISTANCE_NORTH = 0;
   DISTANCE_EAST = 0;
 }

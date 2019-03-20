@@ -216,8 +216,8 @@ void AdvancedPath(struct Tile* target) {
     prevTile = PATH_TAIL->tile;
   }
 
-  struct Tile* rowFirstPath[11];
-  struct Tile* colFirstPath[11];
+  struct Tile* rowFirstPath[11] = {NULL};
+  struct Tile* colFirstPath[11] = {NULL};
   int rowIndex = 0, colIndex = 0;
   int rowFirst = 0, colFirst = 0;
   struct Tile* tile;
@@ -228,6 +228,9 @@ void AdvancedPath(struct Tile* target) {
   int colDiff = (*CURRENT_TILE).col - (*target).col;
 
   //SPECIAL CASE OF WATER IS YOUR CORNER TILE
+
+  Serial.println(rowDiff);
+  Serial.println(colDiff);
 
   // Determine path for considering the row traversal first 
   if (rowDiff > 0 && colDiff > 0) { // If you need to go NW
@@ -240,8 +243,16 @@ void AdvancedPath(struct Tile* target) {
         rowIndex++;
 
         for (int i = -1; i <= 1; i++) {
-          avoidLeft += COURSE[(*CURRENT_TILE).row + 1][y - i].type;
-          avoidRight += COURSE[(*CURRENT_TILE).row - 1][y - i].type;
+          if ((*CURRENT_TILE).row + 1 <= 5) {
+            avoidLeft += COURSE[(*CURRENT_TILE).row + 1][y - i].type;
+          } else {
+            avoidLeft = 999; // can't do it
+          }
+          if ((*CURRENT_TILE).row - 1 >= 0) {
+            avoidRight += COURSE[(*CURRENT_TILE).row - 1][y - i].type;
+          } else {
+            avoidRight = 999; // can't do it
+          }
         }
 
         if (avoidLeft < avoidRight) { // Skirt the water to the left
@@ -273,6 +284,10 @@ void AdvancedPath(struct Tile* target) {
       }
     }
 
+    // Store corner
+    rowFirstPath[rowIndex] = &COURSE[(*CURRENT_TILE).row][(*target).col];
+    rowIndex++;
+
     // Path along the column
     for (int x = (*CURRENT_TILE).row; x >= (*target).row; x--) {
       if (COURSE[x][(*target).col].type == WATER) { // Row first consideration
@@ -281,8 +296,16 @@ void AdvancedPath(struct Tile* target) {
         rowIndex++;
 
         for (int i = -1; i <= 1; i++) {
-          avoidLeft += COURSE[x+i][(*target).col - 1].type;
-          avoidRight += COURSE[x+i][(*target).col + 1].type;
+          if ((*target).col - 1 >= 0) {
+            avoidLeft += COURSE[x+i][(*target).col - 1].type;
+          } else {
+            avoidLeft = 999; // can't do it
+          }
+          if ((*target).col + 1 <= 5) {
+            avoidRight += COURSE[x+i][(*target).col + 1].type;
+          } else {
+            avoidRight = 999; // can't do it
+          }
         }
 
         if (avoidLeft < avoidRight) { // Skirt the water to the left
@@ -310,7 +333,7 @@ void AdvancedPath(struct Tile* target) {
         avoidLeft = 0;
         avoidRight = 0;
       } else {
-        rowFirst += COURSE[x][(*CURRENT_TILE).col].type;
+        rowFirst += COURSE[x][(*target).col].type;
       }
     }
 
@@ -323,8 +346,16 @@ void AdvancedPath(struct Tile* target) {
         colIndex++;
 
         for (int i = -1; i <= 1; i++) {
-          avoidLeft += COURSE[x+i][(*CURRENT_TILE).col - 1].type;
-          avoidRight += COURSE[x+i][(*CURRENT_TILE).col + 1].type;
+          if ((*CURRENT_TILE).col - 1 >= 0) {
+            avoidLeft += COURSE[x+i][(*CURRENT_TILE).col - 1].type;
+          } else {
+            avoidLeft = 999; // can't do it
+          }
+          if ((*CURRENT_TILE).col + 1 <= 5) {
+            avoidRight += COURSE[x+i][(*CURRENT_TILE).col + 1].type;
+          } else {
+            avoidRight = 999; // can't do it
+          }
         }
 
         if (avoidLeft < avoidRight) { // Skirt the water to the left
@@ -355,6 +386,10 @@ void AdvancedPath(struct Tile* target) {
         colFirst += COURSE[x][(*CURRENT_TILE).col].type;
       }
     }
+    
+    // Store corner
+    colFirstPath[colIndex] = &COURSE[(*target).row][(*CURRENT_TILE).col];
+    colIndex++;
 
     // Path along the row
     for (int y = (*CURRENT_TILE).col; y > (*target).col; y--) {
@@ -365,8 +400,16 @@ void AdvancedPath(struct Tile* target) {
         colIndex++;
 
         for (int i = -1; i <= 1; i++) {
-          avoidLeft += COURSE[(*target).row + 1][y - i].type;
-          avoidRight += COURSE[(*target).row - 1][y - i].type;
+          if ((*target).row + 1 <= 5) {
+            avoidLeft += COURSE[(*target).row + 1][y - i].type;
+          } else {
+            avoidLeft = 999; // can't do it
+          }
+          if ((*target).row - 1 >= 0) {
+            avoidRight += COURSE[(*target).row - 1][y - i].type;
+          } else {
+            avoidRight = 999; // can't do it
+          }
         }
 
         if (avoidLeft < avoidRight) { // Skirt the water to the left
@@ -399,10 +442,22 @@ void AdvancedPath(struct Tile* target) {
     }
     
   }
-}
 
-void PathUpdate() {
-  
+  if (rowFirst < colFirst) {
+    for (int i = 0; i < 11; i++) {
+      if (rowFirstPath[i] != NULL) {
+        AddToPath(rowFirstPath[i]);
+      }
+    }
+  } else {
+    for (int i = 0; i < 11; i++) {
+      if (colFirstPath[i] != NULL) {
+        AddToPath(colFirstPath[i]);
+      }
+    }
+  }
+
+  AddToPath(target);
 }
 
 void SelectPath(struct Tile* target){ // Function to determine the optimal path to a given target tile
