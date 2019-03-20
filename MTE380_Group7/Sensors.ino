@@ -357,14 +357,14 @@ void UpdateWallDistance(){
 }
 
 double LeftDistToActual(double dist, double error) {
-  if (dist < 30 || error > 8) return -1;
+  if (dist < 30 || error > 7) return -1;
   else if (dist < 500) return dist;
   else if (dist < 650) return (dist - 500)*2 + 500;
   else return -1;
 }
 
 double FrontDistToActual(double dist, double error) {
-  if (dist < 30 || error > 8) return -1;
+  if (dist < 30 || error > 7) return -1;
   else if (dist < 700) return dist;
   else if (dist < 900) return (dist-700)*2.17 + 700;
   else return -1;
