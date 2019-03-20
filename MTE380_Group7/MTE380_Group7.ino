@@ -101,6 +101,9 @@ bool inWater;
 
 bool btnState = false;
 
+bool temporary_stop = false;
+int temporary_stop_counter = 0;
+
 // Initialize functions
 void InitMotors();
 void InitEncoders();
