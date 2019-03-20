@@ -146,11 +146,11 @@ void setup() {
   //InitTileID();
 
   // Set up COURSE matrix
-  for (int x = 0; x < 6; x++) {
-    for (int y = 0; y < 6; y++) {
-      COURSE[x][y].row = x;
-      COURSE[x][y].col = y;
-      COURSE[x][y].type = FLAT;
+  for (int row = 0; row < 6; row++) {
+    for (int col = 0; col < 6; col++) {
+      COURSE[row][col].row = row;
+      COURSE[row][col].col = col;
+      COURSE[row][col].type = FLAT;
     }
   }
 
@@ -240,7 +240,7 @@ void loop() {
     } */
   }
   int delayTime = (LOOP_RUNTIME) - (millis() - loopStartTime);
-  //Serial.println(delayTime);
+  Serial.println(delayTime);
   if (delayTime > 0) {
     delay(delayTime);
   }
