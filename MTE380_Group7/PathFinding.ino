@@ -234,8 +234,9 @@ void AdvancedPath(struct Tile* target) {
 
   // Determine path for considering the row traversal first 
   if (rowDiff > 0 && colDiff > 0) { // If you need to go NW
+    
     // Traverse row first
-    for (int y = (*CURRENT_TILE).col; y >= (*target).col; y--) {
+    for (int y = (*CURRENT_TILE).col; y > (*target).col; y--) {
       // Path along the row
       if (COURSE[(*CURRENT_TILE).row][y].type == WATER) {
         // Add the old tile to the row traversal path to make it the turning point
@@ -285,11 +286,25 @@ void AdvancedPath(struct Tile* target) {
     }
 
     // Store corner
-    rowFirstPath[rowIndex] = &COURSE[(*CURRENT_TILE).row][(*target).col];
-    rowIndex++;
+    if (COURSE[(*CURRENT_TILE).row][(*target).col].type == WATER){
+      rowFirstPath[rowIndex] = &COURSE[(*CURRENT_TILE).row][(*target).col + 1];
+      rowIndex++;
+      rowFirst += COURSE[(*CURRENT_TILE).row][(*target).col + 1].type;
+      
+      rowFirstPath[rowIndex] = &COURSE[(*CURRENT_TILE).row - 1][(*target).col + 1];
+      rowIndex++;
+      rowFirst += COURSE[(*CURRENT_TILE).row - 1][(*target).col + 1].type;
+      
+      rowFirstPath[rowIndex] = &COURSE[(*CURRENT_TILE).row - 1][(*target).col];
+      rowIndex++;
+      rowFirst += COURSE[(*CURRENT_TILE).row - 1][(*target).col].type;
+    } else {
+      rowFirstPath[rowIndex] = &COURSE[(*CURRENT_TILE).row][(*target).col];
+      rowIndex++;
+    }
 
     // Path along the column
-    for (int x = (*CURRENT_TILE).row; x >= (*target).row; x--) {
+    for (int x = (*CURRENT_TILE).row - 1; x > (*target).row; x--) {
       if (COURSE[x][(*target).col].type == WATER) { // Row first consideration
         // Add the old tile to the row traversal path to make it the turning point
         rowFirstPath[rowIndex] = &COURSE[x-1][(*target).col];
@@ -339,10 +354,10 @@ void AdvancedPath(struct Tile* target) {
 
 
     // Traverse column first option
-    for (int x = (*CURRENT_TILE).row; x >= (*target).row; x--) { // Column sum
+    for (int x = (*CURRENT_TILE).row; x > (*target).row; x--) { // Column sum
       if (COURSE[x][(*CURRENT_TILE).col].type == WATER) { // Column first consideration
         // Add the old tile to the row traversal path to make it the turning point
-        colFirstPath[colIndex] = &COURSE[x-1][(*CURRENT_TILE).col];
+        colFirstPath[colIndex] = &COURSE[x+1][(*CURRENT_TILE).col];
         colIndex++;
 
         for (int i = -1; i <= 1; i++) {
@@ -388,11 +403,25 @@ void AdvancedPath(struct Tile* target) {
     }
     
     // Store corner
-    colFirstPath[colIndex] = &COURSE[(*target).row][(*CURRENT_TILE).col];
-    colIndex++;
+    if (COURSE[(*target).row][(*CURRENT_TILE).col].type == WATER){
+      colFirstPath[colIndex] = &COURSE[(*target).row + 1][(*CURRENT_TILE).col];
+      colIndex++;
+      colFirst += COURSE[(*target).row + 1][(*CURRENT_TILE).col].type;
+      
+      colFirstPath[colIndex] = &COURSE[(*target).row + 1][(*CURRENT_TILE).col - 1];
+      colIndex++;
+      colFirst += COURSE[(*target).row + 1][(*CURRENT_TILE).col - 1].type;
+     
+      colFirstPath[colIndex] = &COURSE[(*target).row][(*CURRENT_TILE).col - 1];
+      colIndex++;
+      colFirst += COURSE[(*target).row][(*CURRENT_TILE).col - 1].type;
+    } else {
+      colFirstPath[colIndex] = &COURSE[(*target).row][(*CURRENT_TILE).col];
+      colIndex++;
+    }
 
     // Path along the row
-    for (int y = (*CURRENT_TILE).col; y > (*target).col; y--) {
+    for (int y = (*CURRENT_TILE).col - 1; y > (*target).col; y--) {
       // Path along the row
       if (COURSE[(*target).row][y].type == WATER) {
         // Add the old tile to the row traversal path to make it the turning point
