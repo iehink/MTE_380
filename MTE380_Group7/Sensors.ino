@@ -6,6 +6,16 @@
 double gyro_pitch, gyro_roll, gyro_yaw, accel_vel, accel_dist;
 int previous_MPU_interrupt_time;
 int encoder_left, encoder_right; // To track when the encoders receive pulses
+double left_distances[10] = {-2,-2,-2,-2,-2,-2,-2,-2,-2,-2};
+double left_avg = 0;
+double left_diff_avg = 0;
+double front_distances[10] = {-2,-2,-2,-2,-2,-2,-2,-2,-2,-2};
+double front_avg = 0;
+double front_diff_avg = 0;
+double right_distances[10] = {-2,-2,-2,-2,-2,-2,-2,-2,-2,-2};
+double right_avg = 0;
+double right_diff_avg = 0;
+unsigned long scan_count_sensors = 0;
 
 // Distance sensors
 #define LOX_LEFT_ADDRESS 0x30
@@ -76,14 +86,11 @@ void InitDistanceSensors() {
   digitalWrite(SHT_LOX_RIGHT, LOW);
   delay(10);
 
-  Serial.println("test");
-
   // initializing LOX_LEFT
   if(!lox_left.begin(LOX_LEFT_ADDRESS)) {
     Serial.println(F("Failed to boot left VL53L0X"));
   }
   delay(10);
-  Serial.println("test");
 
   // activating LOX_FRONT
   digitalWrite(SHT_LOX_FRONT, HIGH);
@@ -201,9 +208,65 @@ void ReadMPU(){
 }
 
 void ReadTOF() {
-  left_dist = ReadDistance(lox_left, distance_left);
-  right_dist = ReadDistance(lox_right, distance_right);
-  front_dist = ReadDistance(lox_front, distance_front);
+  left_distances[scan_count_sensors%10] = ReadDistance(lox_left, distance_left);
+  front_distances[scan_count_sensors%10] = ReadDistance(lox_front, distance_front);
+  right_distances[scan_count_sensors%10] = ReadDistance(lox_right, distance_right);
+  scan_count_sensors++;
+  if (scan_count_sensors > 9) {
+    double left_sum = 0;
+    bool left_oor = false;
+    double front_sum = 0;
+    bool front_oor = false;
+    double right_sum = 0;
+    bool right_oor = false;
+    for (int i = 0; i <= 9; i++) {
+      left_sum += left_distances[i];
+      if (left_distances[i] < 0) left_oor = true;
+      front_sum += front_distances[i];
+      if (front_distances[i] < 0) front_oor = true;
+      right_sum += right_distances[i];
+      if (right_distances[i] < 0) right_oor = true;
+    }
+    if (left_oor) left_avg = -1;
+    else left_avg = left_sum / 10.0;
+    if (front_oor) front_avg = -1;
+    else front_avg = front_sum / 10.0;
+    if (right_oor) right_avg = -1;
+    else right_avg = right_sum / 10.0;
+    
+    double left_error_sum = 0;
+    double front_error_sum = 0;
+    double right_error_sum = 0;
+    for (int i = 0; i <= 9; i++) {
+      left_error_sum += abs(left_distances[i] - left_avg);
+      front_error_sum += abs(front_distances[i] - front_avg);
+      right_error_sum += abs(right_distances[i] - right_avg);
+    }
+    if (left_oor) left_diff_avg = -1;
+    else left_diff_avg = left_error_sum / 10.0;
+    if (front_oor) front_diff_avg = -1;
+    else front_diff_avg = front_error_sum / 10.0;
+    if (right_oor) right_avg = -1;
+    else right_diff_avg = right_error_sum / 10.0;
+
+    left_dist = LeftDistToActual(left_avg, left_diff_avg);
+    front_dist = FrontDistToActual(front_avg, front_diff_avg);
+    right_dist = RightDistToActual(right_avg, right_diff_avg);
+
+    //Serial.print("LEFT: ");
+    //Serial.print(left_avg);
+    //Serial.print(", ");
+    //Serial.print(left_diff_avg);
+    //Serial.print("; FRONT: ");
+    //Serial.print(front_avg);
+    //Serial.print(", ");
+    //Serial.print(front_diff_avg);
+    //Serial.print("; RIGHT: ");
+    //Serial.print(right_avg);
+    //Serial.print(", ");
+    //Serial.println(right_diff_avg);
+    //delay(100);
+  }
 }
 
 /* ------------------------------------------------------------------------------------------------------------------------------
@@ -278,6 +341,27 @@ void UpdateWallDistance(){
   // Since the TOF aren't working well, 
   left_to_wall = left_dist;
   right_to_wall = right_dist;
+}
+
+double LeftDistToActual(double dist, double error) {
+  if (dist < 30 || error > 8) return -1;
+  else if (dist < 500) return dist;
+  else if (dist < 650) return (dist - 500)*2 + 500;
+  else return -1;
+}
+
+double FrontDistToActual(double dist, double error) {
+  if (dist < 30 || error > 8) return -1;
+  else if (dist < 700) return dist;
+  else if (dist < 900) return (dist-700)*2.17 + 700;
+  else return -1;
+}
+
+double RightDistToActual(double dist, double error) {
+  if (dist < 30 || error > 7) return -1;
+  else if (dist < 500) return dist;
+  else if (dist < 640) return (dist-500)*1.54 + 500;
+  else return -1;
 }
 
 /*

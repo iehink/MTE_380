@@ -13,7 +13,6 @@
  */
 
 // Includes
-#include <SharpIR.h>
 #include <MPU6050.h>
 #include <Adafruit_VL53L0X_MTE380.h>
 #include <SparkFun_MMA8452Q.h>
@@ -81,7 +80,7 @@ bool turn_left = false, turn_right = false, forward = false;
 
 // Distance sensor readings
 double left_dist = 0, right_dist = 0, front_dist = 0;
-double right_to_wall = 0, left_to_wall = 0, front_to_wall = 0;
+double right_to_wall = 0, left_to_wall = 0, front_to_wall = 0; // The expected distance to the walls
 
 // Structure dimensions
 #define STRUCT_WIDTH 127 //mm
@@ -146,15 +145,15 @@ void setup() {
   }
 
   // Hard Code COURSE tiles
-  COURSE[1][1] = SAND;
-  COURSE[3][2] = SAND;
-  COURSE[4][4] = SAND;
-  COURSE[3][0] = GRAVEL;
-  COURSE[5][4] = GRAVEL;
-  COURSE[1][4] = GRAVEL;
-  COURSE[0][2] = WATER;
-  COURSE[4][1] = WATER;
-  COURSE[2][5] = WATER;
+  COURSE[1][1].type = SAND;
+  COURSE[3][2].type = SAND;
+  COURSE[4][4].type = SAND;
+  COURSE[3][0].type = GRAVEL;
+  COURSE[5][4].type = GRAVEL;
+  COURSE[1][4].type = GRAVEL;
+  COURSE[0][2].type = WATER;
+  COURSE[4][1].type = WATER;
+  COURSE[2][5].type = WATER;
 
   // Define starting position #TODO - update to actual expected starting position
   STARTING_TILE = &COURSE[1][5];
@@ -173,8 +172,8 @@ void loop() {
   while(!btnState) {
     Stop();
     Button();
-    left_to_wall = left_dist;
-    right_to_wall = right_dist;
+    //left_to_wall = left_dist;
+    //right_to_wall = right_dist;
   }
   
   if(TEST) {
