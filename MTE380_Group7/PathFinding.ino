@@ -107,32 +107,27 @@ int Navigate() { // Checks to verify we are on the right path towards the next p
   // Determine row/column difference; note that any given next step will be a straight line from where we presently are.
   int rowDiff = (*PATH_HEAD->tile).row - (*CURRENT_TILE).row;
   int colDiff = (*PATH_HEAD->tile).col - (*CURRENT_TILE).col;
-
-  Serial.print("rowDiff: ");
-  Serial.println(rowDiff);
-  //Serial.print("colDiff: ");
-  //Serial.println(colDiff);
   
-  // If we've reached the target tile, pop the target off and center ourselves
+  // If we've reached the target tile, pop the target off and return 0 to indicate arrival
   if (rowDiff == 0 && colDiff == 0) {
     PathPointReached();
     return 0;
   }
 
   // Determine direction to head
-  if (rowDiff == 0) { // If we are already in the correct row and just need to go across a column
+  //if (rowDiff == 0) { // If we are already in the correct row and just need to go across a column
     if (colDiff < 0) {
       return WEST;
-    } else {
+    } else if (colDiff > 0) {
       return EAST;
     }
-  } else if (colDiff == 0) { // If we are already in the correct column and just need to go up/down a row
+  //} else if (colDiff == 0) { // If we are already in the correct column and just need to go up/down a row
     if (rowDiff < 0) {
       return NORTH;
     } else {
       return SOUTH;
     }
-  }
+  //}
 }
 
 bool UpdateCourseLocation(){ // Function to update the location on the course grid. Returns true if a new tile has been reached.
@@ -180,7 +175,8 @@ void UpdateDistance() { // Function to update DISTANCE_NORTH and DISTANCE_EAST a
     Serial.println("Error - no direction specified");
   }
 
-  front_to_wall -= distanceTravelled;
+  //front_to_wall -= distanceTravelled;
+  UpdateWallDistance();
   
   return;
 }

@@ -1,19 +1,8 @@
 int state = 0;
-
-void TestGoalSearching() {
-  if (LookForGoal()) {
-    Serial.println((*CURRENT_TILE).goal);
-    btnState = false;
-  }
-
-  Serial.println(scan_state);
-  
-  Move();
-}
   
 void NavToTile(){ // Test tile selection + navigation
   if (state == 0) {
-    SelectPath(&COURSE[1][2]);
+    SelectPath(&COURSE[1][5]);
     COURSE[1][2].goal = POSSIBILITY;
     state = 1;
   }
@@ -25,11 +14,12 @@ void NavToTile(){ // Test tile selection + navigation
   } else if (dir == 0) {
     forward = false;
     Move();
+    btnState = false;
     return; // cut it off rn
     if ((*CURRENT_TILE).goal == POSSIBILITY) {
-      LookForGoal();
+      //LookForGoal();
     } else {
-      Center();
+      //Center();
     }
   } else {
     Head(dir);
@@ -303,14 +293,23 @@ void DistanceTest() {
 }
 
 void TravelTest() {
+  UpdateDistance();
   double len = FindLength();
   forward = true;
-  Serial.println(left_dist);
-  Serial.println(len);
-  Serial.println(scan_state);
+
+  if (scanning_complete) {
+    Serial.print("Length: ");
+    Serial.println(len);
+    forward = false;
+    btnState = false;
+    scanning_complete = false;
+  }
+  Serial.print(left_dist);
+  Serial.print(" is the current scan, this is how far away we think it is: ");
+  Serial.println(object_dist);
   /*if (scanning_complete) {
     Serial.println(IDGoal(len));
-    Stop();
+    Stop(); 
     btnState = false;
   }
 */
@@ -334,7 +333,27 @@ void TravelTest() {
     }
   }
   */
-  //Move();
+  Move();
+}
+
+void AlphaTest() {
+  int dir = Navigate();
+
+  if (dir == CURRENT_DIRECTION || dir == -1) {
+    forward = true;
+  } else if (dir == 0) {
+    if ((*CURRENT_TILE).goal == POSSIBILITY) {
+      //LookForGoal();
+    } else {
+      Center();
+    }
+  } else {
+    if (!scanning) {
+      Head(dir);
+    }
+  }
+  
+  Move();
 }
 
 void Button() { // Swaps btnState whenever the button is pressed

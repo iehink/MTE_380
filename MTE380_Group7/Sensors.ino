@@ -339,8 +339,8 @@ void UpdateWallDistance(){
   }
 
   // Since the TOF aren't working well, 
-  left_to_wall = left_dist;
-  right_to_wall = right_dist;
+  //left_to_wall = left_dist;
+  //right_to_wall = right_dist;
 }
 
 double LeftDistToActual(double dist, double error) {

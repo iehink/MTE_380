@@ -16,7 +16,8 @@ bool scanning_complete = false, scanning = false;
 int scan_off_count = 0, scan_count = 0;
 int scan_state = 0;
 int scan_dir = 0; // 1 = right, 2 = left
-double object_size = 0;
+double object_size = 0, object_dist = 0;
+long unsigned int init_time_scan = millis();
 
 #define FAN_PWM 6
 
@@ -24,6 +25,10 @@ double object_size = 0;
  * **************************************************** Goal-handling functions are below. ****************************************************
  * --------------------------------------------------------------------------------------------------------------------------------------------
  */
+
+void AssignGoal(double objSize) {
+  // uses distance, size to assign goal to a tile
+}
 
 bool IDTile(){ // Function to attempt to identify the current tile. Returns TRUE when tile is identified and identity has been stored in COURSE matrix. #TODO
   if (ReadPitch() >= WATER_THRESHOLD_ANGLE && inWater) { // if we're leaving water, note it
@@ -122,13 +127,14 @@ int CheckGoals(){ // Returns number of goals remaining to complete.
   }
 
   // If we are on a tile identified as a possibility, look for a goal on the tile
-  if ((*CURRENT_TILE).goal == POSSIBILITY) {
+  /*if ((*CURRENT_TILE).goal == POSSIBILITY) {
     LookForGoal();
-  }
+  }*/
 
   return completedGoals;
 }
 
+/*
 bool LookForGoal(){ // Function to search the current tile for any goal and identify what goal is. Returns TRUE if it found a goal and updates goal of tile as suitable. #TODO
   if (!scanning && front_dist > SIZE_ID_DIST) {
     forward = true;
@@ -162,7 +168,7 @@ bool LookForGoal(){ // Function to search the current tile for any goal and iden
   }
 }
 
-void ScanSize() {
+void ScanSize() { // deprecated if we can't turn for size
   double heading = ReadYaw(), distance = front_dist, expectedDist = SIZE_ID_DIST / cos(PI/180*heading);
   double TOL = 20; // [mm] tolerance on distance as compared to expected
   scanning = true;
@@ -206,27 +212,34 @@ void ScanSize() {
     scan_state = 0;
   }
 }
+*/
 
 int IDGoal(double objLen) {
-  double LEN_TOL = 40;
+  double LEN_TOL = 15;
   
   if (abs(objLen - BIG_STRUCT_LEN) < LEN_TOL) {
     return PEOPLE;
   } else if (abs(objLen - SMALL_STRUCT_LEN) < LEN_TOL) {
     return LOST;
   } else if (abs(objLen - STRUCT_WIDTH) < LEN_TOL) {
-    return STRUCTURE;
+    if (GOAL[PEOPLE]) {
+      return LOST;
+    } else if (GOAL[LOST]) {
+      return PEOPLE;
+    } else {
+      return STRUCTURE;
+    }
   } else {
     return NONE;
   }
 }
 
-double FindLength() { // returns a goal to assign
+double FindLength() { // Uses left TOF to assess size of object being passed
   double TOL = 50, objLen = 0; 
-  int SCAN_TOL = 20;
+  int SCAN_TOL = 5;
 
   if (scan_state == 0) {
-    if (abs(right_dist - right_to_wall) > TOL) {
+    /*if (abs(right_dist - right_to_wall) > TOL) {
       if (scan_dir == 2) {
         scan_count = 0;
       }
@@ -237,17 +250,22 @@ double FindLength() { // returns a goal to assign
         scan_state = 1;
         scanning = true;
       }
-    } else if (abs(left_dist - left_to_wall) > TOL) {
-      if (scan_dir == 1) {
+    } else*/ 
+    if (left_dist != -1 && abs(left_dist - left_to_wall) > TOL) {
+      /*if (scan_dir == 1) {
         scan_count = 0;
-      }
-      scan_dir = 2;
-      scan_count++;
-      if (scan_count > SCAN_TOL) {
+      }*/
+      //scan_dir = 2;
+      //scan_count++;
+      //if (scan_count > SCAN_TOL) {
         scan_count = 0;
         scan_state = 2;
         scanning = true;
-      }
+        init_time_scan = millis();
+        object_dist = left_dist;
+      //}
+    } else {
+      scan_count = 0;
     }
   } else if (scan_state == 1) {
     if (scan_off_count > SCAN_TOL) {
@@ -259,20 +277,28 @@ double FindLength() { // returns a goal to assign
       return objLen;
     } else if (abs(right_dist - right_to_wall) < TOL) {
       scan_off_count++;
-    } 
+    }
     scan_count ++;
   } else if (scan_state == 2) {
+    scan_count++;
     if (scan_off_count > SCAN_TOL) {
-      objLen = scan_count * LOOP_RUNTIME / TIME_PER_MM;
+      objLen = (millis() - init_time_scan) / TIME_PER_MM;
       scan_count = 0;
       scan_off_count = 0;
       scan_state = 0;
       scanning_complete = true;
       return objLen;
-    } else if (abs(left_dist - left_to_wall) < TOL) {
+    } else if (abs(left_dist - object_dist) > TOL || left_dist == -1) {
       scan_off_count++;
-    } 
-    scan_count ++;
+    } else {
+      object_dist = (scan_count - 1.0)/(double)scan_count * object_dist + left_dist/(double)scan_count;
+    }
+    if (scan_count <= scan_off_count) {
+      scan_count = 0;
+      scan_off_count = 0;
+      scan_state = 0;
+      object_dist = 0;
+    }
   }
   return -1;
 }
