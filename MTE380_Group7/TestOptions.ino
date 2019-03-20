@@ -298,15 +298,11 @@ void TravelTest() {
   forward = true;
 
   if (scanning_complete) {
-    Serial.print("Length: ");
     Serial.println(len);
     forward = false;
     btnState = false;
     scanning_complete = false;
   }
-  Serial.print(left_dist);
-  Serial.print(" is the current scan, this is how far away we think it is: ");
-  Serial.println(object_dist);
   /*if (scanning_complete) {
     Serial.println(IDGoal(len));
     Stop(); 

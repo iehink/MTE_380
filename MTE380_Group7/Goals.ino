@@ -236,9 +236,10 @@ int IDGoal(double objLen) {
 
 double FindLength() { // Uses left TOF to assess size of object being passed
   double TOL = 50, objLen = 0; 
-  int SCAN_TOL = 5;
+  int SCAN_TOL = 50;
 
   if (scan_state == 0) {
+    object_dist = 0;
     /*if (abs(right_dist - right_to_wall) > TOL) {
       if (scan_dir == 2) {
         scan_count = 0;
@@ -280,8 +281,12 @@ double FindLength() { // Uses left TOF to assess size of object being passed
     }
     scan_count ++;
   } else if (scan_state == 2) {
-    scan_count++;
-    if (scan_off_count > SCAN_TOL) {
+    if (scan_count <  scan_off_count) {
+      scan_count = 0;
+      scan_off_count = 0;
+      scan_state = 0;
+      object_dist = 0;
+    } else if (scan_off_count > SCAN_TOL) {
       objLen = (millis() - init_time_scan) / TIME_PER_MM;
       scan_count = 0;
       scan_off_count = 0;
@@ -291,13 +296,8 @@ double FindLength() { // Uses left TOF to assess size of object being passed
     } else if (abs(left_dist - object_dist) > TOL || left_dist == -1) {
       scan_off_count++;
     } else {
+      scan_count++;
       object_dist = (scan_count - 1.0)/(double)scan_count * object_dist + left_dist/(double)scan_count;
-    }
-    if (scan_count <= scan_off_count) {
-      scan_count = 0;
-      scan_off_count = 0;
-      scan_state = 0;
-      object_dist = 0;
     }
   }
   return -1;
