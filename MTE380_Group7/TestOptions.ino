@@ -2,8 +2,8 @@ int state = 0;
   
 void NavToTile(){ // Test tile selection + navigation
   if (state == 0) {
-    SelectPath(&COURSE[3][3]);
-    //COURSE[1][2].goal = POSSIBILITY;
+    SelectPath(&COURSE[5][0]);
+    COURSE[1][2].goal = POSSIBILITY;
     state = 1;
   }
 

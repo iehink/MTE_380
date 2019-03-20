@@ -61,7 +61,7 @@ Tile COURSE[6][6];
 #define FLAT 1
 #define SAND 2
 #define GRAVEL 3
-#define WATER 4
+#define WATER 99
 
 /* Path planning will be optimized by:
  * 1) Taking the fewest number of turns (since that is the most prone to throw our trajectory off), and
