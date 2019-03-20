@@ -2,14 +2,18 @@ int state = 0;
   
 void NavToTile(){ // Test tile selection + navigation
   if (state == 0) {
-    SelectPath(&COURSE[1][5]);
-    COURSE[1][2].goal = POSSIBILITY;
+    SelectPath(&COURSE[3][3]);
+    //COURSE[1][2].goal = POSSIBILITY;
     state = 1;
   }
 
   int dir = Navigate();
-
-  if (dir == CURRENT_DIRECTION || dir == -1) {
+  Serial.println(dir);
+  if (dir == -1) {
+    forward = false;
+    turn_left = false;
+    turn_right = false;
+  } else if (dir == CURRENT_DIRECTION) {
     forward = true;
   } else if (dir == 0) {
     forward = false;
