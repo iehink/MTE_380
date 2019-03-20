@@ -305,6 +305,19 @@ double FindLength() { // Uses left TOF to assess size of object being passed
   return -1;
 }
 
+// Function to search a sand tile for food. Returns TRUE (and acknowledges food) if food is found. #TODO
+bool SearchSand(){
+  return false;
+}
+
+void InitFan() {
+  pinMode(FAN_PWM, OUTPUT);
+}
+
+void RunFan(int fanSpeed) {
+  analogWrite(FAN_PWM, fanSpeed);
+}
+
 bool ObjectOnTile() {
   if (left_dist < left_to_wall - WALL_TOL || left_dist > left_to_wall + WALL_TOL) left_scan_off_count++;
   else left_scan_off_count = 0;
@@ -332,17 +345,4 @@ bool ObjectOnTile() {
   if (right_scan_off_count > 7) {
     //Serial.println((int)(right_dist/300.0));
   }
-}
-
-// Function to search a sand tile for food. Returns TRUE (and acknowledges food) if food is found. #TODO
-bool SearchSand(){
-  return false;
-}
-
-void InitFan() {
-  pinMode(FAN_PWM, OUTPUT);
-}
-
-void RunFan(int fanSpeed) {
-  analogWrite(FAN_PWM, fanSpeed);
 }

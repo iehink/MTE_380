@@ -105,10 +105,19 @@ bool btnState = false;
 void InitMotors();
 void InitEncoders();
 void InitGyro();
+void InitDistanceSensors();
+void InitMPU();
+void InitFlame();
 void InitTileID();
 double ReadPitch();
 double ReadYaw();
 bool PastCenter();
+void ReadMPU();
+void ReadTOF();
+void Stop();
+void Button();
+void NavToTile();
+void AddToPath(struct Tile* newTile);
 
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * ******************************************************** Running code begins below. ********************************************************
@@ -242,7 +251,7 @@ void ProductionLoop(){
    * 2. Check for objects
    * 3. Check path
    * 4. Check straightness of path
-   */
+   *//*
   // Travel around the course as required
   Navigate();
   
@@ -256,5 +265,5 @@ void ProductionLoop(){
   // Check surroundings if we are not in water
   if (!inWater) {
     //Scan();
-  }
+  }*/
 }
