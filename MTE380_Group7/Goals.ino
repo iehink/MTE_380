@@ -1,9 +1,3 @@
-// Define goal array and goal meanings
-bool GOAL[6] = {false, false, false, false, false, false}; // 0th array unused, array indices correspond to values listed below
-int PEOPLE = 1, LOST = 2, FOOD = 3, FIRE = 4, DELIVER = 5, POSSIBILITY = 6, STRUCTURE = 7, NONE = 8; 
-// Variable to keep track of where the people are
-struct Tile* peopleTile;
-
 // Indicators for tile identification
 double WATER_THRESHOLD_ANGLE = 55, NOT_FLAT_THRESHOLD_ANGLE = 30, BUMP_ANGLE = 10; // degrees
 int notFlat;
@@ -28,49 +22,6 @@ long unsigned int init_time_scan = millis();
  * --------------------------------------------------------------------------------------------------------------------------------------------
  */
 
-void AssignGoal(double objSize) {
-  // uses distance, size to assign goal to a tile
-}
-
-bool IDTile(){ // Function to attempt to identify the current tile. Returns TRUE when tile is identified and identity has been stored in COURSE matrix. #TODO
-  if (ReadPitch() >= WATER_THRESHOLD_ANGLE && inWater) { // if we're leaving water, note it
-    inWater = false;
-  }
-  
-  // if IMU says angle is that of descending into the pit that's supposed to be water;
-  if (-ReadPitch() >= WATER_THRESHOLD_ANGLE || inWater) {
-    (*CURRENT_TILE).type = WATER;
-    inWater = true;
-  } else if (ReadPitch() >= NOT_FLAT_THRESHOLD_ANGLE) {
-    sandOrGravel = true;
-    return false;
-  } else if (notFlat >= 10) {
-    (*CURRENT_TILE).type = GRAVEL;
-  } else if (PastCenter()) {
-    if (sandOrGravel) {
-      (*CURRENT_TILE).type = SAND;
-    } else {
-      (*CURRENT_TILE).type = FLAT;
-    }
-  } else {
-    if (ReadPitch() >= BUMP_ANGLE || ReadYaw() >= BUMP_ANGLE) {
-      notFlat++;
-    }
-    return false;
-  }
-
-  // one of the identification conditions has been met; reset notFlat counter to zero and return true
-  notFlat = 0;
-  sandOrGravel = false;
-  return true;
-}
-
-void InitTileID(){
-  notFlat = 0;
-  inWater = false;
-  sandOrGravel = false;
-}
-
 bool PastCenter(){ // Function to identify if we have reached the center of the tile. Returns true if at or past center in direction travelled, false otherwise.
   if (CURRENT_DIRECTION == EAST && DISTANCE_EAST >= TILE_DISTANCE/2.0) {
     return true;
@@ -83,57 +34,6 @@ bool PastCenter(){ // Function to identify if we have reached the center of the 
   } else {
     return false;
   }
-}
-
-int CheckGoals(){ // Returns number of goals remaining to complete.
-  int completedGoals = 0;
-  
-  // If we haven't found food yet and we are on a sand tile, search for food
-  if (!GOAL[FOOD] && (*CURRENT_TILE).type == SAND && SearchSand()) {
-    GOAL[FOOD] = true;
-    completedGoals++;
-    if (GOAL[PEOPLE]){
-      AddToPath(peopleTile);
-    }
-  }
-  
-  if (!GOAL[PEOPLE] && (*CURRENT_TILE).goal == PEOPLE) {
-    // #TODO: Flash LED certain number of times
-    GOAL[PEOPLE] = true;
-    completedGoals++;
-    peopleTile = CURRENT_TILE;
-  }
-
-  if (!GOAL[LOST] && (*CURRENT_TILE).goal == LOST) {
-    // #TODO: Flash LED certain number of times
-    GOAL[LOST] = true;
-    completedGoals++;
-  }
-  
-  if (!GOAL[FIRE] && (*CURRENT_TILE).goal == FIRE) {
-    // #TODO: Start that fan!
-    /*  while (fire sensor says there's fire) {
-     *    blow it out
-     *  }
-     */
-     GOAL[FIRE] = true;
-     completedGoals++;
-  }
-
-  // If we haven't delivered food yet but we have found the food and are back at the people 
-  // (note that finding food adds the people tile to the path if people have been found)
-  if (!GOAL[DELIVER] && GOAL[FOOD] && (*CURRENT_TILE).goal == PEOPLE){
-    // #TODO: Flash LED certain number of times
-    GOAL[DELIVER] = true;
-    completedGoals++;
-  }
-
-  // If we are on a tile identified as a possibility, look for a goal on the tile
-  /*if ((*CURRENT_TILE).goal == POSSIBILITY) {
-    LookForGoal();
-  }*/
-
-  return completedGoals;
 }
 
 /*
@@ -305,11 +205,6 @@ double FindLength() { // Uses left TOF to assess size of object being passed
   return -1;
 }
 
-// Function to search a sand tile for food. Returns TRUE (and acknowledges food) if food is found. #TODO
-bool SearchSand(){
-  return false;
-}
-
 void InitFan() {
   pinMode(FAN_PWM, OUTPUT);
   analogWrite(FAN_PWM, 0);
@@ -324,40 +219,50 @@ void StopFan() {
 }
 
 bool ObjectOnTile() {
+  int row = 0, col = 0;
+  
   if ((left_dist < left_to_wall - WALL_TOL || left_dist > left_to_wall + WALL_TOL) && left_dist != -1) left_scan_off_count++;
   else left_scan_off_count = 0;
   if ((front_dist < front_to_wall - WALL_TOL || front_dist > front_to_wall + WALL_TOL) && front_dist != -1) front_scan_off_count++;
   else front_scan_off_count = 0;
-  if ((right_dist < right_to_wall - WALL_TOL || right_dist > right_to_wall + WALL_TOL) && right_dist != -1) right_scan_off_count++;
-  else right_scan_off_count = 0;
+  //if ((right_dist < right_to_wall - WALL_TOL || right_dist > right_to_wall + WALL_TOL) && right_dist != -1) right_scan_off_count++;
+  //else right_scan_off_count = 0;
 
   if (left_scan_off_count > 15) {
     left_scan_off_count = 0;
     if (CURRENT_DIRECTION == NORTH) {
-      COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col - (((int)(left_dist/300.0))+1)].goal = 1;
+      row = (*CURRENT_TILE).row;
+      col = (*CURRENT_TILE).col - (((int)(left_dist/300.0))+1);
     } else if (CURRENT_DIRECTION == EAST) {
-      COURSE[(*CURRENT_TILE).row + (((int)(left_dist/300.0))+1)][(*CURRENT_TILE).col].goal = 1;
-      Serial.print("ROW: ");
-      Serial.print((*CURRENT_TILE).row + (((int)(left_dist/300.0))+1));
-      Serial.print(", COL: ");
-      Serial.println((*CURRENT_TILE).col);
+      row = (*CURRENT_TILE).row + (((int)(left_dist/300.0))+1);
+      col = (*CURRENT_TILE).col;
     } else if (CURRENT_DIRECTION == SOUTH) {
-      COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col + (((int)(left_dist/300.0))+1)].goal = 1;
+      row = (*CURRENT_TILE).row;
+      col = (*CURRENT_TILE).col + (((int)(left_dist/300.0))+1);
     } else if (CURRENT_DIRECTION == WEST) {
-      COURSE[(*CURRENT_TILE).row - (((int)(left_dist/300.0))+1)][(*CURRENT_TILE).col].goal = 1;
+      row = (*CURRENT_TILE).row - (((int)(left_dist/300.0))+1);
+      col = (*CURRENT_TILE).col;
+    }
+
+    if (COURSE[row][col].goal == 0) {
+      COURSE[row][col].goal = POSSIBILITY;
+      COURSE[row][col].type = WATER; // avoid running through this tile
+      AdvancedPath(&COURSE[row][col]);
+      return true;
     }
   }
   if (front_scan_off_count > 7) {
+    front_scan_off_count = 0;
+    row = (*CURRENT_TILE).row;
+    col = (*CURRENT_TILE).col - (((int)(front_dist/300.0))+1);
     //Serial.print("FRONT: ");
     //Serial.println((int)(front_dist/300.0));
-  }
-  if (right_scan_off_count > 15) {
-    Serial.print("RIGHT: ");
-    Serial.println(((int)(right_dist/300.0))+1);
-    Serial.print("CROW: ");
-    Serial.println((*CURRENT_TILE).row);
-    Serial.print("CCOL: ");
-    Serial.println((*CURRENT_TILE).col);
-    right_scan_off_count = 0;
+    
+    if (COURSE[row][col].goal == 0) {
+      COURSE[row][col].goal = POSSIBILITY;
+      COURSE[row][col].type = WATER; // avoid running through this tile
+      AdvancedPath(&COURSE[row][col]);
+      return true;
+    }
   }
 }

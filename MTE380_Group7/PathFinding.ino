@@ -100,6 +100,7 @@ int Navigate() { // Checks to verify we are on the right path towards the next p
 
   if (forward) {
     if (UpdateCourseLocation()) { // If we have identified a new tile, then check what we should do after this tile
+      temporary_stop = true;
       return CURRENT_DIRECTION;
     }
   }
@@ -107,9 +108,6 @@ int Navigate() { // Checks to verify we are on the right path towards the next p
   // Determine row/column difference; note that any given next step will be a straight line from where we presently are.
   int rowDiff = (*PATH_HEAD->tile).row - (*CURRENT_TILE).row;
   int colDiff = (*PATH_HEAD->tile).col - (*CURRENT_TILE).col;
-
-  Serial.println(rowDiff);
-  Serial.println(colDiff);
 
   // If we've reached the target tile, pop the target off and return 0 to indicate arrival
   if (rowDiff == 0 && colDiff == 0) {
@@ -191,9 +189,15 @@ void PathPointReached() { // Function to pop the target off the list
   (*PATH_HEAD->tile).pathTarget = false;
 
   // Remove the tile from the list
-  temp = PATH_HEAD;
-  PATH_HEAD = PATH_HEAD->next;
-  delete temp;
+  if (PATH_HEAD->next != NULL) {
+    temp = PATH_HEAD;
+    PATH_HEAD = PATH_HEAD->next;
+    delete temp;
+  } else {
+    delete PATH_HEAD;
+    PATH_HEAD = NULL;
+    PATH_TAIL = NULL;
+  }
 }
 
 
@@ -492,12 +496,9 @@ void AdvancedPath(struct Tile* target) {
     }
   }
   
-
   // Reset counters
   rowIndex = 0;
   colIndex = 0;
-
-
 
   if (rowDiff >= 0) { // If you will need to go North
 
@@ -506,7 +507,7 @@ void AdvancedPath(struct Tile* target) {
       // ROW FIRST OPTION
       if (COURSE[x][(*target).col].type == WATER) { // Row first consideration
         // Add the old tile to the row traversal path to make it the turning point
-        rowPathPt2[rowIndex] = &COURSE[x - 1][(*target).col];
+        rowPathPt2[rowIndex] = &COURSE[x + 1][(*target).col];
         rowIndex++;
 
         for (int i = -1; i <= 1; i++) {
@@ -602,7 +603,7 @@ void AdvancedPath(struct Tile* target) {
     // Store corner
     if (COURSE[(*target).row][(*CURRENT_TILE).col].type == WATER) {
       int EWModifier = 0;
-      if (rowDiff >= 0) { // we also head West 
+      if (colDiff >= 0) { // we also head West 
         EWModifier = 1;
       } else {
         EWModifier = -1;
@@ -630,7 +631,7 @@ void AdvancedPath(struct Tile* target) {
       // ROW FIRST OPTION
       if (COURSE[x][(*target).col].type == WATER) { // Row first consideration
         // Add the old tile to the row traversal path to make it the turning point
-        rowPathPt2[rowIndex] = &COURSE[x + 1][(*target).col];
+        rowPathPt2[rowIndex] = &COURSE[x - 1][(*target).col];
         rowIndex++;
 
         for (int i = -1; i <= 1; i++) {
@@ -725,7 +726,7 @@ void AdvancedPath(struct Tile* target) {
     // Store corner
     if (COURSE[(*target).row][(*CURRENT_TILE).col].type == WATER) {
       int EWModifier = 0;
-      if (rowDiff >= 0) { // we also head West 
+      if (colDiff >= 0) { // we also head West 
         EWModifier = 1;
       } else {
         EWModifier = -1;
