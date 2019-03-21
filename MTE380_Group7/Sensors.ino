@@ -4,10 +4,6 @@
 #define HALL_EFFECT_3 A11
 #define HALL_EFFECT_4 A12
 
-// MPU variables
-double gyro_pitch, gyro_roll, gyro_yaw, accel_vel, accel_dist;
-int previous_MPU_interrupt_time;
-
 // TOF variables
 double left_distances[10] = {-2,-2,-2,-2,-2,-2,-2,-2,-2,-2};
 double left_avg = 0;
