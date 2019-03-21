@@ -22,46 +22,41 @@ void AddToPath(struct Tile* newTile) { // Function to add the next path point to
 
 bool Center() { // Function to travel to the center of the current tile. Returns TRUE when the center has been reached.
   double distN = 0, distE = 0;
-  bool dirSatisfied = false;
 
   distN = 260 - abs(DISTANCE_NORTH);
   distE = 260 - abs(DISTANCE_EAST);
   
   if (CURRENT_DIRECTION == NORTH) {
     if (distN > CENTER_TOL) {
-      Forward(MAX_SPEED);
+      forward = true;
     } else if (distN < -CENTER_TOL) {
-      Reverse(MAX_SPEED);
+      //Reverse(MAX_SPEED);
     }
   } else if (CURRENT_DIRECTION == SOUTH) {
     if (distN < -CENTER_TOL) {
-      Forward(MAX_SPEED);
+      forward = true;
     } else if (distN > CENTER_TOL) {
-      Reverse(MAX_SPEED);
+      //Reverse(MAX_SPEED);
     }
   } else if (CURRENT_DIRECTION == EAST) {
     if (distE > CENTER_TOL) {
-      Forward(MAX_SPEED);
+      forward = true;
     } else if (distE < -CENTER_TOL) {
-      Reverse(MAX_SPEED);
+      //Reverse(MAX_SPEED);
     }
   } else if (CURRENT_DIRECTION == WEST) {
     if (distE < -CENTER_TOL) {
-      Forward(MAX_SPEED);
+      forward = true;
     } else if (distE > CENTER_TOL) {
-      Reverse(MAX_SPEED);
+      //Reverse(MAX_SPEED);
     }
   }
 
-  UpdateCourseLocation();
-
-  Serial.println(CURRENT_DIRECTION);
-  Serial.println(distN);
-  Serial.println(distE);
-
+  UpdateDistance();
+  
   // Are we centered?
-  if ((abs(distN) < CENTER_TOL && (CURRENT_DIRECTION == NORTH || CURRENT_DIRECTION == SOUTH))
-      || (abs(distE) < CENTER_TOL && (CURRENT_DIRECTION == EAST || CURRENT_DIRECTION == WEST))) {
+  if ((distN < CENTER_TOL && (CURRENT_DIRECTION == NORTH || CURRENT_DIRECTION == SOUTH))
+      || (distE < CENTER_TOL && (CURRENT_DIRECTION == EAST || CURRENT_DIRECTION == WEST))) {
     return true;
   } else {
     return false;
@@ -84,7 +79,7 @@ int Navigate() { // Checks to verify we are on the right path towards the next p
   if (forward) {
     if (UpdateCourseLocation()) { // If we have identified a new tile, then check what we should do after this tile
       temporary_stop = true;
-      centering = true;
+      Serial.println("REEEEEEEEEEEEEEEEEEEEEEEE");
       return CURRENT_DIRECTION;
     }
   }

@@ -201,7 +201,7 @@ void setup() {
   COURSE[5][2].type = WATER;
 
   // Define starting position #TODO - update to actual expected starting position
-  STARTING_TILE = &COURSE[5][4];
+  STARTING_TILE = &COURSE[4][2];
   CURRENT_TILE = STARTING_TILE;
   STARTING_DIRECTION = NORTH;
   CURRENT_DIRECTION = STARTING_DIRECTION;

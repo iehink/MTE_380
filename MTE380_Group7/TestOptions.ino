@@ -11,28 +11,43 @@ void NavToTile(){ // Test tile selection + navigation
   
   Serial.print((*CURRENT_TILE).row);
   Serial.print(" ");
-  Serial.println((*CURRENT_TILE).col);
+  Serial.print((*CURRENT_TILE).col);
   
   int dir = Navigate();
+  Serial.print(" ");
+  Serial.println(dir);
   //Serial.println(dir);
   if (temporary_stop) {
     forward = false;
     turn_left = false;
     turn_right = false;
     if (temporary_stop_counter > 30)
-    {
-      Serial.println(front_to_wall);
-      Serial.println(front_dist - front_to_wall);
+    {/*
+      if (front_dist != -1 && front_to_wall != -1) {
+        // compare front dist to expected
+        Serial.println(front_to_wall);
+        Serial.println(front_dist - front_to_wall);
+        if (CURRENT_DIRECTION == NORTH) {
+          DISTANCE_NORTH += (front_dist - front_to_wall);
+        } else if (CURRENT_DIRECTION == EAST) {
+          DISTANCE_EAST += (front_dist - front_to_wall);
+        } else if (CURRENT_DIRECTION == SOUTH) {
+          DISTANCE_NORTH -= (front_dist - front_to_wall);
+        } else if (CURRENT_DIRECTION == WEST) {
+          DISTANCE_EAST -= (front_dist - front_to_wall);
+        }
+      }*/
       time_last_called = millis();
       temporary_stop = false;
       temporary_stop_counter = 0;
+      Serial.println("STOP DONE");
+      centering = true;
     }
     temporary_stop_counter++;
-  } else if ((centering || dir == 0) && !startup) {
-    Serial.println("CENTERING");
-    centering = true;
+  } else if (centering && !startup) {
     if (Center()) {
       centering = false;
+      Serial.println("CENTERING DONE");
     }
   } else if (dir == -1) {
     forward = false;
@@ -41,6 +56,7 @@ void NavToTile(){ // Test tile selection + navigation
   } else if (dir == CURRENT_DIRECTION) {
     forward = true;
   } else {
+    forward = false;
     Head(dir);
   }
   

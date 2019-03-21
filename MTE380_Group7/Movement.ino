@@ -66,7 +66,6 @@ double CardinalToDegrees(int heading){ // Function to convert directional headin
 bool Head(int dir) { // Function to adjust heading #TODO: Update DISTANCE_NORTH and DISTANCE_EAST to reflect distance change when turning
   if (TurnGyro(CardinalToDegrees(dir))) {
     CURRENT_DIRECTION = dir; 
-    //ResetEncoders(); 
     time_last_called = millis();
     return true;
   }
