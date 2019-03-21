@@ -33,8 +33,6 @@ bool Center() { // Function to travel to the center of the current tile. Returns
     distOff = nosePosition + DISTANCE_EAST;
   }
 
-  Serial.println(distOff);
-
   if (distOff > CENTER_TOL) { // not far enough
     forward = true;
     reverse = false;
@@ -130,7 +128,6 @@ bool UpdateCourseLocation() { // Function to update the location on the course g
 }
 
 void UpdateDistance() { // Function to update DISTANCE_NORTH and DISTANCE_EAST as required
-  //ReadEncoders(); // possibly useful if they ever actually work?
   double distanceTravelled = (millis() - time_last_called) / TIME_PER_MM;
   time_last_called = millis();
 

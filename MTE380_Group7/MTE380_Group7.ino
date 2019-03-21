@@ -414,6 +414,7 @@ void GoalApproach() { // As you approach a structure
   }
   
   Move();
+  UpdateDistance();
 }
 
 void GoalHandling() { // If you are on a goal tile, assess which one, handle it as required (including LEDs)
@@ -452,20 +453,23 @@ void GoalHandling() { // If you are on a goal tile, assess which one, handle it 
 }
 
 void ReturningToPath() { // Go back to the center of the previous tile
-  if (CURRENT_DIRECTION == NORTH) {
-    CURRENT_TILE = &COURSE[(*CURRENT_TILE).row + 1][(*CURRENT_TILE).col];
-    DISTANCE_NORTH += TILE_DISTANCE;
-  } else if (CURRENT_DIRECTION == EAST) {
-    CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col + 1];
-    DISTANCE_EAST += TILE_DISTANCE;
-  } else if (CURRENT_DIRECTION == SOUTH) {
-    CURRENT_TILE = &COURSE[(*CURRENT_TILE).row - 1][(*CURRENT_TILE).col];
-    DISTANCE_NORTH -= TILE_DISTANCE;
-  } else if (CURRENT_DIRECTION == WEST) {
-    CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col - 1];
-    DISTANCE_EAST -= TILE_DISTANCE;
+  if (!centering) {
+    if (CURRENT_DIRECTION == NORTH) {
+      CURRENT_TILE = &COURSE[(*CURRENT_TILE).row + 1][(*CURRENT_TILE).col];
+      DISTANCE_NORTH += TILE_DISTANCE;
+    } else if (CURRENT_DIRECTION == EAST) {
+      CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col + 1];
+      DISTANCE_EAST += TILE_DISTANCE;
+    } else if (CURRENT_DIRECTION == SOUTH) {
+      CURRENT_TILE = &COURSE[(*CURRENT_TILE).row - 1][(*CURRENT_TILE).col];
+      DISTANCE_NORTH -= TILE_DISTANCE;
+    } else if (CURRENT_DIRECTION == WEST) {
+      CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col - 1];
+      DISTANCE_EAST -= TILE_DISTANCE;
+    }
   }
   if (Center()) {
+    centering = false;
     production_state = ANY_STATE;
   }
 }
