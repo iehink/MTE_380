@@ -1,16 +1,16 @@
 /* MTE 380 Group 7
- * Date Created: 2019/02/16
- * Author: Catherine Fowler
- * Last Updated: 2019/03/21
- * By: Catherine Fowler
- */
+   Date Created: 2019/02/16
+   Author: Catherine Fowler
+   Last Updated: 2019/03/21
+   By: Catherine Fowler
+*/
 
 // Search for #TODO for missing items
 
 /* Grid layout begins at (1,1) in the upper lefthand corner.
- * North indicates going up a column, right across a row, etc.
- * Coordinates indicated as (RC), e.g. 12 means first row, second column.
- */
+   North indicates going up a column, right across a row, etc.
+   Coordinates indicated as (RC), e.g. 12 means first row, second column.
+*/
 
 // Includes
 #include <MPU6050.h>
@@ -20,8 +20,8 @@
 
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * ************************************************************** Define structs **************************************************************
- * --------------------------------------------------------------------------------------------------------------------------------------------
- */
+   --------------------------------------------------------------------------------------------------------------------------------------------
+*/
 struct Tile {
   int type = 0; // flat, sand, gravel, water, or unknown, as described below in the global variables
   int row = 0;
@@ -38,8 +38,8 @@ struct PathPoint {
 
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * ********************************************************* Define global variables **********************************************************
- * --------------------------------------------------------------------------------------------------------------------------------------------
- */
+   --------------------------------------------------------------------------------------------------------------------------------------------
+*/
 // Pathfinding globals
 int CURRENT_DIRECTION; // To track grid location/direction
 int STARTING_DIRECTION;
@@ -60,17 +60,17 @@ Tile COURSE[6][6];
 #define WATER 99 // just don't do it...
 
 /* Path planning will be optimized by:
- * 1) Taking the fewest number of turns (since that is the most prone to throw our trajectory off), and
- * 2) Prioritizing unknown (UNK) tiles - the sum of each route will be taken, and the lowest score will be preferable.
- * Therefore, weightings for desire to avoid tiles/find tiles should be taken into account for the global variable definitions of tile types.
- */
+   1) Taking the fewest number of turns (since that is the most prone to throw our trajectory off), and
+   2) Prioritizing unknown (UNK) tiles - the sum of each route will be taken, and the lowest score will be preferable.
+   Therefore, weightings for desire to avoid tiles/find tiles should be taken into account for the global variable definitions of tile types.
+*/
 struct PathPoint* PATH_HEAD = NULL;
 struct PathPoint* PATH_TAIL = NULL;
 int path_state = 0;
 
 double DISTANCE_NORTH, DISTANCE_EAST; // Distance based on center of nose of robot, as measured from the south-west corner of the current tile [mm].
 #define TILE_DISTANCE 304.8 // length of each tile (1 ft = 304.8mm) #TODO - update with actual measurements/testing
-double TIME_PER_MM = 3950.0/TILE_DISTANCE; // ms/mm DO NOT DEFINE THIS - IT BREAKS EVERYTHING; set it by measuring the time it takes to traverse a tile
+double TIME_PER_MM = 3950.0 / TILE_DISTANCE; // ms/mm DO NOT DEFINE THIS - IT BREAKS EVERYTHING; set it by measuring the time it takes to traverse a tile
 unsigned long time_last_called = 0; // variable to store the last time UpdateDistance() was called for the purposes of judging distance
 
 // Movement commands
@@ -128,7 +128,7 @@ int production_state = 0;
 
 // Define goal array and goal meanings
 bool GOAL[6] = {false, false, false, false, false, false}; // 0th array unused, array indices correspond to values listed below
-int PEOPLE = 1, LOST = 2, FOOD = 3, FIRE = 4, DELIVER = 5, POSSIBILITY = 6, STRUCTURE = 7, NONE = 8; 
+int PEOPLE = 1, LOST = 2, FOOD = 3, FIRE = 4, DELIVER = 5, POSSIBILITY = 6, STRUCTURE = 7, NONE = 8;
 // Variable to keep track of where the people are
 struct Tile* people_tile;
 struct Tile* lost_tile; // we need to return to both since we can't tell the difference
@@ -155,8 +155,8 @@ void AddToPath(struct Tile* newTile);
 
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * ******************************************************** Running code begins below. ********************************************************
- * --------------------------------------------------------------------------------------------------------------------------------------------
- */
+   --------------------------------------------------------------------------------------------------------------------------------------------
+*/
 void setup() {
   // Begin serial comms for testing
   Serial.begin(9600);
@@ -217,7 +217,7 @@ void setup() {
 void loop() {
   int loopStartTime = millis();
 
-  if(!Button()) {
+  if (!Button()) {
     Stop();
     gyro_yaw = 0;
     DISTANCE_NORTH = 260;
@@ -232,22 +232,8 @@ void loop() {
       }
     }
     ReadTOF();
-  
-  /*
-    if (Fiyah() && !fan_on) {
-      RunFan();
-      fan_on = true;
-    } else if (fan_on_count > 200) {
-      StopFan();
-      fan_on = false;
-      fan_on_count = 0;
-    } else if (fan_on) {
-      fan_on_count++;
-    }
-  
-    */
-    
-    if(TEST) {
+
+    if (TEST) {
       //StructureTest();
       //CenterTest();
       NavToTile();
@@ -260,23 +246,12 @@ void loop() {
       //HeadingTest();
       //Move();
     }
-    else { 
-      // For now, just try to approach the thing in front of you and either blow out the candle or light the correct LED
-      /*if (production_state == 0) {
-        Serial.println("Reset");
-        while(!btnState) {
-          Stop();
-          Button();
-        }
-        btnState = false;
-        production_state = GOAL_APPROACH;
-      }*/
-      
+    else {
       ProductionLoop();
       Serial.println(production_state);
     }
   }
-  
+
   int delayTime = (LOOP_RUNTIME) - (millis() - loopStartTime);
   //Serial.println(delayTime);
   if (delayTime > 0) {
@@ -284,7 +259,7 @@ void loop() {
   }
 }
 
-void ProductionLoop(){ // Full code
+void ProductionLoop() { // Full code
   // If we are not in a specific state at the moment, assess what state we should be in based on goals completed
   if (production_state == ANY_STATE) {
     if (!GOAL[PEOPLE] || !GOAL[LOST] || !GOAL[FIRE]) {
@@ -298,7 +273,7 @@ void ProductionLoop(){ // Full code
       production_state = TRAVELLING;
     }
   }
-  
+
   if (!GOAL[FOOD] && food_sensed) {
     (*CURRENT_TILE).goal = FOOD;
     production_state = GOAL_HANDLING;
@@ -325,9 +300,9 @@ void ProductionLoop(){ // Full code
 
 void SearchState() { // Navigation with searching
   if (!turning && ObjectOnTile()) {
-    path_state = -1; 
+    path_state = -1;
   }
-  
+
   // Run along hard-coded path if there is no path found (i.e. no objects have been found from our path)
   if (PATH_HEAD == NULL) {
     path_state++; // If we reset the path counter to -1, then we will return to the pre-programmed path. If we reached the first pre-programmed path, proceed to the next pathpoint
@@ -336,11 +311,11 @@ void SearchState() { // Navigation with searching
     SelectPath(&COURSE[3][2]);
   } else if (path_state == 1) {
     SelectPath(&COURSE[2][2]);
-  } else if (path_state == 2) { 
+  } else if (path_state == 2) {
     SelectPath(&COURSE[2][4]);
   } else if (path_state == 3) {
     SelectPath(&COURSE[3][4]);
-  } 
+  }
 
   // If we began centering, finish centering
   if (centering) {
@@ -353,7 +328,7 @@ void SearchState() { // Navigation with searching
   if (!centering && !temporary_stop) dir = Navigate();
 
   Serial.println(dir);
-  
+
   if (temporary_stop) {
     forward = false;
     turn_left = false;
@@ -364,7 +339,7 @@ void SearchState() { // Navigation with searching
       temporary_stop_counter = 0;
     }
     temporary_stop_counter++;
-  } else if ((*CURRENT_TILE).goal == POSSIBILITY){
+  } else if ((*CURRENT_TILE).goal == POSSIBILITY) {
     forward = false;
     turn_left = false;
     turn_right = false;
@@ -381,7 +356,7 @@ void SearchState() { // Navigation with searching
     turning = true;
     if (Head(dir)) turning = false;
   }
-  
+
   Move();
 }
 
@@ -395,7 +370,7 @@ void GoalApproach() { // As you approach a structure
       fire_count++;
     }
 
-    if (structure_loop > 20) {    
+    if (structure_loop > 20) {
       if (fire_count > 0) {
         (*CURRENT_TILE).goal = FIRE;
       } else if (GOAL[PEOPLE]) {
@@ -407,11 +382,11 @@ void GoalApproach() { // As you approach a structure
       structure_loop = 0;
       fire_count = 0;
       production_state = GOAL_HANDLING;
-    }    
+    }
   } else {
     forward = true;
   }
-  
+
   Move();
   UpdateDistance();
 }
@@ -424,7 +399,7 @@ void GoalHandling() { // If you are on a goal tile, assess which one, handle it 
     } else if (fan_on_count > 200) {
       StopFan();
       fan_on = false;
-      fan_on_count = 0;      
+      fan_on_count = 0;
       digitalWrite(LED_pin[FIRE], HIGH);
       GOAL[FIRE] = true;
       production_state = RETURNING_TO_PATH;
@@ -466,6 +441,7 @@ void ReturningToPath() { // Go back to the center of the previous tile
       CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col - 1];
       DISTANCE_EAST -= TILE_DISTANCE;
     }
+    centering = true;
   }
   if (Center()) {
     centering = false;
@@ -506,7 +482,7 @@ void Delivering() {
   } else {
     Head(dir);
   }
-  
+
   Move();
 }
 
@@ -544,7 +520,7 @@ void Travelling() { // Navigation without searching; only occurs after all struc
   } else {
     Head(dir);
   }
-  
+
   Move();
 }
 

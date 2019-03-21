@@ -244,13 +244,21 @@ bool ObjectOnTile() {
       col = (*CURRENT_TILE).col;
     }
 
+    Serial.println("saw something left");
+
     if (COURSE[row][col].goal == 0) {
       /*if (path_state != -1) { // if we were only travelling to an unnecessary tile
         ClearPath(); 
       }*/ // Might cause issues with centering on a tile
       COURSE[row][col].goal = POSSIBILITY;
       COURSE[row][col].type = WATER; // avoid running through this tile
-      SelectPath(&COURSE[row][col]);
+      if (path_state == -1) {
+        struct Tile* tile = ClearPath();
+        SelectPath(&COURSE[row][col]);
+        SelectPath(tile);
+      } else {
+        SelectPath(&COURSE[row][col]);
+      }
       return true;
     }
   }
@@ -277,9 +285,13 @@ bool ObjectOnTile() {
     if (COURSE[row][col].goal == 0) {
       COURSE[row][col].goal = POSSIBILITY;
       COURSE[row][col].type = WATER; // avoid running through this tile
-      struct Tile* tile = ClearPath();
-      SelectPath(&COURSE[row][col]);
-      SelectPath(tile);
+      if (path_state == -1) {
+        struct Tile* tile = ClearPath();
+        SelectPath(&COURSE[row][col]);
+        SelectPath(tile);
+      } else {
+        SelectPath(&COURSE[row][col]);
+      }
       return true;
     }
   }

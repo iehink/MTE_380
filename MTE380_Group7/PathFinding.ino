@@ -62,6 +62,7 @@ struct Tile* ClearPath() {
 
 int Navigate() { // Checks to verify we are on the right path towards the next pathpoint. Returns direction to head, 0 if we need to center, -1 if there is no path.
   if (PATH_HEAD == NULL) {
+    Serial.println("where do we gooooo");
     return -1;
   }
 
