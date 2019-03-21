@@ -189,6 +189,7 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
     AddToPath(CURRENT_TILE); // Ensure alignment to center of tile before we begin travelling to the target
   } else {
     prevTile = PATH_TAIL->tile;
+    Serial.println("correct");
   }
 
   struct Tile* rowPathPt1[6] = {NULL};
@@ -201,8 +202,8 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
 
   int avoidLeft = 0, avoidRight = 0;
 
-  int rowDiff = (*CURRENT_TILE).row - (*target).row;
-  int colDiff = (*CURRENT_TILE).col - (*target).col;
+  int rowDiff = (*prevTile).row - (*target).row;
+  int colDiff = (*prevTile).col - (*target).col;
   
 
   /* Path is broken down by directions that will need to be travelled
@@ -213,53 +214,53 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
   // If you will need to go west
   if (colDiff >= 0) {
 
-    for (int y = (*CURRENT_TILE).col; y > (*target).col; y--) {
+    for (int y = (*prevTile).col; y > (*target).col; y--) {
 
       // ROW FIRST OPTIONS
-      if (COURSE[(*CURRENT_TILE).row][y].type == WATER) {
+      if (COURSE[(*prevTile).row][y].type == WATER) {
         // Add the old tile to the row traversal path to make it the turning point
-        rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row][y + 1];
+        rowPathPt1[rowIndex] = &COURSE[(*prevTile).row][y + 1];
         rowIndex++;
 
         for (int i = -1; i <= 1; i++) {
-          if ((*CURRENT_TILE).row + 1 <= 5) {
-            avoidLeft += COURSE[(*CURRENT_TILE).row + 1][y - i].type;
+          if ((*prevTile).row + 1 <= 5) {
+            avoidLeft += COURSE[(*prevTile).row + 1][y - i].type;
           } else {
             avoidLeft = 999; // can't do it
           }
-          if ((*CURRENT_TILE).row - 1 >= 0) {
-            avoidRight += COURSE[(*CURRENT_TILE).row - 1][y - i].type;
+          if ((*prevTile).row - 1 >= 0) {
+            avoidRight += COURSE[(*prevTile).row - 1][y - i].type;
           } else {
             avoidRight = 999; // can't do it
           }
         }
-
+        
         if (avoidLeft < avoidRight) { // Skirt the water to the left
           rowFirst += avoidLeft;
-          rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row + 1][y + 1];
+          rowPathPt1[rowIndex] = &COURSE[(*prevTile).row + 1][y + 1];
           rowIndex++;
-          rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row + 1][y];
+          rowPathPt1[rowIndex] = &COURSE[(*prevTile).row + 1][y];
           rowIndex++;
-          rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row + 1][y - 1];
+          rowPathPt1[rowIndex] = &COURSE[(*prevTile).row + 1][y - 1];
           rowIndex++;
-          rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row][y - 1];
+          rowPathPt1[rowIndex] = &COURSE[(*prevTile).row][y - 1];
           rowIndex++;
         } else { // Skirt the water to the right
-          rowFirst += avoidLeft;
-          rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row - 1][y + 1];
+          rowFirst += avoidRight;
+          rowPathPt1[rowIndex] = &COURSE[(*prevTile).row - 1][y + 1];
           rowIndex++;
-          rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row - 1][y];
+          rowPathPt1[rowIndex] = &COURSE[(*prevTile).row - 1][y];
           rowIndex++;
-          rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row - 1][y - 1];
+          rowPathPt1[rowIndex] = &COURSE[(*prevTile).row - 1][y - 1];
           rowIndex++;
-          rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row][y - 1];
+          rowPathPt1[rowIndex] = &COURSE[(*prevTile).row][y - 1];
           rowIndex++;
         }
 
         avoidLeft = 0;
         avoidRight = 0;
       } else {
-        rowFirst += COURSE[(*CURRENT_TILE).row][y].type;
+        rowFirst += COURSE[(*prevTile).row][y].type;
       }
 
       // COLUMN FIRST OPTIONS
@@ -292,7 +293,7 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
           colPathPt2[colIndex] = &COURSE[(*target).row][y - 1];
           colIndex++;
         } else { // Skirt the water to the right
-          colFirst += avoidLeft;
+          colFirst += avoidRight;
           colPathPt2[colIndex] = &COURSE[(*target).row - 1][y + 1];
           colIndex++;
           colPathPt2[colIndex] = &COURSE[(*target).row - 1][y];
@@ -311,51 +312,53 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
     }
 
 
-    // Store ROW FIRST OPTION corner assuming you needed to head west
-    if (COURSE[(*CURRENT_TILE).row][(*target).col].type == WATER) {
-      int NSModifier = 0;
-      if (rowDiff >= 0) { // we also head North) 
-        NSModifier = 1;
+    if (colDiff != 0) {
+      // Store ROW FIRST OPTION corner assuming you needed to head west
+      if (COURSE[(*prevTile).row][(*target).col].type == WATER) {
+        int NSModifier = 0;
+        if (rowDiff >= 0) { // we also head North) 
+          NSModifier = 1;
+        } else {
+          NSModifier = -1;
+        }
+  
+        
+        rowPathPt1[rowIndex] = &COURSE[(*prevTile).row][(*target).col + 1];
+        rowIndex++;
+        rowFirst += COURSE[(*prevTile).row][(*target).col + 1].type;
+    
+        rowPathPt1[rowIndex] = &COURSE[(*prevTile).row - NSModifier][(*target).col + 1];
+        rowIndex++;
+        rowFirst += COURSE[(*prevTile).row - NSModifier][(*target).col + 1].type;
+    
+        rowPathPt1[rowIndex] = &COURSE[(*prevTile).row - NSModifier][(*target).col];
+        rowIndex++;
+        rowFirst += COURSE[(*prevTile).row - NSModifier][(*target).col].type;
       } else {
-        NSModifier = -1;
+        rowPathPt1[rowIndex] = &COURSE[(*prevTile).row][(*target).col];
+        rowIndex++;
       }
-
-      
-      rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row][(*target).col + 1];
-      rowIndex++;
-      rowFirst += COURSE[(*CURRENT_TILE).row][(*target).col + 1].type;
-  
-      rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row - NSModifier][(*target).col + 1];
-      rowIndex++;
-      rowFirst += COURSE[(*CURRENT_TILE).row - NSModifier][(*target).col + 1].type;
-  
-      rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row - NSModifier][(*target).col];
-      rowIndex++;
-      rowFirst += COURSE[(*CURRENT_TILE).row - NSModifier][(*target).col].type;
-    } else {
-      rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row][(*target).col];
-      rowIndex++;
     }
     
     
   } else { // If you will need to go east
 
-    for (int y = (*CURRENT_TILE).col; y < (*target).col; y++) {
+    for (int y = (*prevTile).col; y < (*target).col; y++) {
 
       // ROW FIRST OPTIONS
-      if (COURSE[(*CURRENT_TILE).row][y].type == WATER) {
+      if (COURSE[(*prevTile).row][y].type == WATER) {
         // Add the old tile to the row traversal path to make it the turning point
-        rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row][y - 1];
+        rowPathPt1[rowIndex] = &COURSE[(*prevTile).row][y - 1];
         rowIndex++;
 
         for (int i = -1; i <= 1; i++) {
-          if ((*CURRENT_TILE).row - 1 >= 0) {
-            avoidLeft += COURSE[(*CURRENT_TILE).row - 1][y + i].type;
+          if ((*prevTile).row - 1 >= 0) {
+            avoidLeft += COURSE[(*prevTile).row - 1][y + i].type;
           } else {
             avoidLeft = 999; // can't do it
           }
-          if ((*CURRENT_TILE).row + 1 <= 5) {
-            avoidRight += COURSE[(*CURRENT_TILE).row + 1][y + i].type;
+          if ((*prevTile).row + 1 <= 5) {
+            avoidRight += COURSE[(*prevTile).row + 1][y + i].type;
           } else {
             avoidRight = 999; // can't do it
           }
@@ -363,30 +366,30 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
 
         if (avoidLeft < avoidRight) { // Skirt the water to the left
           rowFirst += avoidLeft;
-          rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row - 1][y - 1];
+          rowPathPt1[rowIndex] = &COURSE[(*prevTile).row - 1][y - 1];
           rowIndex++;
-          rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row - 1][y];
+          rowPathPt1[rowIndex] = &COURSE[(*prevTile).row - 1][y];
           rowIndex++;
-          rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row - 1][y + 1];
+          rowPathPt1[rowIndex] = &COURSE[(*prevTile).row - 1][y + 1];
           rowIndex++;
-          rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row][y + 1];
+          rowPathPt1[rowIndex] = &COURSE[(*prevTile).row][y + 1];
           rowIndex++;
         } else { // Skirt the water to the right
-          rowFirst += avoidLeft;
-          rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row + 1][y - 1];
+          rowFirst += avoidRight;
+          rowPathPt1[rowIndex] = &COURSE[(*prevTile).row + 1][y - 1];
           rowIndex++;
-          rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row + 1][y];
+          rowPathPt1[rowIndex] = &COURSE[(*prevTile).row + 1][y];
           rowIndex++;
-          rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row + 1][y + 1];
+          rowPathPt1[rowIndex] = &COURSE[(*prevTile).row + 1][y + 1];
           rowIndex++;
-          rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row][y + 1];
+          rowPathPt1[rowIndex] = &COURSE[(*prevTile).row][y + 1];
           rowIndex++;
         }
 
         avoidLeft = 0;
         avoidRight = 0;
       } else {
-        rowFirst += COURSE[(*CURRENT_TILE).row][y].type;
+        rowFirst += COURSE[(*prevTile).row][y].type;
       }
 
       // COLUMN FIRST OPTIONS
@@ -419,7 +422,7 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
           colPathPt2[colIndex] = &COURSE[(*target).row][y + 1];
           colIndex++;
         } else { // Skirt the water to the right
-          colFirst += avoidLeft;
+          colFirst += avoidRight;
           colPathPt2[colIndex] = &COURSE[(*target).row + 1][y - 1];
           colIndex++;
           colPathPt2[colIndex] = &COURSE[(*target).row + 1][y];
@@ -437,31 +440,33 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
       }
     }
 
-
-    // Store ROW FIRST OPTION corner assuming you needed to head west
-    if (COURSE[(*CURRENT_TILE).row][(*target).col].type == WATER) {
-      int NSModifier = 0;
-      if (rowDiff >= 0) { // we also head North) 
-        NSModifier = 1;
+    
+    if (colDiff != 0) {
+      // Store ROW FIRST OPTION corner assuming you needed to head west
+      if (COURSE[(*prevTile).row][(*target).col].type == WATER) {
+        int NSModifier = 0;
+        if (rowDiff >= 0) { // we also head North) 
+          NSModifier = 1;
+        } else {
+          NSModifier = -1;
+        }
+  
+        
+        rowPathPt1[rowIndex] = &COURSE[(*prevTile).row][(*target).col - 1];
+        rowIndex++;
+        rowFirst += COURSE[(*prevTile).row][(*target).col - 1].type;
+    
+        rowPathPt1[rowIndex] = &COURSE[(*prevTile).row - NSModifier][(*target).col - 1];
+        rowIndex++;
+        rowFirst += COURSE[(*prevTile).row - NSModifier][(*target).col - 1].type;
+    
+        rowPathPt1[rowIndex] = &COURSE[(*prevTile).row - NSModifier][(*target).col];
+        rowIndex++;
+        rowFirst += COURSE[(*prevTile).row - NSModifier][(*target).col].type;
       } else {
-        NSModifier = -1;
+        rowPathPt1[rowIndex] = &COURSE[(*prevTile).row][(*target).col];
+        rowIndex++;
       }
-
-      
-      rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row][(*target).col - 1];
-      rowIndex++;
-      rowFirst += COURSE[(*CURRENT_TILE).row][(*target).col - 1].type;
-  
-      rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row - NSModifier][(*target).col - 1];
-      rowIndex++;
-      rowFirst += COURSE[(*CURRENT_TILE).row - NSModifier][(*target).col - 1].type;
-  
-      rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row - NSModifier][(*target).col];
-      rowIndex++;
-      rowFirst += COURSE[(*CURRENT_TILE).row - NSModifier][(*target).col].type;
-    } else {
-      rowPathPt1[rowIndex] = &COURSE[(*CURRENT_TILE).row][(*target).col];
-      rowIndex++;
     }
   }
   
@@ -471,7 +476,7 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
 
   if (rowDiff >= 0) { // If you will need to go North
 
-    for (int x = (*CURRENT_TILE).row; x > (*target).row; x--) {
+    for (int x = (*prevTile).row; x > (*target).row; x--) {
 
       // ROW FIRST OPTION
       if (COURSE[x][(*target).col].type == WATER) { // Row first consideration
@@ -521,19 +526,19 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
       }
 
       // COLUMN FIRST OPTION
-      if (COURSE[x][(*CURRENT_TILE).col].type == WATER) { // Column first consideration
+      if (COURSE[x][(*prevTile).col].type == WATER) { // Column first consideration
         // Add the old tile to the row traversal path to make it the turning point
-        colPathPt1[colIndex] = &COURSE[x + 1][(*CURRENT_TILE).col];
+        colPathPt1[colIndex] = &COURSE[x + 1][(*prevTile).col];
         colIndex++;
 
         for (int i = -1; i <= 1; i++) {
-          if ((*CURRENT_TILE).col - 1 >= 0) {
-            avoidLeft += COURSE[x + i][(*CURRENT_TILE).col - 1].type;
+          if ((*prevTile).col - 1 >= 0) {
+            avoidLeft += COURSE[x + i][(*prevTile).col - 1].type;
           } else {
             avoidLeft = 999; // can't do it
           }
-          if ((*CURRENT_TILE).col + 1 <= 5) {
-            avoidRight += COURSE[x + i][(*CURRENT_TILE).col + 1].type;
+          if ((*prevTile).col + 1 <= 5) {
+            avoidRight += COURSE[x + i][(*prevTile).col + 1].type;
           } else {
             avoidRight = 999; // can't do it
           }
@@ -541,61 +546,62 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
 
         if (avoidLeft < avoidRight) { // Skirt the water to the left
           colFirst += avoidLeft;
-          colPathPt1[colIndex] = &COURSE[x + 1][(*CURRENT_TILE).col - 1];
+          colPathPt1[colIndex] = &COURSE[x + 1][(*prevTile).col - 1];
           colIndex++;
-          colPathPt1[colIndex] = &COURSE[x][(*CURRENT_TILE).col - 1];
+          colPathPt1[colIndex] = &COURSE[x][(*prevTile).col - 1];
           colIndex++;
-          colPathPt1[colIndex] = &COURSE[x - 1][(*CURRENT_TILE).col - 1];
+          colPathPt1[colIndex] = &COURSE[x - 1][(*prevTile).col - 1];
           colIndex++;
-          colPathPt1[colIndex] = &COURSE[x - 1][(*CURRENT_TILE).col];
+          colPathPt1[colIndex] = &COURSE[x - 1][(*prevTile).col];
           colIndex++;
         } else { // Skirt the water to the right
           colFirst += avoidRight;
-          colPathPt1[colIndex] = &COURSE[x + 1][(*CURRENT_TILE).col + 1];
+          colPathPt1[colIndex] = &COURSE[x + 1][(*prevTile).col + 1];
           colIndex++;
-          colPathPt1[colIndex] = &COURSE[x][(*CURRENT_TILE).col + 1];
+          colPathPt1[colIndex] = &COURSE[x][(*prevTile).col + 1];
           colIndex++;
-          colPathPt1[colIndex] = &COURSE[x - 1][(*CURRENT_TILE).col + 1];
+          colPathPt1[colIndex] = &COURSE[x - 1][(*prevTile).col + 1];
           colIndex++;
-          colPathPt1[colIndex] = &COURSE[x - 1][(*CURRENT_TILE).col];
+          colPathPt1[colIndex] = &COURSE[x - 1][(*prevTile).col];
           colIndex++;
         }
 
         avoidLeft = 0;
         avoidRight = 0;
       } else {
-        colFirst += COURSE[x][(*CURRENT_TILE).col].type;
+        colFirst += COURSE[x][(*prevTile).col].type;
       }
     }
 
-
-    // Store corner
-    if (COURSE[(*target).row][(*CURRENT_TILE).col].type == WATER) {
-      int EWModifier = 0;
-      if (colDiff >= 0) { // we also head West 
-        EWModifier = 1;
+    if (rowDiff != 0) {
+      // Store corner
+      if (COURSE[(*target).row][(*prevTile).col].type == WATER) {
+        int EWModifier = 0;
+        if (colDiff >= 0) { // we also head West 
+          EWModifier = 1;
+        } else {
+          EWModifier = -1;
+        }
+        
+        colPathPt1[colIndex] = &COURSE[(*target).row + 1][(*prevTile).col];
+        colIndex++;
+        colFirst += COURSE[(*target).row + 1][(*prevTile).col].type;
+    
+        colPathPt1[colIndex] = &COURSE[(*target).row + 1][(*prevTile).col - EWModifier];
+        colIndex++;
+        colFirst += COURSE[(*target).row + 1][(*prevTile).col - EWModifier].type;
+    
+        colPathPt1[colIndex] = &COURSE[(*target).row][(*prevTile).col - EWModifier];
+        colIndex++;
+        colFirst += COURSE[(*target).row][(*prevTile).col - EWModifier].type;
       } else {
-        EWModifier = -1;
+        colPathPt1[colIndex] = &COURSE[(*target).row][(*prevTile).col];
+        colIndex++;
       }
-      
-      colPathPt1[colIndex] = &COURSE[(*target).row + 1][(*CURRENT_TILE).col];
-      colIndex++;
-      colFirst += COURSE[(*target).row + 1][(*CURRENT_TILE).col].type;
-  
-      colPathPt1[colIndex] = &COURSE[(*target).row + 1][(*CURRENT_TILE).col - EWModifier];
-      colIndex++;
-      colFirst += COURSE[(*target).row + 1][(*CURRENT_TILE).col - EWModifier].type;
-  
-      colPathPt1[colIndex] = &COURSE[(*target).row][(*CURRENT_TILE).col - EWModifier];
-      colIndex++;
-      colFirst += COURSE[(*target).row][(*CURRENT_TILE).col - EWModifier].type;
-    } else {
-      colPathPt1[colIndex] = &COURSE[(*target).row][(*CURRENT_TILE).col];
-      colIndex++;
     }
     
   } else { // If you will need to go South
-    for (int x = (*CURRENT_TILE).row; x < (*target).row; x++) {
+    for (int x = (*prevTile).row; x < (*target).row; x++) {
 
       // ROW FIRST OPTION
       if (COURSE[x][(*target).col].type == WATER) { // Row first consideration
@@ -645,19 +651,19 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
       }
 
       // COLUMN FIRST OPTION
-      if (COURSE[x][(*CURRENT_TILE).col].type == WATER) { // Column first consideration
+      if (COURSE[x][(*prevTile).col].type == WATER) { // Column first consideration
         // Add the old tile to the row traversal path to make it the turning point
-        colPathPt1[colIndex] = &COURSE[x - 1][(*CURRENT_TILE).col];
+        colPathPt1[colIndex] = &COURSE[x - 1][(*prevTile).col];
         colIndex++;
 
         for (int i = -1; i <= 1; i++) {
-          if ((*CURRENT_TILE).col + 1 <= 5) {
-            avoidLeft += COURSE[x - i][(*CURRENT_TILE).col + 1].type;
+          if ((*prevTile).col + 1 <= 5) {
+            avoidLeft += COURSE[x - i][(*prevTile).col + 1].type;
           } else {
             avoidLeft = 999; // can't do it
           }
-          if ((*CURRENT_TILE).col - 1 >= 0) {
-            avoidRight += COURSE[x - i][(*CURRENT_TILE).col - 1].type;
+          if ((*prevTile).col - 1 >= 0) {
+            avoidRight += COURSE[x - i][(*prevTile).col - 1].type;
           } else {
             avoidRight = 999; // can't do it
           }
@@ -665,66 +671,68 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
 
         if (avoidLeft < avoidRight) { // Skirt the water to the left
           colFirst += avoidLeft;
-          colPathPt1[colIndex] = &COURSE[x - 1][(*CURRENT_TILE).col + 1];
+          colPathPt1[colIndex] = &COURSE[x - 1][(*prevTile).col + 1];
           colIndex++;
-          colPathPt1[colIndex] = &COURSE[x][(*CURRENT_TILE).col + 1];
+          colPathPt1[colIndex] = &COURSE[x][(*prevTile).col + 1];
           colIndex++;
-          colPathPt1[colIndex] = &COURSE[x + 1][(*CURRENT_TILE).col + 1];
+          colPathPt1[colIndex] = &COURSE[x + 1][(*prevTile).col + 1];
           colIndex++;
-          colPathPt1[colIndex] = &COURSE[x + 1][(*CURRENT_TILE).col];
+          colPathPt1[colIndex] = &COURSE[x + 1][(*prevTile).col];
           colIndex++;
         } else { // Skirt the water to the right
           colFirst += avoidRight;
-          colPathPt1[colIndex] = &COURSE[x - 1][(*CURRENT_TILE).col - 1];
+          colPathPt1[colIndex] = &COURSE[x - 1][(*prevTile).col - 1];
           colIndex++;
-          colPathPt1[colIndex] = &COURSE[x][(*CURRENT_TILE).col - 1];
+          colPathPt1[colIndex] = &COURSE[x][(*prevTile).col - 1];
           colIndex++;
-          colPathPt1[colIndex] = &COURSE[x + 1][(*CURRENT_TILE).col - 1];
+          colPathPt1[colIndex] = &COURSE[x + 1][(*prevTile).col - 1];
           colIndex++;
-          colPathPt1[colIndex] = &COURSE[x + 1][(*CURRENT_TILE).col];
+          colPathPt1[colIndex] = &COURSE[x + 1][(*prevTile).col];
           colIndex++;
         }
 
         avoidLeft = 0;
         avoidRight = 0;
       } else {
-        colFirst += COURSE[x][(*CURRENT_TILE).col].type;
+        colFirst += COURSE[x][(*prevTile).col].type;
       }
     }
 
-    // Store corner
-    if (COURSE[(*target).row][(*CURRENT_TILE).col].type == WATER) {
-      int EWModifier = 0;
-      if (colDiff >= 0) { // we also head West 
-        EWModifier = 1;
+    if (rowDiff != 0) {
+      // Store corner
+      if (COURSE[(*target).row][(*prevTile).col].type == WATER) {
+        int EWModifier = 0;
+        if (colDiff >= 0) { // we also head West 
+          EWModifier = 1;
+        } else {
+          EWModifier = -1;
+        }
+        
+        colPathPt1[colIndex] = &COURSE[(*target).row - 1][(*prevTile).col];
+        colIndex++;
+        colFirst += COURSE[(*target).row - 1][(*prevTile).col].type;
+    
+        colPathPt1[colIndex] = &COURSE[(*target).row - 1][(*prevTile).col - EWModifier];
+        colIndex++;
+        colFirst += COURSE[(*target).row - 1][(*prevTile).col - EWModifier].type;
+    
+        colPathPt1[colIndex] = &COURSE[(*target).row][(*prevTile).col - EWModifier];
+        colIndex++;
+        colFirst += COURSE[(*target).row][(*prevTile).col - EWModifier].type;
       } else {
-        EWModifier = -1;
+        colPathPt1[colIndex] = &COURSE[(*target).row][(*prevTile).col];
+        colIndex++;
       }
-      
-      colPathPt1[colIndex] = &COURSE[(*target).row - 1][(*CURRENT_TILE).col];
-      colIndex++;
-      colFirst += COURSE[(*target).row - 1][(*CURRENT_TILE).col].type;
-  
-      colPathPt1[colIndex] = &COURSE[(*target).row - 1][(*CURRENT_TILE).col - EWModifier];
-      colIndex++;
-      colFirst += COURSE[(*target).row - 1][(*CURRENT_TILE).col - EWModifier].type;
-  
-      colPathPt1[colIndex] = &COURSE[(*target).row][(*CURRENT_TILE).col - EWModifier];
-      colIndex++;
-      colFirst += COURSE[(*target).row][(*CURRENT_TILE).col - EWModifier].type;
-    } else {
-      colPathPt1[colIndex] = &COURSE[(*target).row][(*CURRENT_TILE).col];
-      colIndex++;
     }
   }
-
+  
   rowIndex = 0;
   colIndex = 0;
 
-  if (rowFirst < colFirst) {
+  if ((rowFirst < colFirst && colDiff != 0) || rowDiff == 0) { // Go across the row
     if (rowFirst > 50) { // this path will not work. Go to the center and try to get to your target again.
       struct Tile* oldTarget = ClearPath();
-      if (oldTarget != &COURSE[2][2] && CURRENT_TILE != &COURSE[2][2]) {
+      if (oldTarget != &COURSE[2][2] && prevTile != &COURSE[2][2]) {
         SelectPath(&COURSE[2][2]);
       } else {
         SelectPath(&COURSE[3][3]);
@@ -745,7 +753,7 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
   } else {
     if (colFirst > 50) { // this path will not work. Go to the center and try to get to your target again.
       struct Tile* oldTarget = ClearPath();
-      if (oldTarget != &COURSE[2][2] && CURRENT_TILE != &COURSE[2][2]) {
+      if (oldTarget != &COURSE[2][2] && prevTile != &COURSE[2][2]) {
         SelectPath(&COURSE[2][2]);
       } else {
         SelectPath(&COURSE[3][3]);

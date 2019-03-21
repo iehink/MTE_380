@@ -1,6 +1,22 @@
 int state = 0;
 bool startup = true;
+
+void PrintPath() {
+  struct PathPoint* testPoint = PATH_HEAD;
   
+  while(testPoint != PATH_TAIL) {
+    Serial.print((*testPoint->tile).row);
+    Serial.print(", ");
+    Serial.print((*testPoint->tile).col);
+    Serial.print("\t");
+    testPoint = testPoint -> next;
+  }
+  Serial.print((*testPoint->tile).row);
+  Serial.print(", ");
+  Serial.print((*testPoint->tile).col);
+  Serial.println();
+}
+
 void NavToTile(){ // Test tile selection + navigation
   if (state == 0) {
     //SelectPath(&COURSE[5][0]);
@@ -118,6 +134,10 @@ void Test3() {
 
     if (testX == 1) {
       PathPointReached();
+    } else {
+      struct Tile* tile = ClearPath();
+      SelectPath(&COURSE[0][0]);
+      SelectPath(tile);
     }
     
     // print all

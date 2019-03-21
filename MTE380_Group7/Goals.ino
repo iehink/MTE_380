@@ -244,8 +244,6 @@ bool ObjectOnTile() {
       col = (*CURRENT_TILE).col;
     }
 
-    Serial.println("saw something left");
-
     if (COURSE[row][col].goal == 0) {
       /*if (path_state != -1) { // if we were only travelling to an unnecessary tile
         ClearPath(); 
@@ -259,6 +257,7 @@ bool ObjectOnTile() {
       } else {
         SelectPath(&COURSE[row][col]);
       }
+      
       return true;
     }
   }
@@ -295,4 +294,6 @@ bool ObjectOnTile() {
       return true;
     }
   }
+
+  return false;
 }

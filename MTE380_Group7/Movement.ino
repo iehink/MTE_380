@@ -154,6 +154,7 @@ void Stop(){
 }
 
 bool TurnGyro (double heading) { // Takes degrees heading (with North as 0 degrees, heading CW, e.g. east is 90) and sets turning accordingly
+  turning = true;
   // Correct input if out of 360 deg heading
   if (heading > 360) {
     heading -= 360;
@@ -181,6 +182,7 @@ bool TurnGyro (double heading) { // Takes degrees heading (with North as 0 degre
     turn_right = false;
     turn_left = false;
     time_last_called = millis(); // Reset timer when a turn is completed
+    turning = false;
     return true;
   }
 

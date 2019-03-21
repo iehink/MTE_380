@@ -99,7 +99,7 @@ int previous_MPU_interrupt_time;
 bool fan_on = false;
 int fan_on_count = 0;
 
-#define TEST false
+#define TEST true
 #define LOOP_RUNTIME 20 // milliseconds
 
 #define FRONT_TO_NOSE 80
@@ -219,8 +219,7 @@ void loop() {
 
   if (!Button()) {
     Stop();
-    InitMPU();
-    CURRENT_DIRECTION = STARTING_DIRECTION;
+    gyro_yaw = 0;
     DISTANCE_NORTH = 260;
     DISTANCE_EAST = 150;
   } else {
@@ -237,12 +236,12 @@ void loop() {
     if (TEST) {
       //StructureTest();
       //CenterTest();
-      NavToTile();
+      //NavToTile();
       //TestGoalSearching();
       //TravelTest();
       //DistanceTest();
       //BoxTest();
-      //Test3();
+      Test3();
       //TurnGyro(90);
       //HeadingTest();
       //Move();
@@ -250,6 +249,7 @@ void loop() {
     else {
       ProductionLoop();
       Serial.println(production_state);
+      PrintPath();
     }
   }
 
@@ -308,14 +308,18 @@ void SearchState() { // Navigation with searching
   if (PATH_HEAD == NULL) {
     path_state++; // If we reset the path counter to -1, then we will return to the pre-programmed path. If we reached the first pre-programmed path, proceed to the next pathpoint
   }
-  if (path_state == 0) {
+  if (path_state == 1) {
     SelectPath(&COURSE[3][2]);
-  } else if (path_state == 1) {
-    SelectPath(&COURSE[2][2]);
-  } else if (path_state == 2) {
-    SelectPath(&COURSE[2][4]);
+    path_state = 2;
   } else if (path_state == 3) {
+    SelectPath(&COURSE[2][2]);
+    path_state = 4;
+  } else if (path_state == 5) {
+    SelectPath(&COURSE[2][4]);
+    path_state = 6;
+  } else if (path_state == 7) {
     SelectPath(&COURSE[3][4]);
+    path_state = 0;
   }
 
   // If we began centering, finish centering
