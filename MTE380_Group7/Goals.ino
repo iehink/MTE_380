@@ -1,9 +1,3 @@
-// Define goal array and goal meanings
-bool GOAL[6] = {false, false, false, false, false, false}; // 0th array unused, array indices correspond to values listed below
-int PEOPLE = 1, LOST = 2, FOOD = 3, FIRE = 4, DELIVER = 5, POSSIBILITY = 6, STRUCTURE = 7, NONE = 8; 
-// Variable to keep track of where the people are
-struct Tile* peopleTile;
-
 // Indicators for tile identification
 double WATER_THRESHOLD_ANGLE = 55, NOT_FLAT_THRESHOLD_ANGLE = 30, BUMP_ANGLE = 10; // degrees
 int notFlat;
@@ -322,40 +316,44 @@ void RunFan(int fanSpeed) {
 }
 
 bool ObjectOnTile() {
+  int row = 0, col = 0;
+  
   if ((left_dist < left_to_wall - WALL_TOL || left_dist > left_to_wall + WALL_TOL) && left_dist != -1) left_scan_off_count++;
   else left_scan_off_count = 0;
   if ((front_dist < front_to_wall - WALL_TOL || front_dist > front_to_wall + WALL_TOL) && front_dist != -1) front_scan_off_count++;
   else front_scan_off_count = 0;
-  if ((right_dist < right_to_wall - WALL_TOL || right_dist > right_to_wall + WALL_TOL) && right_dist != -1) right_scan_off_count++;
-  else right_scan_off_count = 0;
+  //if ((right_dist < right_to_wall - WALL_TOL || right_dist > right_to_wall + WALL_TOL) && right_dist != -1) right_scan_off_count++;
+  //else right_scan_off_count = 0;
 
   if (left_scan_off_count > 15) {
     left_scan_off_count = 0;
     if (CURRENT_DIRECTION == NORTH) {
-      COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col - (((int)(left_dist/300.0))+1)].goal = 1;
+      row = (*CURRENT_TILE).row;
+      col = (*CURRENT_TILE).col - (((int)(left_dist/300.0))+1);
     } else if (CURRENT_DIRECTION == EAST) {
-      COURSE[(*CURRENT_TILE).row + (((int)(left_dist/300.0))+1)][(*CURRENT_TILE).col].goal = 1;
-      Serial.print("ROW: ");
-      Serial.print((*CURRENT_TILE).row + (((int)(left_dist/300.0))+1));
-      Serial.print(", COL: ");
-      Serial.println((*CURRENT_TILE).col);
+      row = (*CURRENT_TILE).row + (((int)(left_dist/300.0))+1);
+      col = (*CURRENT_TILE).col;
     } else if (CURRENT_DIRECTION == SOUTH) {
-      COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col + (((int)(left_dist/300.0))+1)].goal = 1;
+      row = (*CURRENT_TILE).row;
+      col = (*CURRENT_TILE).col + (((int)(left_dist/300.0))+1);
     } else if (CURRENT_DIRECTION == WEST) {
-      COURSE[(*CURRENT_TILE).row - (((int)(left_dist/300.0))+1)][(*CURRENT_TILE).col].goal = 1;
+      row = (*CURRENT_TILE).row - (((int)(left_dist/300.0))+1);
+      col = (*CURRENT_TILE).col;
     }
+    COURSE[row][col].goal = POSSIBILITY;
+    COURSE[row][col].type = WATER; // avoid running through this tile
+    AdvancedPath(&COURSE[row][col]);
+    return true;
   }
   if (front_scan_off_count > 7) {
+    front_scan_off_count = 0;
+    row = (*CURRENT_TILE).row;
+    col = (*CURRENT_TILE).col - (((int)(front_dist/300.0))+1);
     //Serial.print("FRONT: ");
     //Serial.println((int)(front_dist/300.0));
-  }
-  if (right_scan_off_count > 15) {
-    Serial.print("RIGHT: ");
-    Serial.println(((int)(right_dist/300.0))+1);
-    Serial.print("CROW: ");
-    Serial.println((*CURRENT_TILE).row);
-    Serial.print("CCOL: ");
-    Serial.println((*CURRENT_TILE).col);
-    right_scan_off_count = 0;
+    COURSE[row][col].goal = POSSIBILITY;
+    COURSE[row][col].type = WATER; // avoid running through this tile
+    AdvancedPath(&COURSE[row][col]);
+    return true;
   }
 }

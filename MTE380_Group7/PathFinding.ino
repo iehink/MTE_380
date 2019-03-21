@@ -100,6 +100,7 @@ int Navigate() { // Checks to verify we are on the right path towards the next p
 
   if (forward) {
     if (UpdateCourseLocation()) { // If we have identified a new tile, then check what we should do after this tile
+      temporary_stop = true;
       return CURRENT_DIRECTION;
     }
   }
@@ -107,9 +108,6 @@ int Navigate() { // Checks to verify we are on the right path towards the next p
   // Determine row/column difference; note that any given next step will be a straight line from where we presently are.
   int rowDiff = (*PATH_HEAD->tile).row - (*CURRENT_TILE).row;
   int colDiff = (*PATH_HEAD->tile).col - (*CURRENT_TILE).col;
-
-  Serial.println(rowDiff);
-  Serial.println(colDiff);
 
   // If we've reached the target tile, pop the target off and return 0 to indicate arrival
   if (rowDiff == 0 && colDiff == 0) {

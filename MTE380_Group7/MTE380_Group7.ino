@@ -61,7 +61,7 @@ Tile COURSE[6][6];
 #define FLAT 1
 #define SAND 2
 #define GRAVEL 3
-#define WATER 99
+#define WATER 99 // just don't do it...
 
 /* Path planning will be optimized by:
  * 1) Taking the fewest number of turns (since that is the most prone to throw our trajectory off), and
@@ -70,6 +70,7 @@ Tile COURSE[6][6];
  */
 struct PathPoint* PATH_HEAD = NULL;
 struct PathPoint* PATH_TAIL = NULL;
+int path_state = 0;
 
 double DISTANCE_NORTH, DISTANCE_EAST; // Distance based on center of nose of robot, as measured from the south-west corner of the current tile [mm].
 #define TILE_DISTANCE 304.8 // length of each tile (1 ft = 304.8mm) #TODO - update with actual measurements/testing
@@ -103,6 +104,21 @@ bool btnState = false;
 
 bool temporary_stop = false;
 int temporary_stop_counter = 0;
+bool centering = false;
+
+// Keep track of what state we are in
+#define SEARCHING 1
+#define TURNING 2
+#define GOAL_APPROACH 3
+#define GOAL_HANDLING 4
+#define RETURNING_TO_PATH 5
+int production_state = 0;
+
+// Define goal array and goal meanings
+bool GOAL[6] = {false, false, false, false, false, false}; // 0th array unused, array indices correspond to values listed below
+int PEOPLE = 1, LOST = 2, FOOD = 3, FIRE = 4, DELIVER = 5, POSSIBILITY = 6, STRUCTURE = 7, NONE = 8; 
+// Variable to keep track of where the people are
+struct Tile* peopleTile;
 
 // Initialize functions
 void InitMotors();
@@ -187,8 +203,8 @@ void loop() {
   int loopStartTime = millis();
 
   ReadMPU();
-  ReadTOF();
   ReadHallEffect();
+  ReadTOF();
 
   if (Fiyah()) {
     RunFan(250);
@@ -261,23 +277,88 @@ void loop() {
 }
 
 void ProductionLoop(){
-  /* 1. Have we identified the current tile? If no, try to.
-   * 2. Check for objects
-   * 3. Check path
-   * 4. Check straightness of path
-   *//*
-  // Travel around the course as required
-  Navigate();
+  if (production_state == SEARCHING) {
+    SearchState();
+  } else if (production_state == GOAL_APPROACH) {
+    GoalApproach();
+  }
+}
+
+void SearchState() {
+  if (ObjectOnTile()) {
+    path_state = -1; 
+  }
   
-  // ID tile if we don't know it yet
-  if ((*CURRENT_TILE).type == 0) {
-    if (IDTile()) {
-      // LED for testing purposes
+  // Run along hard-coded path if there is no path found (i.e. no objects have been found from our path)
+  if (PATH_HEAD == NULL) {
+    path_state++; // If we reset the path counter to -1, then we will return to the pre-programmed path. If we reached the first pre-programmed path, proceed to the next pathpoint
+  }
+  if (path_state == 0) {
+    AdvancedPath(&COURSE[3][2]);
+  } else if (path_state == 1) {
+    AdvancedPath(&COURSE[2][2]);
+  } else if (path_state == 2) {
+    AdvancedPath(&COURSE[2][4]);
+  } else if (path_state == 3) {
+    AdvancedPath(&COURSE[3][4]);
+  } 
+
+  int dir = -1;
+  if (!centering && !temporary_stop) dir = Navigate();
+  
+  if (temporary_stop) {
+    forward = false;
+    turn_left = false;
+    turn_right = false;
+    if (temporary_stop_counter > 30)
+    {
+      temporary_stop = false;
+      temporary_stop_counter = 0;
+    }
+    temporary_stop_counter++;
+  } else if ((*CURRENT_TILE).goal == POSSIBILITY){
+    forward = false;
+    turn_left = false;
+    turn_right = false;
+    production_state = GOAL_APPROACH;
+  } else if (dir == -1) { // Path head is NULL; stop moving!
+    forward = false;
+    turn_left = false;
+    turn_right = false;
+  } else if (dir == CURRENT_DIRECTION) {
+    forward = true;
+  } else if (dir == 0) {
+    // if (Center()) centering = true; // We need to ensure that we are centered on the tile for the turn about to take place
+    // else centering = false;
+  } else {
+    Head(dir);
+  }
+  
+  Move();
+}
+
+void GoalApproach() {
+  if (front_dist < DIST_FROM_NOSE + 10) {
+    forward = false;
+    if (Fiyah()) {
+      (*CURRENT_TILE).goal = FIRE;
+      production_state = GOAL_HANDLING;
+    } else {
+      (*CURRENT_TILE).goal = STRUCTURE;
+    }
+  } else {
+    forward = true;
+  }
+  
+  Move();
+}
+
+void GoalHandling() {
+  if ((*CURRENT_TILE).goal == FIRE) {
+    if(Fiyah()) {
+      RunFan(250);
+    } else {
+      
     }
   }
-
-  // Check surroundings if we are not in water
-  if (!inWater) {
-    //Scan();
-  }*/
 }
