@@ -1,4 +1,5 @@
 int state = 0;
+bool startup = true;
   
 void NavToTile(){ // Test tile selection + navigation
   if (state == 0) {
@@ -20,11 +21,13 @@ void NavToTile(){ // Test tile selection + navigation
     turn_right = false;
     if (temporary_stop_counter > 30)
     {
+      Serial.println(front_dist);
       temporary_stop = false;
       temporary_stop_counter = 0;
     }
     temporary_stop_counter++;
-  } else if (centering || dir == 0) {
+  } else if ((centering || dir == 0) && !startup) {
+    Serial.println("CENTERING");
     centering = true;
     if (Center()) {
       centering = false;
@@ -40,6 +43,7 @@ void NavToTile(){ // Test tile selection + navigation
   }
   
   Move();
+  startup = false;
 }
 
 void BoxTest() { // Test to set the robot to drive in a box (for calibrating Head and Forward functions) -> multiple button presses reqd

@@ -83,9 +83,13 @@ bool Center() { // Function to travel to the center of the current tile. Returns
     }
   }
 
+  Serial.println(CURRENT_DIRECTION);
+  Serial.println(distN);
+  Serial.println(distE);
+
   // Are we centered?
-  if ((abs(distN) < CENTER_TOL && (CURRENT_DIRECTION == NORTH || CURRENT_DIRECTION == SOUTH))
-      || (abs(distE) < CENTER_TOL && (CURRENT_DIRECTION == EAST || CURRENT_DIRECTION == WEST))) {
+  if (((abs(distN) < 260 + CENTER_TOL && abs(distN) > 260 - CENTER_TOL) && (CURRENT_DIRECTION == NORTH || CURRENT_DIRECTION == SOUTH))
+      || ((abs(distE) < 260 + CENTER_TOL && abs(distE) > 260 - CENTER_TOL) && (CURRENT_DIRECTION == EAST || CURRENT_DIRECTION == WEST))) {
     return true;
   } else {
     return false;
@@ -108,6 +112,7 @@ int Navigate() { // Checks to verify we are on the right path towards the next p
   if (forward) {
     if (UpdateCourseLocation()) { // If we have identified a new tile, then check what we should do after this tile
       temporary_stop = true;
+      centering = true;
       return CURRENT_DIRECTION;
     }
   }
