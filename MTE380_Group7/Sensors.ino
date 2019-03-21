@@ -3,6 +3,11 @@
 #define ENCODER_LEFT_PIN 18
 #define ENCODER_RIGHT_PIN 19
 
+#define HALL_EFFECT_1 A9
+#define HALL_EFFECT_2 A10
+#define HALL_EFFECT_3 A11
+#define HALL_EFFECT_4 A12
+
 double gyro_pitch, gyro_roll, gyro_yaw, accel_vel, accel_dist;
 int previous_MPU_interrupt_time;
 int encoder_left, encoder_right; // To track when the encoders receive pulses
@@ -128,6 +133,13 @@ void InitEncoders() {
 
 void InitFlame() {
   pinMode(FLAME_SENSOR_DIN, INPUT);
+}
+
+void InitHallEffect() {
+  pinMode(HALL_EFFECT_1, INPUT);
+  pinMode(HALL_EFFECT_2, INPUT);
+  pinMode(HALL_EFFECT_3, INPUT);
+  pinMode(HALL_EFFECT_4, INPUT);
 }
 
 double ReadEncoders(){
@@ -269,6 +281,23 @@ void ReadTOF() {
   }
 }
 
+bool ReadHallEffect(){
+  bool return_val = false;
+
+  Serial.println(analogRead(HALL_EFFECT_1));
+  Serial.println(analogRead(HALL_EFFECT_2));
+  Serial.println(analogRead(HALL_EFFECT_3));
+  Serial.println(analogRead(HALL_EFFECT_4));
+  Serial.println();
+
+  if (analogRead(HALL_EFFECT_1) > 2.0) return_val = true;
+  else if (analogRead(HALL_EFFECT_2) > 2.0) return_val = true;
+  else if (analogRead(HALL_EFFECT_3) > 2.0) return_val = true;
+  else if (analogRead(HALL_EFFECT_4) > 2.0) return_val = true;
+  
+  return return_val;
+}
+
 /* ------------------------------------------------------------------------------------------------------------------------------
  * ********************************************* Low Level Functions are below. *************************************************
  * ------------------------------------------------------------------------------------------------------------------------------
@@ -297,11 +326,6 @@ double ReadEncoderRight(){ // Returns distance and resets encoder values
 
   // Return distance conversion
   return ENCODER_RIGHT_RATIO * encoder;
-}
-
-bool ReadHallEffect(){
-  Serial.println(!digitalRead(52));
-  return !digitalRead(52);
 }
 
 int ReadDistance(Adafruit_VL53L0X_MTE380 sensor, VL53L0X_RangingMeasurementData_t measurement){
