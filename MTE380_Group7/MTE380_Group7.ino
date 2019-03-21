@@ -95,7 +95,7 @@ bool inWater;
 bool fan_on = false;
 int fan_on_count = 0;
 
-#define TEST true
+#define TEST false
 #define LOOP_RUNTIME 20 // milliseconds
 
 #define FRONT_TO_NOSE 80
@@ -257,7 +257,8 @@ void loop() {
   }
   else { 
     // For now, just try to approach the thing in front of you and either blow out the candle or light the correct LED
-    if (production_state == 0) {
+    /*if (production_state == 0) {
+      Serial.println("no");
       while(!btnState) {
         Stop();
         Button();
@@ -265,6 +266,10 @@ void loop() {
       btnState = false;
       production_state = GOAL_APPROACH;
     }
+
+    Serial.println(production_state);*/
+
+    if (production_state == ANY_STATE) production_state = GOAL_APPROACH;
     
     ProductionLoop();
   }
@@ -278,7 +283,7 @@ void loop() {
 
 void ProductionLoop(){ // Full code
   // If we are not in a specific state at the moment, assess what state we should be in based on goals completed
-  if (production_state = ANY_STATE) {
+  if (production_state == ANY_STATE) {
     if (!GOAL[PEOPLE] || !GOAL[LOST] || !GOAL[FIRE]){
       production_state = SEARCHING;
     } else if (!GOAL[FOOD]) {
@@ -291,11 +296,13 @@ void ProductionLoop(){ // Full code
     }
   }
   
-  if (food_sensed) {
+  if (!GOAL[FOOD] && food_sensed) {
     (*CURRENT_TILE).goal = FOOD;
     production_state = GOAL_HANDLING;
   }
-  
+
+  Serial.println(production_state);
+
   if (production_state == SEARCHING) {
     SearchState();
   } else if (production_state == GOAL_APPROACH) {
@@ -370,7 +377,9 @@ void SearchState() { // Navigation with searching
 }
 
 void GoalApproach() { // As you approach a structure
-  if (front_dist < FRONT_TO_NOSE + 10) {
+  if (front_dist == -1) {
+    forward = false;
+  } else if (front_dist < FRONT_TO_NOSE + 50) {
     forward = false;
     if (Fiyah()) {
       (*CURRENT_TILE).goal = FIRE;
@@ -389,13 +398,18 @@ void GoalApproach() { // As you approach a structure
 
 void GoalHandling() { // If you are on a goal tile, assess which one, handle it as required (including LEDs)
   if ((*CURRENT_TILE).goal == FIRE) {
-    if(Fiyah()) {
+    if (!fan_on) {
       RunFan();
-    } else {
+      fan_on = true;
+    } else if (fan_on_count > 200) {
       StopFan();
+      fan_on = false;
+      fan_on_count = 0;      
       digitalWrite(LED_pin[FIRE], HIGH);
       GOAL[FIRE] = true;
       production_state = RETURNING_TO_PATH;
+    } else if (fan_on) {
+      fan_on_count++;
     }
   } else if ((*CURRENT_TILE).goal == STRUCTURE) {
     //let's arbitrarily mark the first structure as PEOPLE for now
@@ -412,6 +426,7 @@ void GoalHandling() { // If you are on a goal tile, assess which one, handle it 
   } else if ((*CURRENT_TILE).goal == FOOD) {
     digitalWrite(LED_pin[FOOD], HIGH);
     GOAL[FOOD] = true;
+    food_sensed = false;
     production_state = ANY_STATE;
   }
 }
