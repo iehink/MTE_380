@@ -257,6 +257,7 @@ void loop() {
   else { 
     ProductionLoop();
   }
+  
   int delayTime = (LOOP_RUNTIME) - (millis() - loopStartTime);
   //Serial.println(delayTime);
   if (delayTime > 0) {
@@ -329,8 +330,8 @@ void SearchState() { // Navigation with searching
   } else if (dir == CURRENT_DIRECTION) {
     forward = true;
   } else if (dir == 0) {
-    // if (Center()) centering = true; // We need to ensure that we are centered on the tile for the turn about to take place
-    // else centering = false;
+    if (Center()) centering = false; // We need to ensure that we are centered on the tile for the turn about to take place
+    else centering = true;
   } else {
     turning = true;
     if (Head(dir)) turning = false;
