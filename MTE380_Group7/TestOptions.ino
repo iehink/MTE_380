@@ -24,18 +24,17 @@ void NavToTile(){ // Test tile selection + navigation
       temporary_stop_counter = 0;
     }
     temporary_stop_counter++;
+  } else if (centering || dir == 0) {
+    centering = true;
+    if (Center()) {
+      centering = false;
+    }
   } else if (dir == -1) {
     forward = false;
     turn_left = false;
     turn_right = false;
   } else if (dir == CURRENT_DIRECTION) {
     forward = true;
-  } else if (dir == 0) {
-    if ((*CURRENT_TILE).goal == POSSIBILITY) {
-      //LookForGoal();
-    } else {
-      //Center();
-    }
   } else {
     Head(dir);
   }
