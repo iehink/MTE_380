@@ -270,13 +270,16 @@ void CenterTest() {
 }
 
 
-void Button() { // Swaps btnState whenever the button is pressed
+bool Button() { // Swaps btnState whenever the button is pressed
+  bool temp_btnState = btnState;
   while (digitalRead(4) == HIGH) {
     if (btnState) {
-      btnState = false;
+      temp_btnState = false;
     } else {
-      btnState = true;
+      temp_btnState = true;
     }
-    time_last_called = millis();
   }
+  if (temp_btnState != btnState) time_last_called = millis();
+  btnState = temp_btnState;
+  return btnState;
 }

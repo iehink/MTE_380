@@ -92,6 +92,10 @@ double CURRENT_FAN_SPEED = 0;
 // Variable to note if we are in water or not
 bool inWater;
 
+// MPU variables
+double gyro_pitch, gyro_roll, gyro_yaw, accel_vel, accel_dist;
+int previous_MPU_interrupt_time;
+
 bool fan_on = false;
 int fan_on_count = 0;
 
@@ -145,7 +149,7 @@ bool PastCenter();
 void ReadMPU();
 void ReadTOF();
 void Stop();
-void Button();
+bool Button();
 void NavToTile();
 void AddToPath(struct Tile* newTile);
 
@@ -213,66 +217,64 @@ void setup() {
 void loop() {
   int loopStartTime = millis();
 
-  while(!btnState) {
+  if(!Button()) {
     Stop();
-    Button();
-  }
-
-  if (!fan_on) {
-    ReadMPU();
-  }
-  
-  if (!GOAL[FOOD]) {
-    if (ReadHallEffect()) {
-      food_sensed = true;
-    } else {
-      food_sensed = false;
-    }
-  }
-  
-  ReadTOF();
-
-/*
-  if (Fiyah() && !fan_on) {
-    RunFan();
-    fan_on = true;
-  } else if (fan_on_count > 200) {
-    StopFan();
-    fan_on = false;
-    fan_on_count = 0;
-  } else if (fan_on) {
-    fan_on_count++;
-  }
-
-  */
-  
-  if(TEST) {
-    //StructureTest();
-    CenterTest();
-    //NavToTile();
-    //TestGoalSearching();
-    //TravelTest();
-    //DistanceTest();
-    //BoxTest();
-    //Test3();
-    //TurnGyro(90);
-    //HeadingTest();
-    //Move();
-  }
-  else { 
-    // For now, just try to approach the thing in front of you and either blow out the candle or light the correct LED
-    /*if (production_state == 0) {
-      Serial.println("Reset");
-      while(!btnState) {
-        Stop();
-        Button();
+    gyro_yaw = 0;
+    DISTANCE_NORTH = 260;
+    DISTANCE_EAST = 150;
+  } else {
+    if (!fan_on) ReadMPU();
+    if (!GOAL[FOOD]) {
+      if (ReadHallEffect()) {
+        food_sensed = true;
+      } else {
+        food_sensed = false;
       }
-      btnState = false;
-      production_state = GOAL_APPROACH;
-    }*/
+    }
+    ReadTOF();
+  
+  /*
+    if (Fiyah() && !fan_on) {
+      RunFan();
+      fan_on = true;
+    } else if (fan_on_count > 200) {
+      StopFan();
+      fan_on = false;
+      fan_on_count = 0;
+    } else if (fan_on) {
+      fan_on_count++;
+    }
+  
+    */
     
-    ProductionLoop();
-    Serial.println(production_state);
+    if(TEST) {
+      //StructureTest();
+      //CenterTest();
+      NavToTile();
+      //TestGoalSearching();
+      //TravelTest();
+      //DistanceTest();
+      //BoxTest();
+      //Test3();
+      //TurnGyro(90);
+      //HeadingTest();
+      //Move();
+    }
+    else { 
+      // For now, just try to approach the thing in front of you and either blow out the candle or light the correct LED
+      /*if (production_state == 0) {
+        Serial.println("Reset");
+        while(!btnState) {
+          Stop();
+          Button();
+        }
+        btnState = false;
+        production_state = GOAL_APPROACH;
+      }*/
+      
+      ProductionLoop();
+      Serial.println(production_state);
+    }
   }
   
   int delayTime = (LOOP_RUNTIME) - (millis() - loopStartTime);
