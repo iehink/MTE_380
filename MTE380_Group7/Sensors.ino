@@ -269,10 +269,10 @@ void UpdateWallDistance(){
   double distWestToWall = ((*CURRENT_TILE).col) * TILE_DISTANCE + DISTANCE_EAST;
   double distSouthToWall = (5 - (*CURRENT_TILE).row) * TILE_DISTANCE + DISTANCE_NORTH;
 
-  if (distNorthToWall > 800) distNorthToWall = -1;
-  if (distEastToWall > 800) distEastToWall = -1;
-  if (distSouthToWall > 800) distSouthToWall = -1;
-  if (distWestToWall > 800) distWestToWall = -1;
+  if (distNorthToWall > 1000) distNorthToWall = -1;
+  if (distEastToWall > 1000) distEastToWall = -1;
+  if (distSouthToWall > 1000) distSouthToWall = -1;
+  if (distWestToWall > 1000) distWestToWall = -1;
   
   if (CURRENT_DIRECTION == NORTH) {
     front_to_wall = distNorthToWall;
@@ -298,21 +298,21 @@ void UpdateWallDistance(){
 }
 
 double LeftDistToActual(double dist, double error) {
-  if (dist < 30 || error > 7) return -1;
+  if (dist < 30 || error > 9) return -1;
   else if (dist < 500) return dist;
   else if (dist < 650) return (dist - 500)*2 + 500;
   else return -1;
 }
 
 double FrontDistToActual(double dist, double error) {
-  if (dist < 30 || error > 7) return -1;
+  if (dist < 30 || error > 9) return -1;
   else if (dist < 700) return dist;
   else if (dist < 900) return (dist-700)*2.17 + 700;
   else return -1;
 }
 
 double RightDistToActual(double dist, double error) {
-  if (dist < 30 || error > 7) return -1;
+  if (dist < 30 || error > 9) return -1;
   else if (dist < 500) return dist;
   else if (dist < 640) return (dist-500)*1.54 + 500;
   else return -1;
