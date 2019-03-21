@@ -36,7 +36,7 @@ unsigned long scan_count_sensors = 0;
 
 #define INTEGRATION_TIMESTEP 0.02
 
-#define FLAME_SENSOR_DIN 42
+#define FLAME_SENSOR_DIN 30
 
 // objects for the vl53l0x
 Adafruit_VL53L0X_MTE380 lox_left = Adafruit_VL53L0X_MTE380();
@@ -194,7 +194,8 @@ double ReadYaw() {
 }
 
 bool Fiyah() { // Function to return whether or not the flame sensor is picking up fiyah
-  return (digitalRead(FLAME_SENSOR_DIN));
+  //Serial.println(digitalRead(FLAME_SENSOR_DIN));
+  return (!digitalRead(FLAME_SENSOR_DIN));
 }
 
 void ReadMPU(){

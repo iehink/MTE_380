@@ -88,16 +88,20 @@ double right_to_wall = 0, left_to_wall = 0, front_to_wall = 0; // The expected d
 #define SMALL_STRUCT_LEN 63 //mm
 #define BIG_STRUCT_LEN 191 //mm
 
+#define FAN_ON_SPEED 250
+#define FAN_OFF_SPEED 0
+double CURRENT_FAN_SPEED = 0;
+
 // Variable to note if we are in water or not
 bool inWater;
+
+bool fan_on = false;
+int fan_on_count = 0;
 
 #define TEST true
 #define LOOP_RUNTIME 20 // milliseconds
 
 #define FRONT_TO_NOSE 80
-
-#define FAN_RUN_SPEED 250
-#define FAN_STOP_SPEED 0
 
 bool btnState = false;
 
@@ -195,19 +199,28 @@ void loop() {
     //right_to_wall = right_dist;
   }
 
-  ReadMPU();
+  if (!fan_on) {
+    ReadMPU();
+  }
   ReadTOF();
   ReadHallEffect();
 
-  if (Fiyah()) {
-    RunFan(250);
-  }
+  if (Fiyah() && !fan_on) {
+    RunFan();
+    fan_on = true;
+  } else if (fan_on_count > 200) {
+    StopFan();
+    fan_on = false;
+    fan_on_count = 0;
+  } else if (fan_on) {
+    fan_on_count++;
+  } 
   
   if(TEST) {
     //EncoderHighLow();
     //EncoderTurning();
     //TestStructureIDing();
-    NavToTile();
+    //NavToTile();
     //Serial.println(CURRENT_DIRECTION);
     //Serial.println((*CURRENT_TILE).col);
     //Serial.println((*CURRENT_TILE).col);

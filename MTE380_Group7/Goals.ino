@@ -312,13 +312,15 @@ bool SearchSand(){
 
 void InitFan() {
   pinMode(FAN_PWM, OUTPUT);
-  analogWrite(FAN_PWM, 250);
-  delay(10);
   analogWrite(FAN_PWM, 0);
 }
 
-void RunFan(int fanSpeed) {
-  analogWrite(FAN_PWM, fanSpeed);
+void RunFan() {
+  analogWrite(FAN_PWM, FAN_ON_SPEED);
+}
+
+void StopFan() {
+  analogWrite(FAN_PWM, FAN_OFF_SPEED);
 }
 
 bool ObjectOnTile() {
