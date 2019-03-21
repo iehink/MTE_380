@@ -312,6 +312,9 @@ bool SearchSand(){
 
 void InitFan() {
   pinMode(FAN_PWM, OUTPUT);
+  analogWrite(FAN_PWM, 250);
+  delay(10);
+  analogWrite(FAN_PWM, 0);
 }
 
 void RunFan(int fanSpeed) {

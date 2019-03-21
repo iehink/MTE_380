@@ -131,6 +131,9 @@ void setup() {
   Serial.begin(9600);
   pinMode(4, INPUT); // Button
 
+  InitFan();
+  Serial.println("Fan initialized.");
+
   InitMotors();
   Serial.println("Motors initialized.");
 
@@ -145,6 +148,9 @@ void setup() {
 
   InitFlame();
   Serial.println("Flame sensor initialized.");
+
+  InitHallEffect();
+  Serial.println("Hall effect sensor initialized.");
 
   //InitTileID();
 
@@ -179,8 +185,6 @@ void setup() {
 
 void loop() {
   int loopStartTime = millis();
-  ReadMPU();
-  ReadTOF();
   //ObjectOnTile();
   //struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
   
@@ -189,6 +193,14 @@ void loop() {
     Button();
     //left_to_wall = left_dist;
     //right_to_wall = right_dist;
+  }
+
+  ReadMPU();
+  ReadTOF();
+  ReadHallEffect();
+
+  if (Fiyah()) {
+    RunFan(250);
   }
   
   if(TEST) {
