@@ -128,10 +128,10 @@ struct Tile* people_tile;
 struct Tile* lost_tile; // we need to return to both since we can't tell the difference
 // LEDs to indicate goals; correspond to the indices above
 int LED_pin[6] = {0, 32, 34, 36, 38, 40};
+bool food_sensed = false;
 
 // Initialize functions
 void InitMotors();
-void InitEncoders();
 void InitGyro();
 void InitDistanceSensors();
 void InitMPU();
@@ -167,9 +167,6 @@ void setup() {
   InitMotors();
   Serial.println("Motors initialized.");
 
-  InitEncoders();
-  Serial.println("Encoders intialized.");
-
   InitDistanceSensors();
   Serial.println("Distance sensors intialized.");
 
@@ -181,8 +178,6 @@ void setup() {
 
   InitHallEffect();
   Serial.println("Hall effect sensor initialized.");
-
-  //InitTileID();
 
   // Set up COURSE matrix
   for (int row = 0; row < 6; row++) {
@@ -219,16 +214,22 @@ void loop() {
   while(!btnState) {
     Stop();
     Button();
-    //left_to_wall = left_dist;
-    //right_to_wall = right_dist;
   }
 
   if (!fan_on) {
     ReadMPU();
   }
-  if (!GOAL[FOOD]) ReadHallEffect();
+  if (!GOAL[FOOD]) {
+    if (ReadHallEffect()) {
+      food_sensed = true;
+    } else {
+      food_sensed = false;
+    }
+  }
+  
   ReadTOF();
 
+/*
   if (Fiyah() && !fan_on) {
     RunFan();
     fan_on = true;
@@ -239,15 +240,11 @@ void loop() {
   } else if (fan_on) {
     fan_on_count++;
   }
+
+  */
   
   if(TEST) {
-    //EncoderHighLow();
-    //EncoderTurning();
-    //TestStructureIDing();
     NavToTile();
-    //Serial.println(CURRENT_DIRECTION);
-    //Serial.println((*CURRENT_TILE).col);
-    //Serial.println((*CURRENT_TILE).col);
     //TestGoalSearching();
     //TravelTest();
     //DistanceTest();
@@ -256,41 +253,9 @@ void loop() {
     //TurnGyro(90);
     //HeadingTest();
     //Move();
-    
-    /*
-    Serial.print("LEFT: ");
-    Serial.print(left_dist);
-    Serial.print(", FRONT: ");
-    Serial.print(front_dist);
-    Serial.print(", RIGHT: ");
-    Serial.println(right_dist);
-    */
   }
-  else { /*
-    // Variables to keep track of expected distance measurements to be received from the IR sensors
-    double leftIRDist = 0, rightIRDist = 0;
-
-    // Production loop #TODO implement front IR scanner to handle when we're gonna hit a wall (maybe)
-    while (CheckGoals() < 5) {
-      // Scan for targets (note that ScanLongIR will update the path as required)
-      //leftIRDist = ScanLongIR(IR_LEFT_PIN, IR_LEFT_RATIO, leftIRDist);
-      //rightIRDist = ScanLongIR(IR_RIGHT_PIN, IR_RIGHT_RATIO, rightIRDist);
-
-      // Update navigation
-      Navigate();
-
-      // If we have not identified the current tile, attempt to do so now #TODO: decide if we want to continue doing this after finding food
-      if((*CURRENT_TILE).type == UNK){
-        IDTile();
-      }
-    }
-
-    SelectPath(STARTING_TILE);
-
-    while(true){
-      //just keep trucking til you're home
-      Navigate();
-    } */
+  else { 
+    ProductionLoop();
   }
   int delayTime = (LOOP_RUNTIME) - (millis() - loopStartTime);
   //Serial.println(delayTime);
@@ -299,7 +264,12 @@ void loop() {
   }
 }
 
-void ProductionLoop(){
+void ProductionLoop(){ // Full code
+  if (food_sensed) {
+    (*CURRENT_TILE).goal = FOOD;
+    production_state = GOAL_HANDLING;
+  }
+  
   if (production_state == SEARCHING) {
     SearchState();
   } else if (production_state == GOAL_APPROACH) {
@@ -315,7 +285,7 @@ void ProductionLoop(){
   }
 }
 
-void SearchState() {
+void SearchState() { // Navigation with searching
   if (!turning && ObjectOnTile()) {
     path_state = -1; 
   }
@@ -325,13 +295,13 @@ void SearchState() {
     path_state++; // If we reset the path counter to -1, then we will return to the pre-programmed path. If we reached the first pre-programmed path, proceed to the next pathpoint
   }
   if (path_state == 0) {
-    AdvancedPath(&COURSE[3][2]);
+    SelectPath(&COURSE[3][2]);
   } else if (path_state == 1) {
-    AdvancedPath(&COURSE[2][2]);
+    SelectPath(&COURSE[2][2]);
   } else if (path_state == 2) {
-    AdvancedPath(&COURSE[2][4]);
+    SelectPath(&COURSE[2][4]);
   } else if (path_state == 3) {
-    AdvancedPath(&COURSE[3][4]);
+    SelectPath(&COURSE[3][4]);
   } 
 
   int dir = -1;
@@ -369,7 +339,7 @@ void SearchState() {
   Move();
 }
 
-void GoalApproach() {
+void GoalApproach() { // As you approach a structure
   if (front_dist < FRONT_TO_NOSE + 10) {
     forward = false;
     if (Fiyah()) {
@@ -387,7 +357,7 @@ void GoalApproach() {
   Move();
 }
 
-void GoalHandling() {
+void GoalHandling() { // If you are on a goal tile, assess which one, handle it as required (including LEDs)
   if ((*CURRENT_TILE).goal == FIRE) {
     if(Fiyah()) {
       RunFan();
@@ -411,25 +381,36 @@ void GoalHandling() {
     production_state = RETURNING_TO_PATH;
   } else if ((*CURRENT_TILE).goal == FOOD) {
     digitalWrite(LED_pin[FOOD], HIGH);
-    GOAL[FOOD];
+    GOAL[FOOD] = true;
 
     if (GOAL[PEOPLE]) {
-      AdvancedPath(people_tile);
+      SelectPath(people_tile);
       production_state = SEARCHING;
     } else if (!GOAL[PEOPLE] || !GOAL[LOST] || !GOAL[FIRE]) {
       production_state = SEARCHING; // we won't have needed to go off-track for this
     } else {
-      AdvancedPath(STARTING_TILE);
+      SelectPath(STARTING_TILE);
       production_state = TRAVELLING;
     }
   }
 }
 
-void ReturningToPath() {
-  
+void ReturningToPath() { // Go back to the center of the previous tile
+  if (CURRENT_DIRECTION == NORTH) {
+    CURRENT_TILE = &COURSE[(*CURRENT_TILE).row + 1][(*CURRENT_TILE).col];
+  } else if (CURRENT_DIRECTION == EAST) {
+    CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col + 1];
+  } else if (CURRENT_DIRECTION == SOUTH) {
+    CURRENT_TILE = &COURSE[(*CURRENT_TILE).row - 1][(*CURRENT_TILE).col];
+  } else if (CURRENT_DIRECTION == WEST) {
+    CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col - 1];
+  }
+  if (Center()) {
+    production_state = SEARCHING;
+  }
 }
 
-void Travelling() {
+void Travelling() { // Navigation without searching
   int dir = Navigate();
 
   if (dir == CURRENT_DIRECTION) {
@@ -452,7 +433,7 @@ void Travelling() {
   Move();
 }
 
-void Done() {
+void Done() { // End state (flash lights on the spot)
   forward = false;
   turn_right = false;
   turn_left = false;

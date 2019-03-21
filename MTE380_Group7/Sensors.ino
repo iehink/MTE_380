@@ -1,16 +1,14 @@
-// Encoder constants
-// Pinouts - must be 2, 3, 18, 19, 20, or 21 (viable pins for interrupts)
-#define ENCODER_LEFT_PIN 18
-#define ENCODER_RIGHT_PIN 19
-
+// Hall Effect pins
 #define HALL_EFFECT_1 A9
 #define HALL_EFFECT_2 A10
 #define HALL_EFFECT_3 A11
 #define HALL_EFFECT_4 A12
 
+// MPU variables
 double gyro_pitch, gyro_roll, gyro_yaw, accel_vel, accel_dist;
 int previous_MPU_interrupt_time;
-int encoder_left, encoder_right; // To track when the encoders receive pulses
+
+// TOF variables
 double left_distances[10] = {-2,-2,-2,-2,-2,-2,-2,-2,-2,-2};
 double left_avg = 0;
 double left_diff_avg = 0;
@@ -36,7 +34,7 @@ unsigned long scan_count_sensors = 0;
 
 #define INTEGRATION_TIMESTEP 0.02
 
-#define FLAME_SENSOR_DIN 30
+#define FLAME_SENSOR_PIN 30
 
 // objects for the vl53l0x
 Adafruit_VL53L0X_MTE380 lox_left = Adafruit_VL53L0X_MTE380();
@@ -121,18 +119,8 @@ void InitDistanceSensors() {
   lox_right.startMeasurement();
 }
 
-void InitEncoders() {
-  // Attach interrupts and define encoder starting values
-  encoder_left = 0;
-  pinMode(ENCODER_LEFT_PIN, INPUT);
-  attachInterrupt(digitalPinToInterrupt(ENCODER_LEFT_PIN), EncoderLeft_ISR, CHANGE);
-  encoder_right = 0;
-  pinMode(ENCODER_RIGHT_PIN, INPUT);
-  attachInterrupt(digitalPinToInterrupt(ENCODER_RIGHT_PIN), EncoderRight_ISR, CHANGE);
-}
-
 void InitFlame() {
-  pinMode(FLAME_SENSOR_DIN, INPUT);
+  pinMode(FLAME_SENSOR_PIN, INPUT);
 }
 
 void InitHallEffect() {
@@ -140,37 +128,6 @@ void InitHallEffect() {
   pinMode(HALL_EFFECT_2, INPUT);
   pinMode(HALL_EFFECT_3, INPUT);
   pinMode(HALL_EFFECT_4, INPUT);
-}
-
-double ReadEncoders(){
-  double encL = ReadEncoderLeft(), encR = ReadEncoderRight();
-  double distance = (encL + encR)/2; // average what each encoder thinks
-
-  if (abs(encL - encR) > 10) {
-    Serial.println("ERROR: ENCODER DISCREPANCY");
-    if (encL > encR) {
-      Serial.println("ENCODER Right LAGGING");
-    } else {
-      Serial.println("ENCODER Left LAGGING");
-    }
-  }
-
-  // Update distance travelled
-  if (CURRENT_DIRECTION == NORTH) {
-    DISTANCE_NORTH += distance;
-  } else if (CURRENT_DIRECTION == SOUTH) {
-    DISTANCE_NORTH -= distance;
-  } else if (CURRENT_DIRECTION == EAST) {
-    DISTANCE_EAST += distance;
-  } else {
-    DISTANCE_EAST -= distance;
-  }
-  return distance;
-}
-
-void ResetEncoders() {
-  encoder_left = 0;
-  encoder_right = 0;
 }
 
 double ReadPitch() {
@@ -194,8 +151,7 @@ double ReadYaw() {
 }
 
 bool Fiyah() { // Function to return whether or not the flame sensor is picking up fiyah
-  //Serial.println(digitalRead(FLAME_SENSOR_DIN));
-  return (!digitalRead(FLAME_SENSOR_DIN));
+  return (!digitalRead(FLAME_SENSOR_PIN));
 }
 
 void ReadMPU(){
@@ -285,12 +241,6 @@ void ReadTOF() {
 bool ReadHallEffect(){
   bool return_val = false;
 
-  //Serial.println(analogRead(HALL_EFFECT_1));
-  //Serial.println(analogRead(HALL_EFFECT_2));
-  //Serial.println(analogRead(HALL_EFFECT_3));
-  //Serial.println(analogRead(HALL_EFFECT_4));
-  //Serial.println();
-
   if (analogRead(HALL_EFFECT_1) > 2.0) return_val = true;
   else if (analogRead(HALL_EFFECT_2) > 2.0) return_val = true;
   else if (analogRead(HALL_EFFECT_3) > 2.0) return_val = true;
@@ -303,32 +253,6 @@ bool ReadHallEffect(){
  * ********************************************* Low Level Functions are below. *************************************************
  * ------------------------------------------------------------------------------------------------------------------------------
  */
-// Interrupts
-void EncoderLeft_ISR(){
-  encoder_left++;
-}
-void EncoderRight_ISR(){
-  encoder_right++;
-}
-
-double ReadEncoderLeft(){ // Returns distance and resets encoder values
-  // Store current encoder value and immediately clear it (to minimize misses of rotations)
-  int encoder = encoder_left;
-  encoder_left = 0;
-
-  // Return distance conversion
-  return ENCODER_LEFT_RATIO * encoder;
-}
-
-double ReadEncoderRight(){ // Returns distance and resets encoder values
-  // Store current encoder value and immediately clear it (to minimize misses of rotations)
-  int encoder = encoder_right;
-  encoder_right = 0;
-
-  // Return distance conversion
-  return ENCODER_RIGHT_RATIO * encoder;
-}
-
 int ReadDistance(Adafruit_VL53L0X_MTE380 sensor, VL53L0X_RangingMeasurementData_t measurement){
   if (sensor.DataReady()) {
     sensor.getData(&measurement);
@@ -349,14 +273,6 @@ void UpdateWallDistance(){
   if (distEastToWall > 800) distEastToWall = -1;
   if (distSouthToWall > 800) distSouthToWall = -1;
   if (distWestToWall > 800) distWestToWall = -1;
-
-  //Serial.print(distNorthToWall);
-  //Serial.print(", ");
-  //Serial.print(distEastToWall);
-  //Serial.print(", ");
-  //Serial.print(distSouthToWall);
-  //Serial.print(", ");
-  //Serial.println(distWestToWall);
   
   if (CURRENT_DIRECTION == NORTH) {
     front_to_wall = distNorthToWall;
@@ -401,45 +317,3 @@ double RightDistToActual(double dist, double error) {
   else if (dist < 640) return (dist-500)*1.54 + 500;
   else return -1;
 }
-
-/*
-// Scanning function to check long-range IR and add tiles to the target path if the sensors pick things up #TODO - could be optimized to find things when turning
-double ScanLongIR(int IR_Pin, double ratio, double dist){
-  double newDist = 0;
-  double threshold = 5000; // threshold at which a change in IR reading will be considered significant enough to investigate [mm]
-
-  newDist = analogRead(IR_Pin) * ratio;
-  if (abs(newDist - dist) > threshold) {
-    int numTiles, i;
-    struct Tile tile;
-
-    // Use a multiplier to minimize repetitiveness of the code, since one is just the opposite of the other
-    if(IR_Pin == IR_LEFT_PIN) { // left IR sensor picked up something interesting
-      i = 1;
-    } else { // right IR sensor picked up something interesting
-      i = -1;
-    }
-
-    numTiles = floor((newDist + IR_SENSOR_DISTANCE)/TILE_DISTANCE);
-
-    // Determine where new target tile is
-    if (CURRENT_DIRECTION == NORTH) {
-      tile.row = (*CURRENT_TILE).row - i*numTiles;
-    } else if (CURRENT_DIRECTION == EAST) {
-      tile.col = (*CURRENT_TILE).col - i*numTiles;
-    } else if (CURRENT_DIRECTION == SOUTH) {
-      tile.row = (*CURRENT_TILE).row + i*numTiles;
-    } else {
-      tile.col = (*CURRENT_TILE).col + i*numTiles;
-    }
-
-    COURSE[tile.row][tile.col].goal = POSSIBILITY;
-    SelectPath(&COURSE[tile.row][tile.col]);
-
-  } else {
-    dist = 0.9 * dist + 0.1 * newDist; // Update expectation of sensor reading, weighted towards what it has been previously
-  }
-
-  return dist;
-}
-*/
