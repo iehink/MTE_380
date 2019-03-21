@@ -130,7 +130,7 @@ void setup() {
   // Begin serial comms for testing
   Serial.begin(9600);
   pinMode(4, INPUT); // Button
-
+/*
   InitMotors();
   Serial.println("Motors initialized.");
 
@@ -145,7 +145,7 @@ void setup() {
 
   InitFlame();
   Serial.println("Flame sensor initialized.");
-
+*/
   //InitTileID();
 
   // Set up COURSE matrix
@@ -169,7 +169,7 @@ void setup() {
   COURSE[5][2].type = WATER;
 
   // Define starting position #TODO - update to actual expected starting position
-  STARTING_TILE = &COURSE[5][4];
+  STARTING_TILE = &COURSE[1][2];
   CURRENT_TILE = STARTING_TILE;
   STARTING_DIRECTION = NORTH;
   CURRENT_DIRECTION = STARTING_DIRECTION;
@@ -179,23 +179,25 @@ void setup() {
 
 void loop() {
   int loopStartTime = millis();
-  ReadMPU();
-  ReadTOF();
+  //ReadMPU();
+  //ReadTOF();
   //ObjectOnTile();
   //struct PathPoint* testPoint = (struct PathPoint*)malloc(sizeof(struct PathPoint));
-  
+
+/*
   while(!btnState) {
     Stop();
     Button();
     //left_to_wall = left_dist;
     //right_to_wall = right_dist;
   }
+  */
   
   if(TEST) {
     //EncoderHighLow();
     //EncoderTurning();
     //TestStructureIDing();
-    NavToTile();
+    //NavToTile();
     //Serial.println(CURRENT_DIRECTION);
     //Serial.println((*CURRENT_TILE).col);
     //Serial.println((*CURRENT_TILE).col);
@@ -203,7 +205,7 @@ void loop() {
     //TravelTest();
     //DistanceTest();
     //BoxTest();
-    //Test3();
+    Test3();
     //TurnGyro(90);
     //HeadingTest();
     //Move();
