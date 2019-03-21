@@ -205,12 +205,12 @@ void setup() {
   COURSE[5][2].type = WATER;
 
   // Define starting position #TODO - update to actual expected starting position
-  STARTING_TILE = &COURSE[1][2];
+  STARTING_TILE = &COURSE[5][4];
   CURRENT_TILE = STARTING_TILE;
   STARTING_DIRECTION = NORTH;
   CURRENT_DIRECTION = STARTING_DIRECTION;
-  DISTANCE_NORTH = 0;
-  DISTANCE_EAST = 0;
+  DISTANCE_NORTH = 260;
+  DISTANCE_EAST = 150;
 }
 
 void loop() {
@@ -244,7 +244,7 @@ void loop() {
     //EncoderHighLow();
     //EncoderTurning();
     //TestStructureIDing();
-    //NavToTile();
+    NavToTile();
     //Serial.println(CURRENT_DIRECTION);
     //Serial.println((*CURRENT_TILE).col);
     //Serial.println((*CURRENT_TILE).col);
@@ -252,7 +252,7 @@ void loop() {
     //TravelTest();
     //DistanceTest();
     //BoxTest();
-    Test3();
+    //Test3();
     //TurnGyro(90);
     //HeadingTest();
     //Move();

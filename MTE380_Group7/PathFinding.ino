@@ -1,3 +1,5 @@
+#define CENTER_TOL 15.0
+
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * ***************************************************** Pathfinding functions are below. *****************************************************
    --------------------------------------------------------------------------------------------------------------------------------------------
@@ -19,15 +21,11 @@ void AddToPath(struct Tile* newTile) { // Function to add the next path point to
 }
 
 bool Center() { // Function to travel to the center of the current tile. Returns TRUE when the center has been reached.
-  forward = false;
-  turn_left = false;
-  turn_right = false;
-  return true;
   double distN = 0, distE = 0;
   bool dirSatisfied = false;
 
-  distN = 0.5 * TILE_DISTANCE - DISTANCE_NORTH;
-  distE = 0.5 * TILE_DISTANCE - DISTANCE_EAST;
+  distN = 260 - abs(DISTANCE_NORTH);
+  distE = 260 - abs(DISTANCE_EAST);
 
   // Adjust heading if one direction has been satisfied
   if (distN == 0 && (CURRENT_DIRECTION == NORTH || CURRENT_DIRECTION == SOUTH)) {
@@ -86,7 +84,8 @@ bool Center() { // Function to travel to the center of the current tile. Returns
   }
 
   // Are we centered?
-  if (distN == 0 && distE == 0) {
+  if ((abs(distN) < CENTER_TOL && (CURRENT_DIRECTION == NORTH || CURRENT_DIRECTION == SOUTH))
+      || (abs(distE) < CENTER_TOL && (CURRENT_DIRECTION == EAST || CURRENT_DIRECTION == WEST))) {
     return true;
   } else {
     return false;

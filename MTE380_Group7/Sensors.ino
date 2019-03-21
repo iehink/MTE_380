@@ -285,11 +285,11 @@ void ReadTOF() {
 bool ReadHallEffect(){
   bool return_val = false;
 
-  Serial.println(analogRead(HALL_EFFECT_1));
-  Serial.println(analogRead(HALL_EFFECT_2));
-  Serial.println(analogRead(HALL_EFFECT_3));
-  Serial.println(analogRead(HALL_EFFECT_4));
-  Serial.println();
+  //Serial.println(analogRead(HALL_EFFECT_1));
+  //Serial.println(analogRead(HALL_EFFECT_2));
+  //Serial.println(analogRead(HALL_EFFECT_3));
+  //Serial.println(analogRead(HALL_EFFECT_4));
+  //Serial.println();
 
   if (analogRead(HALL_EFFECT_1) > 2.0) return_val = true;
   else if (analogRead(HALL_EFFECT_2) > 2.0) return_val = true;
