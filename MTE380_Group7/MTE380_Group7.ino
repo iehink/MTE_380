@@ -1,7 +1,7 @@
 /* MTE 380 Group 7
  * Date Created: 2019/02/16
  * Author: Catherine Fowler
- * Last Updated: 2019/02/20
+ * Last Updated: 2019/03/21
  * By: Catherine Fowler
  */
 
@@ -40,10 +40,6 @@ struct PathPoint {
  * ********************************************************* Define global variables **********************************************************
  * --------------------------------------------------------------------------------------------------------------------------------------------
  */
-// Encoder values [mm/encoder pulse] #TODO - determine actual ratios
-#define ENCODER_LEFT_RATIO 7.9
-#define ENCODER_RIGHT_RATIO 7.2
- 
 // Pathfinding globals
 int CURRENT_DIRECTION; // To track grid location/direction
 int STARTING_DIRECTION;
@@ -74,7 +70,7 @@ int path_state = 0;
 
 double DISTANCE_NORTH, DISTANCE_EAST; // Distance based on center of nose of robot, as measured from the south-west corner of the current tile [mm].
 #define TILE_DISTANCE 304.8 // length of each tile (1 ft = 304.8mm) #TODO - update with actual measurements/testing
-double TIME_PER_MM = 3950.0/300.0; // ms/mm DO NOT DEFINE THIS - IT BREAKS EVERYTHING
+double TIME_PER_MM = 3950.0/TILE_DISTANCE; // ms/mm DO NOT DEFINE THIS - IT BREAKS EVERYTHING; set it by measuring the time it takes to traverse a tile
 unsigned long time_last_called = 0; // variable to store the last time UpdateDistance() was called for the purposes of judging distance
 
 // Movement commands
@@ -260,6 +256,16 @@ void loop() {
     //Move();
   }
   else { 
+    // For now, just try to approach the thing in front of you and either blow out the candle or light the correct LED
+    if (production_state == 0) {
+      while(!btnState) {
+        Stop();
+        Button();
+      }
+      btnState = false;
+      production_state = GOAL_APPROACH;
+    }
+    
     ProductionLoop();
   }
   
