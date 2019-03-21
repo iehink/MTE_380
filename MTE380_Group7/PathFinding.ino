@@ -52,49 +52,6 @@ bool Center() { // Function to travel to the center of the current tile. Returns
   UpdateDistance();
   
   return false;
-
-  /*
-  double distN = 0, distE = 0;
-
-  distN = 260 - abs(DISTANCE_NORTH);
-  distE = 260 - abs(DISTANCE_EAST);
-  
-  if (CURRENT_DIRECTION == NORTH) {
-    if (distN > CENTER_TOL) {
-      forward = true;
-    } else if (distN < -CENTER_TOL) {
-      //Reverse(MAX_SPEED);
-    }
-  } else if (CURRENT_DIRECTION == SOUTH) {
-    if (distN < -CENTER_TOL) {
-      forward = true;
-    } else if (distN > CENTER_TOL) {
-      //Reverse(MAX_SPEED);
-    }
-  } else if (CURRENT_DIRECTION == EAST) {
-    if (distE > CENTER_TOL) {
-      forward = true;
-    } else if (distE < -CENTER_TOL) {
-      //Reverse(MAX_SPEED);
-    }
-  } else if (CURRENT_DIRECTION == WEST) {
-    if (distE < -CENTER_TOL) {
-      forward = true;
-    } else if (distE > CENTER_TOL) {
-      //Reverse(MAX_SPEED);
-    }
-  }
-
-  UpdateDistance();
-  
-  // Are we centered?
-  if ((distN < CENTER_TOL && (CURRENT_DIRECTION == NORTH || CURRENT_DIRECTION == SOUTH))
-      || (distE < CENTER_TOL && (CURRENT_DIRECTION == EAST || CURRENT_DIRECTION == WEST))) {
-    return true;
-  } else {
-    return false;
-  }
-  */
 }
 
 struct Tile* ClearPath() {
