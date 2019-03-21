@@ -164,16 +164,6 @@ void ReadMPU(){
   gyro_yaw = gyro_yaw + normGyro.ZAxis * INTEGRATION_TIMESTEP;
 
   Vector normAccel = mpu.readNormalizeAccel();
-
-  accel_vel = accel_vel + normAccel.XAxis * INTEGRATION_TIMESTEP;
-  accel_dist = accel_dist + accel_vel * INTEGRATION_TIMESTEP;
-
-  //Serial.print("A: ");
-  //Serial.print(normAccel.XAxis);
-  //Serial.print(", V: ");
-  //Serial.print(accel_vel);
-  //Serial.print(", D: ");
-  //Serial.print(accel_dist);
 }
 
 void ReadTOF() {
@@ -241,10 +231,10 @@ void ReadTOF() {
 bool ReadHallEffect(){
   bool return_val = false;
 
-  if (analogRead(HALL_EFFECT_1) > 2.0) return_val = true;
-  else if (analogRead(HALL_EFFECT_2) > 2.0) return_val = true;
-  else if (analogRead(HALL_EFFECT_3) > 2.0) return_val = true;
-  else if (analogRead(HALL_EFFECT_4) > 2.0) return_val = true;
+  if (analogRead(HALL_EFFECT_1) > 700.0) return_val = true;
+  else if (analogRead(HALL_EFFECT_2) > 700.0) return_val = true;
+  else if (analogRead(HALL_EFFECT_3) > 700.0) return_val = true;
+  else if (analogRead(HALL_EFFECT_4) > 700.0) return_val = true;
   
   return return_val;
 }
