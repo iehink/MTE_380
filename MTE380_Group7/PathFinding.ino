@@ -184,7 +184,7 @@ void PathPointReached() { // Function to pop the target off the list
   }
 }
 
-void SelectPath(struct Tile* target) {
+void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at all costs
   // If the target tile is already being targeted, leave the path alone and log to console for testing purposes #TODO: remove for production
   if ((*target).pathTarget) {
     Serial.print("Attempted to target same tile again");

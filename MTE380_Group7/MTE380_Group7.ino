@@ -112,12 +112,17 @@ bool centering = false;
 bool turning = false;
 
 // Keep track of what state we are in
+#define ANY_STATE 0
 #define SEARCHING 1
 #define GOAL_APPROACH 2
 #define GOAL_HANDLING 3
 #define RETURNING_TO_PATH 4
-#define TRAVELLING 5
-#define DONE 6
+#define DELIVERING 5
+#define FINDING_FOOD 6
+#define TRAVELLING 7
+#define DONE 8
+int deliveryNum = 0;
+int foodNum = 0;
 int production_state = 0;
 
 // Define goal array and goal meanings
@@ -266,6 +271,20 @@ void loop() {
 }
 
 void ProductionLoop(){ // Full code
+  // If we are not in a specific state at the moment, assess what state we should be in based on goals completed
+  if (production_state = ANY_STATE) {
+    if (!GOAL[PEOPLE] || !GOAL[LOST] || !GOAL[FIRE]){
+      production_state = SEARCHING;
+    } else if (!GOAL[FOOD]) {
+      production_state = FINDING_FOOD;
+    } else if (!GOAL[DELIVER]) {
+      production_state = DELIVERING;
+    } else {
+      SelectPath(STARTING_TILE);
+      production_state = TRAVELLING;
+    }
+  }
+  
   if (food_sensed) {
     (*CURRENT_TILE).goal = FOOD;
     production_state = GOAL_HANDLING;
@@ -279,9 +298,13 @@ void ProductionLoop(){ // Full code
     GoalHandling();
   } else if (production_state == RETURNING_TO_PATH) {
     ReturningToPath();
+  } else if (production_state == FINDING_FOOD) {
+    FindingFood();
+  } else if (production_state == DELIVERING) {
+    Delivering();
   } else if (production_state == TRAVELLING) {
     Travelling();
-  } else {
+  } else if (production_state == DONE) {
     Done();
   }
 }
@@ -345,7 +368,7 @@ void GoalApproach() { // As you approach a structure
     forward = false;
     if (Fiyah()) {
       (*CURRENT_TILE).goal = FIRE;
-    } else if (people_tile != NULL) {
+    } else if (GOAL[PEOPLE]) {
       (*CURRENT_TILE).goal = LOST;
     } else {
       (*CURRENT_TILE).goal = STRUCTURE;
@@ -383,16 +406,7 @@ void GoalHandling() { // If you are on a goal tile, assess which one, handle it 
   } else if ((*CURRENT_TILE).goal == FOOD) {
     digitalWrite(LED_pin[FOOD], HIGH);
     GOAL[FOOD] = true;
-
-    if (GOAL[PEOPLE]) {
-      SelectPath(people_tile);
-      production_state = SEARCHING;
-    } else if (!GOAL[PEOPLE] || !GOAL[LOST] || !GOAL[FIRE]) {
-      production_state = SEARCHING; // we won't have needed to go off-track for this
-    } else {
-      SelectPath(STARTING_TILE);
-      production_state = TRAVELLING;
-    }
+    production_state = ANY_STATE;
   }
 }
 
@@ -407,11 +421,63 @@ void ReturningToPath() { // Go back to the center of the previous tile
     CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col - 1];
   }
   if (Center()) {
-    production_state = SEARCHING;
+    production_state = ANY_STATE;
   }
 }
 
-void Travelling() { // Navigation without searching
+void Delivering() {
+  int dir = Navigate();
+
+  if (deliveryNum == 0) {
+    SelectPath(people_tile);
+    deliveryNum = 1;
+  } else if (deliveryNum == 2) {
+    SelectPath(lost_tile);
+    deliveryNum = 3;
+  }
+
+  if (dir == CURRENT_DIRECTION) {
+    forward = true;
+  } else if (dir == -1) { // Path head is NULL; stop moving!
+    forward = false;
+    turn_left = false;
+    turn_right = false;
+    production_state = RETURNING_TO_PATH;
+    if (deliveryNum == 1) {
+      deliveryNum = 2;
+    } else {
+      GOAL[DELIVER] = true;
+      production_state = GOAL_HANDLING;
+    }
+  } else if (dir == CURRENT_DIRECTION) {
+    forward = true;
+  } else if (dir == 0) {
+    forward = false;
+    turn_left = false;
+    turn_right = false;
+  } else {
+    Head(dir);
+  }
+  
+  Move();
+}
+
+void FindingFood() {
+  if (foodNum == 0) {
+    SelectPath(&COURSE[1][1]);
+    foodNum = 1;
+  } else if (foodNum == 1) {
+    SelectPath(&COURSE[2][3]);
+    foodNum = 2;
+  } else if (foodNum == 2) {
+    SelectPath(&COURSE[4][4]);
+    foodNum = 0;
+  }
+
+  production_state = TRAVELLING;
+}
+
+void Travelling() { // Navigation without searching; only occurs after all structures have been found
   int dir = Navigate();
 
   if (dir == CURRENT_DIRECTION) {
@@ -420,13 +486,13 @@ void Travelling() { // Navigation without searching
     forward = false;
     turn_left = false;
     turn_right = false;
+    production_state = ANY_STATE;
   } else if (dir == CURRENT_DIRECTION) {
     forward = true;
   } else if (dir == 0) {
     forward = false;
     turn_left = false;
     turn_right = false;
-    production_state = DONE;
   } else {
     Head(dir);
   }
