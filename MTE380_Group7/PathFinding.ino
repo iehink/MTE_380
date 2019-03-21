@@ -92,6 +92,14 @@ bool Center() { // Function to travel to the center of the current tile. Returns
   }
 }
 
+struct Tile* ClearPath() {
+  struct Tile* tile = PATH_TAIL->tile;
+  while (PATH_TAIL != NULL) {
+    PathPointReached();
+  }
+  return tile;
+}
+
 int Navigate() { // Checks to verify we are on the right path towards the next pathpoint. Returns direction to head, 0 if we need to center, -1 if there is no path.
   if (PATH_HEAD == NULL) {
     return -1;
@@ -199,7 +207,6 @@ void PathPointReached() { // Function to pop the target off the list
   }
 }
 
-
 void AdvancedPath(struct Tile* target) {
   // If the target tile is already being targeted, leave the path alone and log to console for testing purposes #TODO: remove for production
   if ((*target).pathTarget) {
@@ -231,9 +238,7 @@ void AdvancedPath(struct Tile* target) {
 
   int rowDiff = (*CURRENT_TILE).row - (*target).row;
   int colDiff = (*CURRENT_TILE).col - (*target).col;
-
-  Serial.println(rowDiff);
-  Serial.println(colDiff);
+  
 
   /* Path is broken down by directions that will need to be travelled
      Options are to start by traversing the row or the column, then checking for water tiles and tracking around them ensues
@@ -752,25 +757,45 @@ void AdvancedPath(struct Tile* target) {
   colIndex = 0;
 
   if (rowFirst < colFirst) {
-    for (int i = 0; i < 6; i++) {
-      if (rowPathPt1[i] != NULL) {
-        AddToPath(rowPathPt1[i]);
+    if (rowFirst > 50) { // this path will not work. Go to the center and try to get to your target again.
+      struct Tile* oldTarget = ClearPath();
+      if (oldTarget != &COURSE[2][2] && CURRENT_TILE != &COURSE[2][2]) {
+        SelectPath(&COURSE[2][2]);
+      } else {
+        SelectPath(&COURSE[3][3]);
       }
-    }
-    for (int i = 0; i < 6; i++) {
-      if (rowPathPt2[i] != NULL) {
-        AddToPath(rowPathPt2[i]);
+      SelectPath(oldTarget);
+    } else {
+      for (int i = 0; i < 6; i++) {
+        if (rowPathPt1[i] != NULL) {
+          AddToPath(rowPathPt1[i]);
+        }
+      }
+      for (int i = 0; i < 6; i++) {
+        if (rowPathPt2[i] != NULL) {
+          AddToPath(rowPathPt2[i]);
+        }
       }
     }
   } else {
-    for (int i = 0; i < 6; i++) {
-      if (colPathPt1[i] != NULL) {
-        AddToPath(colPathPt1[i]);
+    if (colFirst > 50) { // this path will not work. Go to the center and try to get to your target again.
+      struct Tile* oldTarget = ClearPath();
+      if (oldTarget != &COURSE[2][2] && CURRENT_TILE != &COURSE[2][2]) {
+        SelectPath(&COURSE[2][2]);
+      } else {
+        SelectPath(&COURSE[3][3]);
       }
-    }
-    for (int i = 0; i < 6; i++) {
-      if (colPathPt2[i] != NULL) {
-        AddToPath(colPathPt2[i]);
+      SelectPath(oldTarget);
+    } else {
+      for (int i = 0; i < 6; i++) {
+        if (colPathPt1[i] != NULL) {
+          AddToPath(colPathPt1[i]);
+        }
+      }
+      for (int i = 0; i < 6; i++) {
+        if (colPathPt2[i] != NULL) {
+          AddToPath(colPathPt2[i]);
+        }
       }
     }
   }

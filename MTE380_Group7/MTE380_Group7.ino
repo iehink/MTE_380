@@ -392,6 +392,7 @@ void GoalHandling() {
     if(Fiyah()) {
       RunFan();
     } else {
+      StopFan();
       digitalWrite(LED_pin[FIRE], HIGH);
       GOAL[FIRE] = true;
       production_state = RETURNING_TO_PATH;
