@@ -21,7 +21,9 @@ void NavToTile(){ // Test tile selection + navigation
     turn_right = false;
     if (temporary_stop_counter > 30)
     {
-      Serial.println(front_dist);
+      Serial.println(front_to_wall);
+      Serial.println(front_dist - front_to_wall);
+      time_last_called = millis();
       temporary_stop = false;
       temporary_stop_counter = 0;
     }
