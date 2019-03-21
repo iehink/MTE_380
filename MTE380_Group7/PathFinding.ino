@@ -26,70 +26,42 @@ bool Center() { // Function to travel to the center of the current tile. Returns
 
   distN = 260 - abs(DISTANCE_NORTH);
   distE = 260 - abs(DISTANCE_EAST);
-
-  // Adjust heading if one direction has been satisfied
-  if (distN == 0 && (CURRENT_DIRECTION == NORTH || CURRENT_DIRECTION == SOUTH)) {
-    if (distE > 0) {
-      if (Head(EAST)) {
-        dirSatisfied = true;
-      }
-    } else if (distE < 0) {
-      if (Head(WEST)) {
-        dirSatisfied = true;
-      }
-    } else {
-      Stop();
+  
+  if (CURRENT_DIRECTION == NORTH) {
+    if (distN > CENTER_TOL) {
+      Forward(MAX_SPEED);
+    } else if (distN < -CENTER_TOL) {
+      Reverse(MAX_SPEED);
     }
-  } else if (distE == 0 && (CURRENT_DIRECTION == EAST || CURRENT_DIRECTION == WEST)) {
-    if (distN > 0) {
-      if (Head(NORTH)) {
-        dirSatisfied = true;
-      }
-    } else if (distN < 0) {
-      if (Head(SOUTH)) {
-        dirSatisfied = true;
-      }
-    } else {
-      Stop();
+  } else if (CURRENT_DIRECTION == SOUTH) {
+    if (distN < -CENTER_TOL) {
+      Forward(MAX_SPEED);
+    } else if (distN > CENTER_TOL) {
+      Reverse(MAX_SPEED);
     }
-  }
-
-  // Determine what way to head to be centered
-  if (dirSatisfied) {
-    if (CURRENT_DIRECTION == NORTH) {
-      if (distN > 0) {
-        Forward(MAX_SPEED);
-      } else if (distN < 0) {
-        Reverse(MAX_SPEED);
-      }
-    } else if (CURRENT_DIRECTION == SOUTH) {
-      if (distN < 0) {
-        Forward(MAX_SPEED);
-      } else if (distN > 0) {
-        Reverse(MAX_SPEED);
-      }
-    } else if (CURRENT_DIRECTION == EAST) {
-      if (distE > 0) {
-        Forward(MAX_SPEED);
-      } else if (distE < 0) {
-        Reverse(MAX_SPEED);
-      }
-    } else if (CURRENT_DIRECTION == WEST) {
-      if (distE < 0) {
-        Forward(MAX_SPEED);
-      } else if (distE > 0) {
-        Reverse(MAX_SPEED);
-      }
+  } else if (CURRENT_DIRECTION == EAST) {
+    if (distE > CENTER_TOL) {
+      Forward(MAX_SPEED);
+    } else if (distE < -CENTER_TOL) {
+      Reverse(MAX_SPEED);
+    }
+  } else if (CURRENT_DIRECTION == WEST) {
+    if (distE < -CENTER_TOL) {
+      Forward(MAX_SPEED);
+    } else if (distE > CENTER_TOL) {
+      Reverse(MAX_SPEED);
     }
   }
+
+  UpdateCourseLocation();
 
   Serial.println(CURRENT_DIRECTION);
   Serial.println(distN);
   Serial.println(distE);
 
   // Are we centered?
-  if (((abs(distN) < 260 + CENTER_TOL && abs(distN) > 260 - CENTER_TOL) && (CURRENT_DIRECTION == NORTH || CURRENT_DIRECTION == SOUTH))
-      || ((abs(distE) < 260 + CENTER_TOL && abs(distE) > 260 - CENTER_TOL) && (CURRENT_DIRECTION == EAST || CURRENT_DIRECTION == WEST))) {
+  if ((abs(distN) < CENTER_TOL && (CURRENT_DIRECTION == NORTH || CURRENT_DIRECTION == SOUTH))
+      || (abs(distE) < CENTER_TOL && (CURRENT_DIRECTION == EAST || CURRENT_DIRECTION == WEST))) {
     return true;
   } else {
     return false;
