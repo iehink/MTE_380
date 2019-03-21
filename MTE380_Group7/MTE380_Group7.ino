@@ -74,7 +74,7 @@ double TIME_PER_MM = 3950.0/TILE_DISTANCE; // ms/mm DO NOT DEFINE THIS - IT BREA
 unsigned long time_last_called = 0; // variable to store the last time UpdateDistance() was called for the purposes of judging distance
 
 // Movement commands
-bool turn_left = false, turn_right = false, forward = false;
+bool turn_left = false, turn_right = false, forward = false, reverse = false;
 
 // Distance sensor readings
 double left_dist = -1, right_dist = -1, front_dist = -1;
@@ -95,7 +95,7 @@ bool inWater;
 bool fan_on = false;
 int fan_on_count = 0;
 
-#define TEST false
+#define TEST true
 #define LOOP_RUNTIME 20 // milliseconds
 
 #define FRONT_TO_NOSE 80
@@ -119,6 +119,7 @@ bool turning = false;
 #define DONE 8
 int deliveryNum = 0;
 int foodNum = 0;
+int fire_count = 0, structure_loop = 0;
 int production_state = 0;
 
 // Define goal array and goal meanings
@@ -201,7 +202,7 @@ void setup() {
   COURSE[5][2].type = WATER;
 
   // Define starting position #TODO - update to actual expected starting position
-  STARTING_TILE = &COURSE[4][2];
+  STARTING_TILE = &COURSE[3][0];
   CURRENT_TILE = STARTING_TILE;
   STARTING_DIRECTION = NORTH;
   CURRENT_DIRECTION = STARTING_DIRECTION;
@@ -220,6 +221,7 @@ void loop() {
   if (!fan_on) {
     ReadMPU();
   }
+  
   if (!GOAL[FOOD]) {
     if (ReadHallEffect()) {
       food_sensed = true;
@@ -245,7 +247,9 @@ void loop() {
   */
   
   if(TEST) {
-    NavToTile();
+    //StructureTest();
+    CenterTest();
+    //NavToTile();
     //TestGoalSearching();
     //TravelTest();
     //DistanceTest();
@@ -258,20 +262,17 @@ void loop() {
   else { 
     // For now, just try to approach the thing in front of you and either blow out the candle or light the correct LED
     /*if (production_state == 0) {
-      Serial.println("no");
+      Serial.println("Reset");
       while(!btnState) {
         Stop();
         Button();
       }
       btnState = false;
       production_state = GOAL_APPROACH;
-    }
-
-    Serial.println(production_state);*/
-
-    if (production_state == ANY_STATE) production_state = GOAL_APPROACH;
+    }*/
     
     ProductionLoop();
+    Serial.println(production_state);
   }
   
   int delayTime = (LOOP_RUNTIME) - (millis() - loopStartTime);
@@ -284,7 +285,7 @@ void loop() {
 void ProductionLoop(){ // Full code
   // If we are not in a specific state at the moment, assess what state we should be in based on goals completed
   if (production_state == ANY_STATE) {
-    if (!GOAL[PEOPLE] || !GOAL[LOST] || !GOAL[FIRE]){
+    if (!GOAL[PEOPLE] || !GOAL[LOST] || !GOAL[FIRE]) {
       production_state = SEARCHING;
     } else if (!GOAL[FOOD]) {
       production_state = FINDING_FOOD;
@@ -300,8 +301,6 @@ void ProductionLoop(){ // Full code
     (*CURRENT_TILE).goal = FOOD;
     production_state = GOAL_HANDLING;
   }
-
-  Serial.println(production_state);
 
   if (production_state == SEARCHING) {
     SearchState();
@@ -335,14 +334,23 @@ void SearchState() { // Navigation with searching
     SelectPath(&COURSE[3][2]);
   } else if (path_state == 1) {
     SelectPath(&COURSE[2][2]);
-  } else if (path_state == 2) {
+  } else if (path_state == 2) { 
     SelectPath(&COURSE[2][4]);
   } else if (path_state == 3) {
     SelectPath(&COURSE[3][4]);
   } 
 
+  // If we began centering, finish centering
+  if (centering) {
+    if (Center()) {
+      centering = false;
+    }
+  }
+
   int dir = -1;
   if (!centering && !temporary_stop) dir = Navigate();
+
+  Serial.println(dir);
   
   if (temporary_stop) {
     forward = false;
@@ -366,8 +374,7 @@ void SearchState() { // Navigation with searching
   } else if (dir == CURRENT_DIRECTION) {
     forward = true;
   } else if (dir == 0) {
-    if (Center()) centering = false; // We need to ensure that we are centered on the tile for the turn about to take place
-    else centering = true;
+    centering = true;
   } else {
     turning = true;
     if (Head(dir)) turning = false;
@@ -381,14 +388,24 @@ void GoalApproach() { // As you approach a structure
     forward = false;
   } else if (front_dist < FRONT_TO_NOSE + 50) {
     forward = false;
+    structure_loop++;
     if (Fiyah()) {
-      (*CURRENT_TILE).goal = FIRE;
-    } else if (GOAL[PEOPLE]) {
-      (*CURRENT_TILE).goal = LOST;
-    } else {
-      (*CURRENT_TILE).goal = STRUCTURE;
+      fire_count++;
     }
-    production_state = GOAL_HANDLING;
+
+    if (structure_loop > 20) {    
+      if (fire_count > 0) {
+        (*CURRENT_TILE).goal = FIRE;
+      } else if (GOAL[PEOPLE]) {
+        (*CURRENT_TILE).goal = LOST;
+      } else {
+        (*CURRENT_TILE).goal = STRUCTURE;
+      }
+
+      structure_loop = 0;
+      fire_count = 0;
+      production_state = GOAL_HANDLING;
+    }    
   } else {
     forward = true;
   }
@@ -434,12 +451,16 @@ void GoalHandling() { // If you are on a goal tile, assess which one, handle it 
 void ReturningToPath() { // Go back to the center of the previous tile
   if (CURRENT_DIRECTION == NORTH) {
     CURRENT_TILE = &COURSE[(*CURRENT_TILE).row + 1][(*CURRENT_TILE).col];
+    DISTANCE_NORTH += TILE_DISTANCE;
   } else if (CURRENT_DIRECTION == EAST) {
     CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col + 1];
+    DISTANCE_EAST += TILE_DISTANCE;
   } else if (CURRENT_DIRECTION == SOUTH) {
     CURRENT_TILE = &COURSE[(*CURRENT_TILE).row - 1][(*CURRENT_TILE).col];
+    DISTANCE_NORTH -= TILE_DISTANCE;
   } else if (CURRENT_DIRECTION == WEST) {
     CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col - 1];
+    DISTANCE_EAST -= TILE_DISTANCE;
   }
   if (Center()) {
     production_state = ANY_STATE;

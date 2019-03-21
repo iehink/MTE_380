@@ -21,6 +21,39 @@ void AddToPath(struct Tile* newTile) { // Function to add the next path point to
 }
 
 bool Center() { // Function to travel to the center of the current tile. Returns TRUE when the center has been reached.
+  double distOff = 0, nosePosition = 260;
+
+  if (CURRENT_DIRECTION == NORTH) {
+    distOff = nosePosition - DISTANCE_NORTH;
+  } else if (CURRENT_DIRECTION == EAST) {
+    distOff = nosePosition - DISTANCE_EAST;
+  } else if (CURRENT_DIRECTION == SOUTH) {
+    distOff = nosePosition + DISTANCE_NORTH;
+  } else if (CURRENT_DIRECTION == WEST) {
+    distOff = nosePosition + DISTANCE_EAST;
+  }
+
+  Serial.println(distOff);
+
+  if (distOff > CENTER_TOL) { // not far enough
+    forward = true;
+    reverse = false;
+  } else if (-distOff > CENTER_TOL) { // overshot
+    forward = false;
+    reverse = true;
+  } else {
+    forward = false;
+    reverse = false; 
+    Move();
+    return true;
+  }
+
+  Move();
+  UpdateDistance();
+  
+  return false;
+
+  /*
   double distN = 0, distE = 0;
 
   distN = 260 - abs(DISTANCE_NORTH);
@@ -61,6 +94,7 @@ bool Center() { // Function to travel to the center of the current tile. Returns
   } else {
     return false;
   }
+  */
 }
 
 struct Tile* ClearPath() {
@@ -79,7 +113,7 @@ int Navigate() { // Checks to verify we are on the right path towards the next p
   if (forward) {
     if (UpdateCourseLocation()) { // If we have identified a new tile, then check what we should do after this tile
       temporary_stop = true;
-      Serial.println("REEEEEEEEEEEEEEEEEEEEEEEE");
+      //Serial.println("REEEEEEEEEEEEEEEEEEEEEEEE");
       return CURRENT_DIRECTION;
     }
   }

@@ -95,14 +95,30 @@ void Move() { // Function to act on the current state of global variables
     TurnLeft (TURN_SPEED);
   } else if (forward) {
     Forward (MAX_SPEED);
+  } else if (reverse) {
+    Reverse (MAX_SPEED);
   } else {
     Stop();
   }
 }
 
 void Reverse(int spd){
-  RightTrack(MOTOR_A_REV, spd);
-  LeftTrack(MOTOR_B_REV, spd);
+  double spdR = spd + rightMotorSpeedModifier, spdL = spd + leftMotorSpeedModifier;
+  double angleDiff = CardinalToDegrees(CURRENT_DIRECTION) - ReadYaw();
+
+  if (angleDiff > 180) {
+    angleDiff -= 360;
+  }
+  if (angleDiff < -180) {
+    angleDiff += 360;
+  }
+  
+  // adjust motor speed modifiers based on gyro readings
+  rightMotorSpeedModifier += angleDiff;
+  leftMotorSpeedModifier -= angleDiff;
+  
+  RightTrack(MOTOR_A_REV, spdR);
+  LeftTrack(MOTOR_B_REV, spdL);
 }
 
 void Stop(){

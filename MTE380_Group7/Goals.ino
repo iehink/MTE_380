@@ -256,15 +256,30 @@ bool ObjectOnTile() {
   }
   if (front_scan_off_count > 7) {
     front_scan_off_count = 0;
-    row = (*CURRENT_TILE).row;
-    col = (*CURRENT_TILE).col - (((int)(front_dist/300.0))+1);
+    
+    if (CURRENT_DIRECTION == NORTH) {
+      row = (*CURRENT_TILE).row - (((int)(front_dist/300.0))+1);
+      col = (*CURRENT_TILE).col;
+    } else if (CURRENT_DIRECTION == EAST) {
+      row = (*CURRENT_TILE).row;
+      col = (*CURRENT_TILE).col + (((int)(front_dist/300.0))+1);
+    } else if (CURRENT_DIRECTION == SOUTH) {
+      row = (*CURRENT_TILE).row + (((int)(front_dist/300.0))+1);
+      col = (*CURRENT_TILE).col;
+    } else if (CURRENT_DIRECTION == WEST) {
+      row = (*CURRENT_TILE).row;
+      col = (*CURRENT_TILE).col - (((int)(front_dist/300.0))+1);
+    }
+
     //Serial.print("FRONT: ");
     //Serial.println((int)(front_dist/300.0));
     
     if (COURSE[row][col].goal == 0) {
       COURSE[row][col].goal = POSSIBILITY;
       COURSE[row][col].type = WATER; // avoid running through this tile
+      struct Tile* tile = ClearPath();
       SelectPath(&COURSE[row][col]);
+      SelectPath(tile);
       return true;
     }
   }

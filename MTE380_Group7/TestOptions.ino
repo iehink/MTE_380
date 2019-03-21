@@ -251,25 +251,24 @@ void HeadingTest() {
   }
 }
 
-void AlphaTest() {
-  int dir = Navigate();
-
-  if (dir == CURRENT_DIRECTION || dir == -1) {
-    forward = true;
-  } else if (dir == 0) {
-    if ((*CURRENT_TILE).goal == POSSIBILITY) {
-      //LookForGoal();
-    } else {
-      Center();
-    }
+void StructureTest() {
+  if (production_state == GOAL_HANDLING) {
+    GoalHandling();
+  } else if (production_state == RETURNING_TO_PATH) {
+    btnState = false;
+    production_state = GOAL_APPROACH;
   } else {
-    if (!scanning) {
-      Head(dir);
-    }
+    GoalApproach();
   }
-  
-  Move();
 }
+
+void CenterTest() {
+  if (Center()) {
+    DISTANCE_NORTH = 0;
+    btnState = false;
+  }
+}
+
 
 void Button() { // Swaps btnState whenever the button is pressed
   while (digitalRead(4) == HIGH) {
