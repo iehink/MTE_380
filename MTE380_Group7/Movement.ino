@@ -63,13 +63,40 @@ double CardinalToDegrees(int heading){ // Function to convert directional headin
   }
 }
 
-bool Head(int dir) { // Function to adjust heading #TODO: Update DISTANCE_NORTH and DISTANCE_EAST to reflect distance change when turning
-  if (TurnGyro(CardinalToDegrees(dir))) {
-    CURRENT_DIRECTION = dir; 
-    time_last_called = millis();
+bool Head(int dir) { // Function to adjust heading
+  double offset = 100;
+
+  if (dir == CURRENT_DIRECTION) { // catch just in case
     return true;
   }
 
+  if (TurnGyro(CardinalToDegrees(dir))) {
+
+    // Update distances
+    if (CURRENT_DIRECTION == NORTH) {
+      DISTANCE_NORTH -= offset;
+    } else if (CURRENT_DIRECTION == EAST) {
+      DISTANCE_EAST -= offset;
+    } else if (CURRENT_DIRECTION == SOUTH) {
+      DISTANCE_NORTH += offset;
+    } else if (CURRENT_DIRECTION == WEST) {
+      DISTANCE_EAST += offset;
+    }
+
+    if (dir == NORTH) {
+      DISTANCE_NORTH += offset;
+    } else if (dir == EAST) {
+      DISTANCE_EAST += offset;
+    } else if (dir == SOUTH) {
+      DISTANCE_NORTH -= offset;
+    } else if (dir == WEST) {
+      DISTANCE_EAST -= offset;
+    }
+    
+    CURRENT_DIRECTION = dir; 
+    time_last_called = millis();    
+    return true;
+  }
   return false;
 }
 

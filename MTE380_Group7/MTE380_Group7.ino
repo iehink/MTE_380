@@ -95,7 +95,7 @@ bool inWater;
 bool fan_on = false;
 int fan_on_count = 0;
 
-#define TEST true
+#define TEST false
 #define LOOP_RUNTIME 20 // milliseconds
 
 #define FRONT_TO_NOSE 80
@@ -202,7 +202,7 @@ void setup() {
   COURSE[5][2].type = WATER;
 
   // Define starting position #TODO - update to actual expected starting position
-  STARTING_TILE = &COURSE[3][0];
+  STARTING_TILE = &COURSE[5][4];
   CURRENT_TILE = STARTING_TILE;
   STARTING_DIRECTION = NORTH;
   CURRENT_DIRECTION = STARTING_DIRECTION;

@@ -177,13 +177,17 @@ void UpdateDistance() { // Function to update DISTANCE_NORTH and DISTANCE_EAST a
   double distanceTravelled = (millis() - time_last_called) / TIME_PER_MM;
   time_last_called = millis();
 
-  if (CURRENT_DIRECTION == NORTH) {
+  int dir = CURRENT_DIRECTION;
+  if (reverse) dir += 2;
+  if (dir > WEST) dir -= 4;
+
+  if (dir == NORTH) {
     DISTANCE_NORTH += distanceTravelled;
-  } else if (CURRENT_DIRECTION == EAST) {
+  } else if (dir == EAST) {
     DISTANCE_EAST += distanceTravelled;
-  } else if (CURRENT_DIRECTION == SOUTH) {
+  } else if (dir == SOUTH) {
     DISTANCE_NORTH -= distanceTravelled;
-  } else if (CURRENT_DIRECTION == WEST) {
+  } else if (dir == WEST) {
     DISTANCE_EAST -= distanceTravelled;
   } else {
     Serial.println("Error - no direction specified");
