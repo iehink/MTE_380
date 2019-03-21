@@ -111,40 +111,6 @@ void Stop(){
   Brake(MOTOR_B_BRAKE, true);
 }
 
-void Turn (int degCW) { // Function to turn the device degCW degrees clockwise and update current direction #TODO
-  ReadEncoders(); // Update distance value first so we don't upset that measurement
-
-  // WE ARE USING ENCODER RIGHT FOR THIS BECAUSE IT SEEMS MORE CONSISTENT
-
-  double distPerDeg = ENCODER_LEFT_RATIO / (5.1 * 90 / (abs(degCW))); // ENCODER_RIGHT_RATIO / 4.9; // [mm/encoder pulse] / [deg]
-  double turnDist = ReadEncoderLeft(); //ReadEncoderRight();
-
-  while (degCW < 0) {
-    degCW += 360;
-  }
-  
-  degCW = degCW%360;
-
-  if (degCW <= 180) {
-    while(turnDist < distPerDeg*degCW){
-      TurnRight(TURN_SPEED);
-      turnDist += ReadEncoderLeft(); //ReadEncoderRight();
-      delay(100);
-    }
-  } else {
-    while(turnDist < distPerDeg*(360 - degCW)){
-      TurnLeft(TURN_SPEED);
-      turnDist += ReadEncoderLeft(); //ReadEncoderRight();
-      delay(100);
-    }
-  }
-
-  Stop();
-  // reset encoders to not mess with other functions
-  ResetEncoders();
-  return;
-}
-
 bool TurnGyro (double heading) { // Takes degrees heading (with North as 0 degrees, heading CW, e.g. east is 90) and sets turning accordingly
   // Correct input if out of 360 deg heading
   if (heading > 360) {

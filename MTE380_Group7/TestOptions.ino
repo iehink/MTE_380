@@ -4,7 +4,7 @@ void NavToTile(){ // Test tile selection + navigation
   if (state == 0) {
     //SelectPath(&COURSE[5][0]);
     //COURSE[1][2].goal = POSSIBILITY;
-    AdvancedPath(&COURSE[0][0]);
+    SelectPath(&COURSE[0][0]);
     state = 1;
   }
   
@@ -43,68 +43,6 @@ void NavToTile(){ // Test tile selection + navigation
   Move();
 }
 
-void BoxTest() { // Test to set the robot to drive in a box (for calibrating Head and Forward functions) -> multiple button presses reqd
-  double len = 210;
-
-  Serial.println(state);
-
-  if (state == 0) {
-    if (DISTANCE_NORTH < len) {
-      forward = true;
-      ReadEncoders();
-    } else {
-      state++;
-    }
-  } else if (state == 1) {
-    if (Head(EAST)) {
-      state++;
-    }
-  } else if (state == 2) {
-    if (DISTANCE_EAST < len) {
-      forward = true;
-      ReadEncoders();
-    } else {
-      state++;
-    }
-  } else if (state == 3) {
-    if (Head(SOUTH)) {
-      state++;
-    }
-  } else if (state == 4) {
-    if (DISTANCE_NORTH > 0) {
-      forward = true;
-      ReadEncoders();
-    } else {
-      forward = false;
-      state++;
-    }
-  } else if (state == 5) {
-    if (Head(EAST)) {
-      state++;
-    }
-  } else if (state == 6) {
-    if (Head(WEST)) {
-      state++;
-    }
-  } else if (state == 7) {
-    if (DISTANCE_EAST > 0) {
-      forward = true;
-      ReadEncoders();
-    } else {
-      forward = false;
-      state++;
-    }
-  } else {  
-    if (Head(NORTH)) {
-      state = 0;
-    }
-    if (DISTANCE_NORTH < 0) DISTANCE_NORTH = 0; // fixing weird bug where it goes heckin negative
-    if (DISTANCE_EAST < 0) DISTANCE_EAST = 0; // fixing weird bug where it goes heckin negative
-  }
-  
-  Move();
-}
-
 void Test3() {
   int testX = 0, testY = 0, testZ = 0;
   PathPoint* testPoint;
@@ -132,7 +70,7 @@ void Test3() {
   Serial.println(testX);
   Serial.println(testY);
   
-  AdvancedPath(&COURSE[testX][testY]);
+  SelectPath(&COURSE[testX][testY]);
   COURSE[testX][testY].goal = POSSIBILITY;
 
   testPoint = PATH_HEAD;
@@ -176,89 +114,6 @@ void Test3() {
     Serial.print((*testPoint->tile).col);
     Serial.println();
   }
-}
-
-void BasicEncoderTest(){
-  while(true) {
-    LeftTrack(0, 250);
-    //RightTrack(1, 250);
-  }/*
-  bool buttonPressed = false;
-
-  Stop();
-  while(!buttonPressed){
-    if (digitalRead(4) == HIGH) {
-      buttonPressed = true;
-    }
-  }
-
-  buttonPressed = false;
-  delay(200);
-
-  while(!buttonPressed){
-    if (digitalRead(4) == HIGH) {
-      buttonPressed = true;
-    }
-    Serial.print("ENC LEFT: ");
-    Serial.println(ReadEncoderLeft());
-    Serial.print("ENC RIGHT: ");
-    Serial.println(ReadEncoderRight());
-    delay(3000);
-  }
- */
-}
-
-void EncoderHighLow() { // While you hold the button, encoder digital values will be printed and the wheels will turn
-  Stop();
-  while(digitalRead(4) == HIGH){
-    Forward(170);
-    Serial.print(digitalRead(ENCODER_LEFT_PIN));
-    Serial.print(" ");
-    Serial.println(digitalRead(ENCODER_RIGHT_PIN));
-  }
-}
-
-void EncoderTest() {
-  double totalLength = 0;
-
-  Serial.println("Right Encoder");
-  Serial.println(ReadEncoderRight());
-  Button();
-
-  while(totalLength < 210) {
-    Forward(MAX_SPEED);
-    totalLength += ReadEncoderRight();
-    Serial.println(totalLength);
-  }
-
-  totalLength = 0;
-  Serial.println("Left Encoder");
-  Serial.println(ReadEncoderLeft());
-  Button();
-   
-  while(totalLength < 210) {
-    Forward(MAX_SPEED);
-    totalLength += ReadEncoderLeft();
-    Serial.println(totalLength);
-  }
-}
-
-void EncoderTurning () {
-  int turnIncrement = 10; // Note there is a hard limit on how fine this can be based on the encoders
-  
-  Button();
-  Turn(90);
-  Button();
-  Turn(-90);
-
-  Button(); 
-  for (int i =0; i < 90; i+=turnIncrement) {
-    Turn(turnIncrement);
-    Serial.println(i);
-  }
-
-  Button();
-  Turn(-90);
 }
 
 void IMUTest() { // Can it go straight?
