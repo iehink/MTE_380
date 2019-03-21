@@ -95,7 +95,7 @@ bool inWater;
 bool fan_on = false;
 int fan_on_count = 0;
 
-#define TEST true
+#define TEST false
 #define LOOP_RUNTIME 20 // milliseconds
 
 #define FRONT_TO_NOSE 80
@@ -258,6 +258,7 @@ void loop() {
   else { 
     // For now, just try to approach the thing in front of you and either blow out the candle or light the correct LED
     if (production_state == 0) {
+      Serial.println("no");
       while(!btnState) {
         Stop();
         Button();
@@ -265,6 +266,8 @@ void loop() {
       btnState = false;
       production_state = GOAL_APPROACH;
     }
+
+    Serial.println(production_state);
     
     ProductionLoop();
   }
@@ -291,7 +294,7 @@ void ProductionLoop(){ // Full code
     }
   }
   
-  if (food_sensed) {
+  if (!GOAL[FOOD] && food_sensed) {
     (*CURRENT_TILE).goal = FOOD;
     production_state = GOAL_HANDLING;
   }
@@ -370,6 +373,7 @@ void SearchState() { // Navigation with searching
 }
 
 void GoalApproach() { // As you approach a structure
+  Serial.println(front_dist);
   if (front_dist < FRONT_TO_NOSE + 10) {
     forward = false;
     if (Fiyah()) {
@@ -412,6 +416,7 @@ void GoalHandling() { // If you are on a goal tile, assess which one, handle it 
   } else if ((*CURRENT_TILE).goal == FOOD) {
     digitalWrite(LED_pin[FOOD], HIGH);
     GOAL[FOOD] = true;
+    food_sensed = false;
     production_state = ANY_STATE;
   }
 }
