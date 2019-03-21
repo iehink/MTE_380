@@ -105,20 +105,25 @@ bool btnState = false;
 bool temporary_stop = false;
 int temporary_stop_counter = 0;
 bool centering = false;
+bool turning = false;
 
 // Keep track of what state we are in
 #define SEARCHING 1
-#define TURNING 2
-#define GOAL_APPROACH 3
-#define GOAL_HANDLING 4
-#define RETURNING_TO_PATH 5
+#define GOAL_APPROACH 2
+#define GOAL_HANDLING 3
+#define RETURNING_TO_PATH 4
+#define TRAVELLING 5
+#define DONE 6
 int production_state = 0;
 
 // Define goal array and goal meanings
 bool GOAL[6] = {false, false, false, false, false, false}; // 0th array unused, array indices correspond to values listed below
 int PEOPLE = 1, LOST = 2, FOOD = 3, FIRE = 4, DELIVER = 5, POSSIBILITY = 6, STRUCTURE = 7, NONE = 8; 
 // Variable to keep track of where the people are
-struct Tile* peopleTile;
+struct Tile* people_tile;
+struct Tile* lost_tile; // we need to return to both since we can't tell the difference
+// LEDs to indicate goals; correspond to the indices above
+int LED_pin[6] = {0, 32, 34, 36, 38, 40};
 
 // Initialize functions
 void InitMotors();
@@ -146,6 +151,11 @@ void setup() {
   // Begin serial comms for testing
   Serial.begin(9600);
   pinMode(4, INPUT); // Button
+
+  // LEDs
+  for (int i = 1; i <= 5; i++) {
+    pinMode(LED_pin[i], OUTPUT);
+  }
 
   InitFan();
   Serial.println("Fan initialized.");
@@ -203,7 +213,7 @@ void loop() {
   int loopStartTime = millis();
 
   ReadMPU();
-  ReadHallEffect();
+  if (!GOAL[FOOD]) ReadHallEffect();
   ReadTOF();
 
   if (Fiyah()) {
@@ -281,11 +291,19 @@ void ProductionLoop(){
     SearchState();
   } else if (production_state == GOAL_APPROACH) {
     GoalApproach();
+  } else if (production_state == GOAL_HANDLING) {
+    GoalHandling();
+  } else if (production_state == RETURNING_TO_PATH) {
+    ReturningToPath();
+  } else if (production_state == TRAVELLING) {
+    Travelling();
+  } else {
+    Done();
   }
 }
 
 void SearchState() {
-  if (ObjectOnTile()) {
+  if (!turning && ObjectOnTile()) {
     path_state = -1; 
   }
   
@@ -331,21 +349,24 @@ void SearchState() {
     // if (Center()) centering = true; // We need to ensure that we are centered on the tile for the turn about to take place
     // else centering = false;
   } else {
-    Head(dir);
+    turning = true;
+    if (Head(dir)) turning = false;
   }
   
   Move();
 }
 
 void GoalApproach() {
-  if (front_dist < DIST_FROM_NOSE + 10) {
+  if (front_dist < FRONT_TO_NOSE + 10) {
     forward = false;
     if (Fiyah()) {
       (*CURRENT_TILE).goal = FIRE;
-      production_state = GOAL_HANDLING;
+    } else if (people_tile != NULL) {
+      (*CURRENT_TILE).goal = LOST;
     } else {
       (*CURRENT_TILE).goal = STRUCTURE;
     }
+    production_state = GOAL_HANDLING;
   } else {
     forward = true;
   }
@@ -358,7 +379,77 @@ void GoalHandling() {
     if(Fiyah()) {
       RunFan(250);
     } else {
-      
+      digitalWrite(LED_pin[FIRE], HIGH);
+      GOAL[FIRE] = true;
+      production_state = RETURNING_TO_PATH;
     }
+  } else if ((*CURRENT_TILE).goal == STRUCTURE) {
+    //let's arbitrarily mark the first structure as PEOPLE for now
+    (*CURRENT_TILE).goal = PEOPLE;
+    people_tile = CURRENT_TILE;
+    digitalWrite(LED_pin[PEOPLE], HIGH);
+    GOAL[PEOPLE] = true;
+    production_state = RETURNING_TO_PATH;
+  } else if ((*CURRENT_TILE).goal == LOST) {
+    lost_tile = CURRENT_TILE;
+    digitalWrite(LED_pin[LOST], HIGH);
+    GOAL[LOST] = HIGH;
+    production_state = RETURNING_TO_PATH;
+  } else if ((*CURRENT_TILE).goal == FOOD) {
+    digitalWrite(LED_pin[FOOD], HIGH);
+    GOAL[FOOD];
+
+    if (GOAL[PEOPLE]) {
+      AdvancedPath(people_tile);
+      production_state = SEARCHING;
+    } else if (!GOAL[PEOPLE] || !GOAL[LOST] || !GOAL[FIRE]) {
+      production_state = SEARCHING; // we won't have needed to go off-track for this
+    } else {
+      AdvancedPath(STARTING_TILE);
+      production_state = TRAVELLING;
+    }
+  }
+}
+
+void ReturningToPath() {
+  
+}
+
+void Travelling() {
+  int dir = Navigate();
+
+  if (dir == CURRENT_DIRECTION) {
+    forward = true;
+  } else if (dir == -1) { // Path head is NULL; stop moving!
+    forward = false;
+    turn_left = false;
+    turn_right = false;
+  } else if (dir == CURRENT_DIRECTION) {
+    forward = true;
+  } else if (dir == 0) {
+    forward = false;
+    turn_left = false;
+    turn_right = false;
+    production_state = DONE;
+  } else {
+    Head(dir);
+  }
+  
+  Move();
+}
+
+void Done() {
+  forward = false;
+  turn_right = false;
+  turn_left = false;
+
+  for (int i = 1; i <= 5; i++) {
+    digitalWrite(LED_pin[i], LOW);
+  }
+
+  delay(1000);
+
+  for (int i = 1; i <= 5; i++) {
+    digitalWrite(LED_pin[i], HIGH);
   }
 }
