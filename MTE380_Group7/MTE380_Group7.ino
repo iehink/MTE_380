@@ -519,6 +519,11 @@ void FindingFood() {
 }
 
 void Travelling() { // Navigation without searching
+  // If we are gonna hit something, don't.
+  if (!centering && !turning && front_dist < 300 && front_dist != -1) {
+    ObjectOnTile(); // this should set the thing ahead of us as a possibility
+  }
+  
   // If we began centering, finish centering
   if (centering) {
     if (Center()) {
