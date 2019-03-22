@@ -98,7 +98,7 @@ int previous_MPU_interrupt_time;
 bool fan_on = false;
 int fan_on_count = 0;
 
-#define TEST false
+#define TEST true
 #define LOOP_RUNTIME 20 // milliseconds
 
 #define FRONT_TO_NOSE 80
@@ -241,7 +241,7 @@ void loop() {
       //TravelTest();
       //DistanceTest();
       //BoxTest();
-      Test3();
+      //Test3();
       //TurnGyro(90);
       //HeadingTest();
       //Move();

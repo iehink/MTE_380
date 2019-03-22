@@ -221,6 +221,13 @@ void ReadTOF() {
     //Serial.print(", ");
     //Serial.println(right_diff_avg);
     //delay(100);
+
+    Serial.print("RAW: ");
+    Serial.print(left_avg);
+    Serial.print(", ERROR: ");
+    Serial.print(left_diff_avg);
+    Serial.print(", MODIFIED: ");
+    Serial.println(left_dist);
   }
 }
 
