@@ -69,7 +69,7 @@ int path_state = 0;
 
 double DISTANCE_NORTH, DISTANCE_EAST; // Distance based on center of nose of robot, as measured from the south-west corner of the current tile [mm].
 #define TILE_DISTANCE 304.8 // length of each tile (1 ft = 304.8mm) #TODO - update with actual measurements/testing
-double TIME_PER_MM = 3950.0 / TILE_DISTANCE; // ms/mm DO NOT DEFINE THIS - IT BREAKS EVERYTHING; set it by measuring the time it takes to traverse a tile
+double TIME_PER_MM = 4050.0 / TILE_DISTANCE; // ms/mm DO NOT DEFINE THIS - IT BREAKS EVERYTHING; set it by measuring the time it takes to traverse a tile
 unsigned long time_last_called = 0; // variable to store the last time UpdateDistance() was called for the purposes of judging distance
 
 // Movement commands
@@ -98,7 +98,7 @@ int previous_MPU_interrupt_time;
 bool fan_on = false;
 int fan_on_count = 0;
 
-#define TEST true
+#define TEST false
 #define LOOP_RUNTIME 20 // milliseconds
 
 #define FRONT_TO_NOSE 80
@@ -208,11 +208,11 @@ void setup() {
   COURSE[5][2].type = WATER;
 
   // Define starting position #TODO - update to actual expected starting position
-  STARTING_TILE = &COURSE[5][4];
+  STARTING_TILE = &COURSE[4][5];
   CURRENT_TILE = STARTING_TILE;
   STARTING_DIRECTION = NORTH;
   CURRENT_DIRECTION = STARTING_DIRECTION;
-  DISTANCE_NORTH = 260;
+  DISTANCE_NORTH = 0;
   DISTANCE_EAST = 150;
 }
 
@@ -223,7 +223,7 @@ void loop() {
     Stop();
     InitMPU();
     CURRENT_DIRECTION = STARTING_DIRECTION;
-    DISTANCE_NORTH = 260;
+    DISTANCE_NORTH = 0;
     DISTANCE_EAST = 150;
   } else {
     if (!fan_on) ReadMPU();
@@ -251,8 +251,8 @@ void loop() {
     }
     else {
       ProductionLoop();
-      Serial.println(production_state);
-      PrintPath();
+      //Serial.println(production_state);
+      //PrintPath();
     }
   }
 
@@ -303,9 +303,9 @@ void ProductionLoop() { // Full code
 }
 
 void SearchState() { // Navigation with searching
-  if (!turning && ObjectOnTile()) {
+  /*if (!turning && ObjectOnTile()) {
     production_state = TRAVELLING;
-  }
+  }*/
 
   // Run along hard-coded path if there is no path found (i.e. no objects have been found from our path)
   if (PATH_HEAD == NULL) {
@@ -321,40 +321,40 @@ void SearchState() { // Navigation with searching
     if (Center()) {
       centering = false;
     }
-  }
-
-  int dir = -1;
-  if (!centering && !temporary_stop) dir = Navigate();
-
-  if (temporary_stop) {
-    forward = false;
-    turn_left = false;
-    turn_right = false;
-    if (temporary_stop_counter > 30)
-    {
-      temporary_stop = false;
-      temporary_stop_counter = 0;
-    }
-    temporary_stop_counter++;
-  } else if ((*CURRENT_TILE).goal == POSSIBILITY) {
-    forward = false;
-    turn_left = false;
-    turn_right = false;
-    production_state = GOAL_APPROACH;
-  } else if (dir == -1) { // Path head is NULL; stop moving!
-    forward = false;
-    turn_left = false;
-    turn_right = false;
-  } else if (dir == CURRENT_DIRECTION) {
-    forward = true;
-  } else if (dir == 0) {
-    centering = true;
   } else {
-    turning = true;
-    if (Head(dir)) turning = false;
+    int dir = -1;
+    if (!centering && !temporary_stop) dir = Navigate();
+  
+    if (temporary_stop) {
+      forward = false;
+      turn_left = false;
+      turn_right = false;
+      if (temporary_stop_counter > 30)
+      {
+        temporary_stop = false;
+        temporary_stop_counter = 0;
+      }
+      temporary_stop_counter++;
+    } else if ((*CURRENT_TILE).goal == POSSIBILITY) {
+      forward = false;
+      turn_left = false;
+      turn_right = false;
+      production_state = GOAL_APPROACH;
+    } else if (dir == -1) { // Path head is NULL; stop moving!
+      forward = false;
+      turn_left = false;
+      turn_right = false;
+    } else if (dir == CURRENT_DIRECTION) {
+      forward = true;
+    } else if (dir == 0) {
+      centering = true;
+    } else {
+      turning = true;
+      if (Head(dir)) turning = false;
+    }
+  
+    Move();
   }
-
-  Move();
 }
 
 void GoalApproach() { // As you approach a structure

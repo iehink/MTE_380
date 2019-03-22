@@ -194,7 +194,6 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
     AddToPath(CURRENT_TILE); // Ensure alignment to center of tile before we begin travelling to the target
   } else {
     prevTile = PATH_TAIL->tile;
-    Serial.println("correct");
   }
 
   struct Tile* rowPathPt1[6] = {NULL};

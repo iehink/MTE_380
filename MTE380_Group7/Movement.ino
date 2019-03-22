@@ -66,12 +66,13 @@ double CardinalToDegrees(int heading){ // Function to convert directional headin
 bool Head(int dir) { // Function to adjust heading
   double offset = 100;
 
-  if (dir == CURRENT_DIRECTION) { // catch just in case
-    return true;
-  }
-
   if (Center()) {
     centering = false;
+    
+    if (dir == CURRENT_DIRECTION) { // catch just in case
+      return true;
+    }
+    
     if (TurnGyro(CardinalToDegrees(dir))) {
       // Update distances
       if (CURRENT_DIRECTION == NORTH) {
