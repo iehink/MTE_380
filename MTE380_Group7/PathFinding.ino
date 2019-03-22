@@ -21,7 +21,7 @@ void AddToPath(struct Tile* newTile) { // Function to add the next path point to
 }
 
 bool Center() { // Function to travel to the center of the current tile. Returns TRUE when the center has been reached.
-  double distOff = 0, nosePosition = 290;
+  double distOff = 0, nosePosition = 295;
 
   if (CURRENT_DIRECTION == NORTH) {
     distOff = nosePosition - DISTANCE_NORTH;

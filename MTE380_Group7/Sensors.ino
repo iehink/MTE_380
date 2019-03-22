@@ -290,7 +290,7 @@ double LeftDistToActual(double dist, double error) {
 }
 
 double FrontDistToActual(double dist, double error) {
-  if (dist < 30) return -1;
+  if (dist < 30 || error > 9) return -1;
   else if (dist < 450) return dist;
   else return -1;
 }

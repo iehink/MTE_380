@@ -55,7 +55,7 @@ Tile COURSE[6][6];
 #define UNK 0
 #define FLAT 1
 #define SAND 2
-#define GRAVEL 3
+#define GRAVEL 8
 #define WATER 99 // just don't do it...
 
 /* Path planning will be optimized by:
@@ -207,12 +207,12 @@ void setup() {
   COURSE[5][2].type = WATER;
 
   // Define starting position #TODO - update to actual expected starting position
-  STARTING_TILE = &COURSE[1][0];
+  STARTING_TILE = &COURSE[3][0];
   CURRENT_TILE = STARTING_TILE;
   STARTING_DIRECTION = EAST;
   CURRENT_DIRECTION = STARTING_DIRECTION;
   DISTANCE_NORTH = 150;
-  DISTANCE_EAST = 260;
+  DISTANCE_EAST = 295;
 }
 
 void loop() {
@@ -223,7 +223,7 @@ void loop() {
     InitMPU();
     CURRENT_DIRECTION = STARTING_DIRECTION;
     DISTANCE_NORTH = 150;
-    DISTANCE_EAST = 260;
+    DISTANCE_EAST = 295;
   } else {
     if (!fan_on) ReadMPU();
     if (!GOAL[FOOD]) {
