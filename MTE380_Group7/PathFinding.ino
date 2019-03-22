@@ -21,16 +21,16 @@ void AddToPath(struct Tile* newTile) { // Function to add the next path point to
 }
 
 bool Center() { // Function to travel to the center of the current tile. Returns TRUE when the center has been reached.
-  double distOff = 0, nosePosition = 250;
+  double distOff = 0, nosePosition = 260;
 
   if (CURRENT_DIRECTION == NORTH) {
     distOff = nosePosition - DISTANCE_NORTH;
   } else if (CURRENT_DIRECTION == EAST) {
     distOff = nosePosition - DISTANCE_EAST;
   } else if (CURRENT_DIRECTION == SOUTH) {
-    distOff = nosePosition + DISTANCE_NORTH;
+    distOff = DISTANCE_NORTH - (TILE_DISTANCE - nosePosition);
   } else if (CURRENT_DIRECTION == WEST) {
-    distOff = nosePosition + DISTANCE_EAST;
+    distOff = DISTANCE_EAST - (TILE_DISTANCE - nosePosition);
   }
 
   if (distOff > CENTER_TOL) { // not far enough
@@ -43,9 +43,9 @@ bool Center() { // Function to travel to the center of the current tile. Returns
     forward = false;
     reverse = false; 
     Move();
+    //Serial.println("DONE CENTERING!");
     return true;
   }
-
   Move();
   UpdateDistance();
   
@@ -69,7 +69,6 @@ int Navigate() { // Checks to verify we are on the right path towards the next p
   if (forward) {
     if (UpdateCourseLocation()) { // If we have identified a new tile, then check what we should do after this tile
       temporary_stop = true;
-      //Serial.println("REEEEEEEEEEEEEEEEEEEEEEEE");
       return CURRENT_DIRECTION;
     }
   }
@@ -104,26 +103,23 @@ bool UpdateCourseLocation() { // Function to update the location on the course g
   UpdateDistance();
 
   // Determine if we are now on a new tile
-  if (abs(DISTANCE_NORTH) > TILE_DISTANCE) {
-    if (CURRENT_DIRECTION == NORTH) {
-      CURRENT_TILE = &COURSE[(*CURRENT_TILE).row - 1][(*CURRENT_TILE).col];
-      DISTANCE_NORTH -= TILE_DISTANCE;
-      return true;
-    } else if (CURRENT_DIRECTION == SOUTH) {
-      CURRENT_TILE = &COURSE[(*CURRENT_TILE).row + 1][(*CURRENT_TILE).col];
-      DISTANCE_NORTH += TILE_DISTANCE;
-      return true;
-    }
-  } else if (abs(DISTANCE_EAST) > TILE_DISTANCE) {
-    if (CURRENT_DIRECTION == EAST) {
-      CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col + 1];
-      DISTANCE_EAST -= TILE_DISTANCE;
-      return true;
-    } else if (CURRENT_DIRECTION == WEST) {
-      CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col - 1];
-      DISTANCE_EAST += TILE_DISTANCE;
-      return true;
-    }
+  if (CURRENT_DIRECTION == NORTH && abs(DISTANCE_NORTH) > TILE_DISTANCE) {
+    CURRENT_TILE = &COURSE[(*CURRENT_TILE).row - 1][(*CURRENT_TILE).col];
+    DISTANCE_NORTH -= TILE_DISTANCE;
+    return true;
+  } else if (CURRENT_DIRECTION == SOUTH && DISTANCE_NORTH < 0) {
+    CURRENT_TILE = &COURSE[(*CURRENT_TILE).row + 1][(*CURRENT_TILE).col];
+    DISTANCE_NORTH += TILE_DISTANCE;
+    return true;
+  }
+  if (CURRENT_DIRECTION == EAST && abs(DISTANCE_EAST) > TILE_DISTANCE) {
+    CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col + 1];
+    DISTANCE_EAST -= TILE_DISTANCE;
+    return true;
+  } else if (CURRENT_DIRECTION == WEST && DISTANCE_EAST < 0) {
+    CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col - 1];
+    DISTANCE_EAST += TILE_DISTANCE;
+    return true;
   }
   return false;
 }
@@ -179,7 +175,7 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
     return;
   }
 
-  if ((*target).type == WATER) {
+  if ((*target).goal == 0 && (*target).type == WATER) {
     Serial.println("No.");
     return;
   }
@@ -191,6 +187,8 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
   struct Tile* prevTile;
   if (PATH_TAIL == NULL) {
     prevTile = CURRENT_TILE;
+    //Serial.print("IT ADDED THE CURRENT TILE IN COL: ");
+    //Serial.println((*CURRENT_TILE).col);
     AddToPath(CURRENT_TILE); // Ensure alignment to center of tile before we begin travelling to the target
   } else {
     prevTile = PATH_TAIL->tile;
@@ -733,7 +731,9 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
   rowIndex = 0;
   colIndex = 0;
 
-  if ((rowFirst < colFirst && colDiff != 0) || rowDiff == 0) { // Go across the row
+  if (rowFirst == 0 && colFirst == 0) { // if we're literally beside the tile
+    // do nothing but add to target (happens later)
+  } else if ((rowFirst < colFirst && colDiff != 0) || rowDiff == 0) { // Go across the row
     if (rowFirst > 50) { // this path will not work. Go to the center and try to get to your target again.
       struct Tile* oldTarget = ClearPath();
       if (oldTarget != &COURSE[2][2] && prevTile != &COURSE[2][2]) {

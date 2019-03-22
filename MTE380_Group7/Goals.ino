@@ -66,9 +66,6 @@ bool ObjectOnTile() {
 
     //Serial.print("FRONT: ");
     //Serial.println((int)(front_dist/300.0));
-
-    Serial.print(row);
-    Serial.println(col);
     
     if (COURSE[row][col].goal == 0) {
       COURSE[row][col].goal = POSSIBILITY;
@@ -125,6 +122,8 @@ bool ObjectOnTile() {
       // Clear wherever we were previously going and instead go to the object we found
       struct Tile* tile = ClearPath();
       SelectPath(&COURSE[row][col]);
+
+      centering = true; // center first
       
       return true;
     }
@@ -168,14 +167,15 @@ bool ObjectOnTile() {
       /*if (path_state != -1) { // if we were only travelling to an unnecessary tile
         ClearPath(); 
       }*/ // Might cause issues with centering on a tile
-      Serial.print(row);
-      Serial.println(col);
+      //Serial.print(row);
+      //Serial.println(col);
       COURSE[row][col].goal = POSSIBILITY;
       COURSE[row][col].type = WATER; // avoid running through this tile
       
       // Clear wherever we were previously going and instead go to the object we found
       struct Tile* tile = ClearPath();
       SelectPath(&COURSE[row][col]);
+      centering = true; // center on the tile first
       //SelectPath(tile);
       
       return true;

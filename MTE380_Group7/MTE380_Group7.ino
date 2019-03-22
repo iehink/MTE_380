@@ -69,7 +69,7 @@ int path_state = 0;
 
 double DISTANCE_NORTH, DISTANCE_EAST; // Distance based on center of nose of robot, as measured from the south-west corner of the current tile [mm].
 #define TILE_DISTANCE 304.8 // length of each tile (1 ft = 304.8mm) #TODO - update with actual measurements/testing
-double TIME_PER_MM = 4050.0 / TILE_DISTANCE; // ms/mm DO NOT DEFINE THIS - IT BREAKS EVERYTHING; set it by measuring the time it takes to traverse a tile
+double TIME_PER_MM = 4250.0 / TILE_DISTANCE; // ms/mm DO NOT DEFINE THIS - IT BREAKS EVERYTHING; set it by measuring the time it takes to traverse a tile
 unsigned long time_last_called = 0; // variable to store the last time UpdateDistance() was called for the purposes of judging distance
 
 // Movement commands
@@ -208,12 +208,12 @@ void setup() {
   COURSE[5][2].type = WATER;
 
   // Define starting position #TODO - update to actual expected starting position
-  STARTING_TILE = &COURSE[4][5];
+  STARTING_TILE = &COURSE[0][1];
   CURRENT_TILE = STARTING_TILE;
-  STARTING_DIRECTION = NORTH;
+  STARTING_DIRECTION = EAST;
   CURRENT_DIRECTION = STARTING_DIRECTION;
-  DISTANCE_NORTH = 0;
-  DISTANCE_EAST = 150;
+  DISTANCE_NORTH = 150;
+  DISTANCE_EAST = 260;
 }
 
 void loop() {
@@ -223,8 +223,8 @@ void loop() {
     Stop();
     InitMPU();
     CURRENT_DIRECTION = STARTING_DIRECTION;
-    DISTANCE_NORTH = 0;
-    DISTANCE_EAST = 150;
+    DISTANCE_NORTH = 150;
+    DISTANCE_EAST = 260;
   } else {
     if (!fan_on) ReadMPU();
     if (!GOAL[FOOD]) {
@@ -303,9 +303,9 @@ void ProductionLoop() { // Full code
 }
 
 void SearchState() { // Navigation with searching
-  /*if (!turning && ObjectOnTile()) {
+  if (!turning && ObjectOnTile()) {
     production_state = TRAVELLING;
-  }*/
+  }
 
   // Run along hard-coded path if there is no path found (i.e. no objects have been found from our path)
   if (PATH_HEAD == NULL) {
@@ -347,7 +347,9 @@ void SearchState() { // Navigation with searching
     } else if (dir == CURRENT_DIRECTION) {
       forward = true;
     } else if (dir == 0) {
-      centering = true;
+      if ((*CURRENT_TILE).goal == 0) {
+        centering = true;
+      }
     } else {
       turning = true;
       if (Head(dir)) turning = false;
@@ -359,7 +361,7 @@ void SearchState() { // Navigation with searching
 
 void GoalApproach() { // As you approach a structure
   if (approach_dist <= 0) {
-    approach_dist = front_dist;
+    approach_dist = front_dist - (FRONT_TO_NOSE + 50);
   }
   if (front_dist == -1) {
     approach_counter++;
@@ -399,7 +401,7 @@ void GoalApproach() { // As you approach a structure
       }
 
       approach_dist = 0;
-      
+
       production_state = GOAL_HANDLING;
     }
   } else {
@@ -524,7 +526,7 @@ void Travelling() { // Navigation without searching
   if (!centering && !turning && front_dist < 300 && front_dist != -1) {
     ObjectOnTile(); // this should set the thing ahead of us as a possibility if needed
   }
-  
+    
   // If we began centering, finish centering
   if (centering) {
     if (Center()) {
@@ -558,11 +560,14 @@ void Travelling() { // Navigation without searching
     } else if (dir == CURRENT_DIRECTION) {
       forward = true;
     } else if (dir == 0) {
-      centering = true;
+      if ((*CURRENT_TILE).goal == 0) {
+        centering = true;
+      }
     } else {
       Head(dir);
     }
   }
+
   Move();
 }
 

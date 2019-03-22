@@ -64,7 +64,7 @@ double CardinalToDegrees(int heading){ // Function to convert directional headin
 }
 
 bool Head(int dir) { // Function to adjust heading
-  double offset = 100;
+  double offset = 110;
 
   if (Center()) {
     centering = false;
