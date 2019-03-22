@@ -175,7 +175,12 @@ void PathPointReached() { // Function to pop the target off the list
 void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at all costs
   // If the target tile is already being targeted, leave the path alone and log to console for testing purposes #TODO: remove for production
   if ((*target).pathTarget) {
-    Serial.print("Attempted to target same tile again");
+    Serial.println("Attempted to target same tile again");
+    return;
+  }
+
+  if ((*target).type == WATER) {
+    Serial.println("No.");
     return;
   }
 
@@ -751,9 +756,9 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
       }
     }
   } else {
-    if (colFirst > 50) { // this path will not work. Go to the center and try to get to your target again.
+    if (colFirst > 50) { // this path will not work. Go to the an acceptable center tile and try to get to your target again.
       struct Tile* oldTarget = ClearPath();
-      if (oldTarget != &COURSE[2][2] && prevTile != &COURSE[2][2]) {
+      if (oldTarget != &COURSE[2][2] && prevTile != &COURSE[2][2] && COURSE[2][2].goal == 0) {
         SelectPath(&COURSE[2][2]);
       } else {
         SelectPath(&COURSE[3][3]);

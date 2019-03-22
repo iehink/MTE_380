@@ -126,6 +126,8 @@ int foodNum = 0;
 int fire_count = 0, structure_loop = 0;
 int production_state = 0;
 
+double approach_dist = 0;
+
 // Define goal array and goal meanings
 bool GOAL[6] = {false, false, false, false, false, false}; // 0th array unused, array indices correspond to values listed below
 int PEOPLE = 1, LOST = 2, FOOD = 3, FIRE = 4, DELIVER = 5, POSSIBILITY = 6, STRUCTURE = 7, NONE = 8;
@@ -302,26 +304,16 @@ void ProductionLoop() { // Full code
 
 void SearchState() { // Navigation with searching
   if (!turning && ObjectOnTile()) {
-    path_state = -1;
     production_state = TRAVELLING;
   }
 
   // Run along hard-coded path if there is no path found (i.e. no objects have been found from our path)
   if (PATH_HEAD == NULL) {
-    path_state++; // If we reset the path counter to -1, then we will return to the pre-programmed path. If we reached the first pre-programmed path, proceed to the next pathpoint
-  }
-  if (path_state == 1) {
-    SelectPath(&COURSE[3][2]);
-    path_state = 2;
-  } else if (path_state == 3) {
-    SelectPath(&COURSE[2][2]);
-    path_state = 4;
-  } else if (path_state == 5) {
-    SelectPath(&COURSE[2][4]);
-    path_state = 6;
-  } else if (path_state == 7) {
-    SelectPath(&COURSE[3][4]);
-    path_state = 0;
+    forward = false; 
+    turn_left = false;
+    turn_right = false;
+    reverse = false;
+    SetSandPath();
   }
 
   // If we began centering, finish centering
@@ -366,6 +358,9 @@ void SearchState() { // Navigation with searching
 }
 
 void GoalApproach() { // As you approach a structure
+  if (approach_dist <= 0) {
+    approach_dist = front_dist;
+  }
   if (front_dist == -1) {
     approach_counter++;
     if (approach_counter > 30) { 
@@ -391,6 +386,20 @@ void GoalApproach() { // As you approach a structure
       structure_loop = 0;
       fire_count = 0;
       approach_counter = 0;
+
+      // adjust distance travelled
+      if (CURRENT_DIRECTION == NORTH) {
+        DISTANCE_NORTH += approach_dist;
+      } else if (CURRENT_DIRECTION == EAST) {
+        DISTANCE_EAST += approach_dist;
+      } else if (CURRENT_DIRECTION == SOUTH) {
+        DISTANCE_NORTH -= approach_dist;
+      } else if (CURRENT_DIRECTION == WEST) {
+        DISTANCE_EAST -= approach_dist;
+      }
+
+      approach_dist = 0;
+      
       production_state = GOAL_HANDLING;
     }
   } else {
@@ -398,7 +407,6 @@ void GoalApproach() { // As you approach a structure
   }
 
   Move();
-  UpdateDistance();
 }
 
 void GoalHandling() { // If you are on a goal tile, assess which one, handle it as required (including LEDs)
@@ -512,6 +520,11 @@ void FindingFood() {
 }
 
 void Travelling() { // Navigation without searching
+  // If we are gonna hit something, don't.
+  if (!centering && !turning && front_dist < 300 && front_dist != -1) {
+    ObjectOnTile(); // this should set the thing ahead of us as a possibility if needed
+  }
+  
   // If we began centering, finish centering
   if (centering) {
     if (Center()) {

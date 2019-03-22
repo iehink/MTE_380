@@ -203,46 +203,6 @@ void DistanceTest() {
   Move();
 }
 
-void TravelTest() {
-  UpdateDistance();
-  double len = FindLength();
-  forward = true;
-
-  if (scanning_complete) {
-    Serial.println(len);
-    forward = false;
-    btnState = false;
-    scanning_complete = false;
-  }
-  /*if (scanning_complete) {
-    Serial.println(IDGoal(len));
-    Stop(); 
-    btnState = false;
-  }
-*/
-  /*
-  if (!scanning) {
-    Navigate();
-  } else {
-    forward = 1;
-    if (scanning_complete) {
-      IDGoal(len);
-      if (scan_dir == 1) {
-        if (Head(CardinalToDegrees(CURRENT_DIRECTION) + 90)) {
-          forward = true;
-          
-        }
-      } else if (scan_dir == 2) {
-        if (Head(CardinalToDegrees(CURRENT_DIRECTION) - 90)) {
-          
-        }
-      }
-    }
-  }
-  */
-  Move();
-}
-
 void HeadingTest() {
   if (state == 0) {
     if (Head(EAST)) {
