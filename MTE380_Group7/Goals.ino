@@ -186,14 +186,22 @@ bool ObjectOnTile() {
 }
 
 bool SetSandPath() {
-  SelectPath(&COURSE[2][2]);
-  SelectPath(&COURSE[2][4]);
-  SelectPath(&COURSE[5][4]);
-  SelectPath(&COURSE[5][3]);
-  SelectPath(&COURSE[1][3]);
-  SelectPath(&COURSE[1][0]);
-  SelectPath(&COURSE[0][0]);
-  SelectPath(&COURSE[0][2]);
-  SelectPath(&COURSE[5][2]);
+  if (COURSE[2][2].type != WATER) SelectPath(&COURSE[2][2]);
+  if (COURSE[2][1].type != WATER) SelectPath(&COURSE[2][1]);
+  if (COURSE[1][1].type != WATER) SelectPath(&COURSE[1][1]);
+  if (COURSE[0][1].type != WATER) SelectPath(&COURSE[0][1]);
+  if (COURSE[0][2].type != WATER) SelectPath(&COURSE[0][2]);
+  if (COURSE[2][2].type != WATER) SelectPath(&COURSE[2][2]);
+  if (COURSE[2][3].type != WATER) SelectPath(&COURSE[2][3]);
+  if (COURSE[2][4].type != WATER) SelectPath(&COURSE[2][4]);
+  if (COURSE[4][4].type != WATER) SelectPath(&COURSE[4][4]);
+  if (COURSE[5][4].type != WATER) SelectPath(&COURSE[5][4]);
+  if (COURSE[5][3].type != WATER) SelectPath(&COURSE[5][3]);
+  if (COURSE[3][3].type != WATER) SelectPath(&COURSE[3][3]);
+  if (COURSE[3][0].type != WATER) SelectPath(&COURSE[3][0]);
+  if (COURSE[3][4].type != WATER) SelectPath(&COURSE[3][4]);
+  if (COURSE[2][4].type != WATER) SelectPath(&COURSE[2][4]);
+  if (COURSE[2][5].type != WATER) SelectPath(&COURSE[2][5]);
+  if (COURSE[0][5].type != WATER) SelectPath(&COURSE[0][5]);
   return true;
 }
