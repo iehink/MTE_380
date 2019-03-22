@@ -237,7 +237,7 @@ void loop() {
 
     ProductionLoop();
     //Serial.println(production_state);
-    PrintPath();
+    //PrintPath();
   }
 
   int delayTime = (LOOP_RUNTIME) - (millis() - loopStartTime);
@@ -256,6 +256,8 @@ void ProductionLoop() { // Full code
       production_state = FINDING_FOOD;
     } else if (!GOAL[DELIVER]) {
       production_state = DELIVERING;
+    } else if (CURRENT_TILE == STARTING_TILE) {
+      production_state = DONE;
     } else {
       SelectPath(STARTING_TILE);
       production_state = TRAVELLING;
@@ -461,11 +463,16 @@ void Delivering() {
   int dir = Navigate();
 
   if (deliveryNum == 0) {
+    ClearPath();
     SelectPath(people_tile);
-    deliveryNum = 1;
-  } else if (deliveryNum == 2) {
     SelectPath(lost_tile);
-    deliveryNum = 3;
+    deliveryNum = 1;
+  }
+
+  if ((*CURRENT_TILE).goal == PEOPLE) {
+    production_state == RETURNING_TO_PATH;
+  } else if ((*CURRENT_TILE).goal == LOST) {
+    production_state == RETURNING_TO_PATH;
   }
 
   if (dir == CURRENT_DIRECTION) {
@@ -474,13 +481,8 @@ void Delivering() {
     forward = false;
     turn_left = false;
     turn_right = false;
-    production_state = RETURNING_TO_PATH;
-    if (deliveryNum == 1) {
-      deliveryNum = 2;
-    } else {
-      GOAL[DELIVER] = true;
-      production_state = GOAL_HANDLING;
-    }
+    GOAL[DELIVER] = true;
+    production_state = GOAL_HANDLING;
   } else if (dir == CURRENT_DIRECTION) {
     forward = true;
   } else if (dir == 0) {
