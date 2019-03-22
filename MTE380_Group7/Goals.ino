@@ -187,11 +187,11 @@ bool ObjectOnTile() {
 
 bool SetSandPath() {
   if (COURSE[2][2].type != WATER) SelectPath(&COURSE[2][2]);
-  if (COURSE[2][1].type != WATER) SelectPath(&COURSE[2][1]);
-  if (COURSE[1][1].type != WATER) SelectPath(&COURSE[1][1]);
-  if (COURSE[0][1].type != WATER) SelectPath(&COURSE[0][1]);
-  if (COURSE[0][2].type != WATER) SelectPath(&COURSE[0][2]);
-  if (COURSE[2][2].type != WATER) SelectPath(&COURSE[2][2]);
+  //if (COURSE[2][1].type != WATER) SelectPath(&COURSE[2][1]);
+  //if (COURSE[1][1].type != WATER) SelectPath(&COURSE[1][1]);
+  //if (COURSE[0][1].type != WATER) SelectPath(&COURSE[0][1]);
+  //if (COURSE[0][2].type != WATER) SelectPath(&COURSE[0][2]);
+  //if (COURSE[2][2].type != WATER) SelectPath(&COURSE[2][2]);
   if (COURSE[2][3].type != WATER) SelectPath(&COURSE[2][3]);
   if (COURSE[2][4].type != WATER) SelectPath(&COURSE[2][4]);
   if (COURSE[4][4].type != WATER) SelectPath(&COURSE[4][4]);

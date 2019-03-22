@@ -207,7 +207,7 @@ void setup() {
   COURSE[5][2].type = WATER;
 
   // Define starting position #TODO - update to actual expected starting position
-  STARTING_TILE = &COURSE[3][0];
+  STARTING_TILE = &COURSE[1][0];
   CURRENT_TILE = STARTING_TILE;
   STARTING_DIRECTION = EAST;
   CURRENT_DIRECTION = STARTING_DIRECTION;
@@ -238,6 +238,12 @@ void loop() {
     ProductionLoop();
     //Serial.println(production_state);
     //PrintPath();
+    /*if (PATH_HEAD != NULL) {
+      Serial.print((*PATH_HEAD->tile).row);
+      Serial.println((*PATH_HEAD->tile).col);
+    } else {
+      Serial.println("Empty");
+    }*/
   }
 
   int delayTime = (LOOP_RUNTIME) - (millis() - loopStartTime);
@@ -433,6 +439,11 @@ void GoalHandling() { // If you are on a goal tile, assess which one, handle it 
     food_sensed = false;
     production_state = ANY_STATE;
   }
+
+  if (GOAL[DELIVER]) {
+    digitalWrite(LED_pin[DELIVER], HIGH);
+    production_state = ANY_STATE;
+  }
 }
 
 void ReturningToPath() { // Go back to the center of the previous tile
@@ -464,8 +475,8 @@ void Delivering() {
 
   if (deliveryNum == 0) {
     ClearPath();
-    SelectPath(people_tile);
     SelectPath(lost_tile);
+    SelectPath(people_tile);
     deliveryNum = 1;
   }
 
@@ -575,4 +586,6 @@ void Done() { // End state (flash lights on the spot)
   for (int i = 1; i <= 5; i++) {
     digitalWrite(LED_pin[i], HIGH);
   }
+  
+  Move();
 }

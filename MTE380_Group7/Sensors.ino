@@ -255,10 +255,10 @@ void UpdateWallDistance(){
   double distWestToWall = ((*CURRENT_TILE).col) * TILE_DISTANCE + DISTANCE_EAST;
   double distSouthToWall = (5 - (*CURRENT_TILE).row) * TILE_DISTANCE + DISTANCE_NORTH;
 
-  if (distNorthToWall > 800) distNorthToWall = -1;
-  if (distEastToWall > 800) distEastToWall = -1;
-  if (distSouthToWall > 800) distSouthToWall = -1;
-  if (distWestToWall > 800) distWestToWall = -1;
+  //if (distNorthToWall > 900) distNorthToWall = -1;
+  //if (distEastToWall > 900) distEastToWall = -1;
+  //if (distSouthToWall > 900) distSouthToWall = -1;
+  //if (distWestToWall > 900) distWestToWall = -1;
   
   if (CURRENT_DIRECTION == NORTH) {
     front_to_wall = distNorthToWall;
