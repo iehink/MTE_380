@@ -126,6 +126,8 @@ int foodNum = 0;
 int fire_count = 0, structure_loop = 0;
 int production_state = 0;
 
+double approach_dist = 0;
+
 // Define goal array and goal meanings
 bool GOAL[6] = {false, false, false, false, false, false}; // 0th array unused, array indices correspond to values listed below
 int PEOPLE = 1, LOST = 2, FOOD = 3, FIRE = 4, DELIVER = 5, POSSIBILITY = 6, STRUCTURE = 7, NONE = 8;
@@ -355,6 +357,9 @@ void SearchState() { // Navigation with searching
 }
 
 void GoalApproach() { // As you approach a structure
+  if (approach_dist <= 0) {
+    approach_dist = front_dist;
+  }
   if (front_dist == -1) {
     approach_counter++;
     if (approach_counter > 30) { 
@@ -380,6 +385,20 @@ void GoalApproach() { // As you approach a structure
       structure_loop = 0;
       fire_count = 0;
       approach_counter = 0;
+
+      // adjust distance travelled
+      if (CURRENT_DIRECTION == NORTH) {
+        DISTANCE_NORTH += approach_dist;
+      } else if (CURRENT_DIRECTION == EAST) {
+        DISTANCE_EAST += approach_dist;
+      } else if (CURRENT_DIRECTION == SOUTH) {
+        DISTANCE_NORTH -= approach_dist;
+      } else if (CURRENT_DIRECTION == WEST) {
+        DISTANCE_EAST -= approach_dist;
+      }
+
+      approach_dist = 0;
+      
       production_state = GOAL_HANDLING;
     }
   } else {
@@ -387,7 +406,6 @@ void GoalApproach() { // As you approach a structure
   }
 
   Move();
-  UpdateDistance();
 }
 
 void GoalHandling() { // If you are on a goal tile, assess which one, handle it as required (including LEDs)
