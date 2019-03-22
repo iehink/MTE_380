@@ -21,7 +21,7 @@ void AddToPath(struct Tile* newTile) { // Function to add the next path point to
 }
 
 bool Center() { // Function to travel to the center of the current tile. Returns TRUE when the center has been reached.
-  double distOff = 0, nosePosition = 260;
+  double distOff = 0, nosePosition = 290;
 
   if (CURRENT_DIRECTION == NORTH) {
     distOff = nosePosition - DISTANCE_NORTH;
@@ -46,6 +46,7 @@ bool Center() { // Function to travel to the center of the current tile. Returns
     //Serial.println("DONE CENTERING!");
     return true;
   }
+  
   Move();
   UpdateDistance();
   
@@ -103,20 +104,22 @@ bool UpdateCourseLocation() { // Function to update the location on the course g
   UpdateDistance();
 
   // Determine if we are now on a new tile
-  if (CURRENT_DIRECTION == NORTH && abs(DISTANCE_NORTH) > TILE_DISTANCE) {
+  //if (CURRENT_DIRECTION == NORTH && abs(DISTANCE_NORTH) > TILE_DISTANCE) {
+  if (DISTANCE_NORTH > TILE_DISTANCE) {
     CURRENT_TILE = &COURSE[(*CURRENT_TILE).row - 1][(*CURRENT_TILE).col];
     DISTANCE_NORTH -= TILE_DISTANCE;
     return true;
-  } else if (CURRENT_DIRECTION == SOUTH && DISTANCE_NORTH < 0) {
+  } else if (DISTANCE_NORTH < 0) {//(CURRENT_DIRECTION == SOUTH && DISTANCE_NORTH < 0) {
     CURRENT_TILE = &COURSE[(*CURRENT_TILE).row + 1][(*CURRENT_TILE).col];
     DISTANCE_NORTH += TILE_DISTANCE;
     return true;
   }
-  if (CURRENT_DIRECTION == EAST && abs(DISTANCE_EAST) > TILE_DISTANCE) {
+  //if (CURRENT_DIRECTION == EAST && abs(DISTANCE_EAST) > TILE_DISTANCE) {
+  if (DISTANCE_EAST > TILE_DISTANCE) {
     CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col + 1];
     DISTANCE_EAST -= TILE_DISTANCE;
     return true;
-  } else if (CURRENT_DIRECTION == WEST && DISTANCE_EAST < 0) {
+  } else if (DISTANCE_EAST < 0) {//(CURRENT_DIRECTION == WEST && DISTANCE_EAST < 0) {
     CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col - 1];
     DISTANCE_EAST += TILE_DISTANCE;
     return true;

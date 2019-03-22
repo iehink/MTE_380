@@ -15,7 +15,7 @@ double object_size = 0, object_dist = 0;
 long unsigned int init_time_scan = millis();
 
 #define FAN_PWM 6
-#define WALL_TOL 120
+#define WALL_TOL 150
 
 /* --------------------------------------------------------------------------------------------------------------------------------------------
  * **************************************************** Goal-handling functions are below. ****************************************************
@@ -86,7 +86,7 @@ bool ObjectOnTile() {
   if (right_scan_off_count > 15) {
     right_scan_off_count = 0;
     if (CURRENT_DIRECTION == NORTH) {
-      if (DISTANCE_NORTH < 100) { // if we caught a reading from the previous row
+      if (DISTANCE_NORTH < 50) { // if we caught a reading from the previous row
         row = (*CURRENT_TILE).row + 1;
       } else {
         row = (*CURRENT_TILE).row;
@@ -134,7 +134,7 @@ bool ObjectOnTile() {
   if (left_scan_off_count > 15) {
     left_scan_off_count = 0;
     if (CURRENT_DIRECTION == NORTH) {
-      if (DISTANCE_NORTH < 100) { // if we caught a reading from the previous row
+      if (DISTANCE_NORTH < 50) { // if we caught a reading from the previous row
         row = (*CURRENT_TILE).row + 1;
       } else {
         row = (*CURRENT_TILE).row;

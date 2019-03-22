@@ -98,7 +98,6 @@ int previous_MPU_interrupt_time;
 bool fan_on = false;
 int fan_on_count = 0;
 
-#define TEST false
 #define LOOP_RUNTIME 20 // milliseconds
 
 #define FRONT_TO_NOSE 80
@@ -236,24 +235,9 @@ void loop() {
     }
     ReadTOF();
 
-    if (TEST) {
-      //StructureTest();
-      //CenterTest();
-      //NavToTile();
-      //TestGoalSearching();
-      //TravelTest();
-      //DistanceTest();
-      //BoxTest();
-      //Test3();
-      //TurnGyro(90);
-      //HeadingTest();
-      //Move();
-    }
-    else {
-      ProductionLoop();
-      //Serial.println(production_state);
-      //PrintPath();
-    }
+    ProductionLoop();
+    //Serial.println(production_state);
+    PrintPath();
   }
 
   int delayTime = (LOOP_RUNTIME) - (millis() - loopStartTime);
@@ -306,8 +290,6 @@ void SearchState() { // Navigation with searching
   if (!turning && ReadPitch() >= -1 && ObjectOnTile()) {
     production_state = TRAVELLING;
   }
-
-  Serial.println(ReadPitch());
 
   // Run along hard-coded path if there is no path found (i.e. no objects have been found from our path)
   if (PATH_HEAD == NULL) {
@@ -467,6 +449,7 @@ void ReturningToPath() { // Go back to the center of the previous tile
       DISTANCE_EAST -= TILE_DISTANCE;
     }
     centering = true;
+    time_last_called = millis(); // reset this so we don't update a crazy distance
   }
   if (Center()) {
     centering = false;
