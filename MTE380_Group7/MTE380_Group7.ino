@@ -303,9 +303,11 @@ void ProductionLoop() { // Full code
 }
 
 void SearchState() { // Navigation with searching
-  if (!turning && ObjectOnTile()) {
+  if (!turning && ReadPitch() >= -1 && ObjectOnTile()) {
     production_state = TRAVELLING;
   }
+
+  Serial.println(ReadPitch());
 
   // Run along hard-coded path if there is no path found (i.e. no objects have been found from our path)
   if (PATH_HEAD == NULL) {
@@ -360,9 +362,16 @@ void SearchState() { // Navigation with searching
 }
 
 void GoalApproach() { // As you approach a structure
+  // Store how far away you are from the candle
   if (approach_dist <= 0) {
     approach_dist = front_dist - (FRONT_TO_NOSE + 50);
   }
+
+  // If we *EVER* see fire on approach, this is the candle!
+  if (Fiyah()) {
+    fire_count++;
+  }
+    
   if (front_dist == -1) {
     approach_counter++;
     if (approach_counter > 30) { 
@@ -372,11 +381,8 @@ void GoalApproach() { // As you approach a structure
   } else if (front_dist < FRONT_TO_NOSE + 50) {
     forward = false;
     structure_loop++;
-    if (Fiyah()) {
-      fire_count++;
-    }
 
-    if (structure_loop > 20) {
+    if (structure_loop > 50) {
       if (fire_count > 0) {
         (*CURRENT_TILE).goal = FIRE;
       } else if (GOAL[PEOPLE]) {
@@ -451,13 +457,13 @@ void ReturningToPath() { // Go back to the center of the previous tile
       CURRENT_TILE = &COURSE[(*CURRENT_TILE).row + 1][(*CURRENT_TILE).col];
       DISTANCE_NORTH += TILE_DISTANCE;
     } else if (CURRENT_DIRECTION == EAST) {
-      CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col + 1];
+      CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col - 1];
       DISTANCE_EAST += TILE_DISTANCE;
     } else if (CURRENT_DIRECTION == SOUTH) {
       CURRENT_TILE = &COURSE[(*CURRENT_TILE).row - 1][(*CURRENT_TILE).col];
       DISTANCE_NORTH -= TILE_DISTANCE;
     } else if (CURRENT_DIRECTION == WEST) {
-      CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col - 1];
+      CURRENT_TILE = &COURSE[(*CURRENT_TILE).row][(*CURRENT_TILE).col + 1];
       DISTANCE_EAST -= TILE_DISTANCE;
     }
     centering = true;
