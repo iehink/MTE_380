@@ -42,9 +42,11 @@ bool ObjectOnTile() {
   else left_scan_off_count = 0;
   if ((front_dist < front_to_wall - WALL_TOL || front_dist > front_to_wall + WALL_TOL) && front_dist != -1) front_scan_off_count++;
   else front_scan_off_count = 0;
-  //if ((right_dist < right_to_wall - WALL_TOL || right_dist > right_to_wall + WALL_TOL) && right_dist != -1) right_scan_off_count++;
-  //else right_scan_off_count = 0;
+  if ((right_dist < right_to_wall - WALL_TOL || right_dist > right_to_wall + WALL_TOL) && right_dist != -1) right_scan_off_count++;
+  else right_scan_off_count = 0;
 
+
+  // Front sensor
   if (front_scan_off_count > 7) {
     front_scan_off_count = 0;
     
@@ -82,6 +84,54 @@ bool ObjectOnTile() {
     }
   }
 
+
+  // Right sensor
+  if (right_scan_off_count > 15) {
+    right_scan_off_count = 0;
+    if (CURRENT_DIRECTION == NORTH) {
+      if (DISTANCE_NORTH < 100) { // if we caught a reading from the previous row
+        row = (*CURRENT_TILE).row + 1;
+      } else {
+        row = (*CURRENT_TILE).row;
+      }
+      col = (*CURRENT_TILE).col + (((int)(right_dist/400.0))+1);
+    } else if (CURRENT_DIRECTION == EAST) {
+      row = (*CURRENT_TILE).row + (((int)(right_dist/400.0))+1);
+      if (DISTANCE_EAST < 100) { // if we caught a reading from the previous column
+        col = (*CURRENT_TILE).col - 1;
+      } else {
+        col = (*CURRENT_TILE).col;
+      }
+    } else if (CURRENT_DIRECTION == SOUTH) {
+      if (DISTANCE_NORTH > -100) { // if we caught a reading from the previous row
+        row = (*CURRENT_TILE).row - 1;
+      } else {
+        row = (*CURRENT_TILE).row;
+      }
+      col = (*CURRENT_TILE).col - (((int)(right_dist/400.0))+1);
+    } else if (CURRENT_DIRECTION == WEST) {
+      row = (*CURRENT_TILE).row - (((int)(right_dist/400.0))+1);
+      if (DISTANCE_EAST > -100) { // if we caught a reading from the previous column
+        col = (*CURRENT_TILE).col + 1;
+      } else {
+        col = (*CURRENT_TILE).col;
+      }
+    }
+
+    if (COURSE[row][col].goal == 0) {
+      COURSE[row][col].goal = POSSIBILITY;
+      COURSE[row][col].type = WATER; // avoid running through this tile
+      
+      // Clear wherever we were previously going and instead go to the object we found
+      struct Tile* tile = ClearPath();
+      SelectPath(&COURSE[row][col]);
+      
+      return true;
+    }
+  }
+
+
+  // Left sensor
   if (left_scan_off_count > 15) {
     left_scan_off_count = 0;
     if (CURRENT_DIRECTION == NORTH) {
@@ -92,7 +142,7 @@ bool ObjectOnTile() {
       }
       col = (*CURRENT_TILE).col - (((int)(left_dist/400.0))+1);
     } else if (CURRENT_DIRECTION == EAST) {
-      row = (*CURRENT_TILE).row + (((int)(left_dist/400.0))+1);
+      row = (*CURRENT_TILE).row - (((int)(left_dist/400.0))+1);
       if (DISTANCE_EAST < 100) { // if we caught a reading from the previous column
         col = (*CURRENT_TILE).col - 1;
       } else {
@@ -106,7 +156,7 @@ bool ObjectOnTile() {
       }
       col = (*CURRENT_TILE).col + (((int)(left_dist/400.0))+1);
     } else if (CURRENT_DIRECTION == WEST) {
-      row = (*CURRENT_TILE).row - (((int)(left_dist/400.0))+1);
+      row = (*CURRENT_TILE).row + (((int)(left_dist/400.0))+1);
       if (DISTANCE_EAST > -100) { // if we caught a reading from the previous column
         col = (*CURRENT_TILE).col + 1;
       } else {
