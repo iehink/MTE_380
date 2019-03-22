@@ -221,13 +221,6 @@ void ReadTOF() {
     //Serial.print(", ");
     //Serial.println(right_diff_avg);
     //delay(100);
-
-    Serial.print("RAW: ");
-    Serial.print(left_avg);
-    Serial.print(", ERROR: ");
-    Serial.print(left_diff_avg);
-    Serial.print(", MODIFIED: ");
-    Serial.println(left_dist);
   }
 }
 
@@ -292,21 +285,19 @@ void UpdateWallDistance(){
 
 double LeftDistToActual(double dist, double error) {
   if (dist < 30 || error > 9) return -1;
-  else if (dist < 500) return dist;
-  else if (dist < 650) return (dist - 500)*2 + 500;
+  else if (dist < 900) return dist;
   else return -1;
 }
 
 double FrontDistToActual(double dist, double error) {
-  if (dist < 30 || error > 9) return -1;
+  if (dist < 30 || error > 5) return -1;
   else if (dist < 450) return dist;
-  else if (dist < 700) return (dist-450)*2.17 + 450;
+  else if (dist < 700) return dist * 1.1;
   else return -1;
 }
 
 double RightDistToActual(double dist, double error) {
   if (dist < 30 || error > 9) return -1;
-  else if (dist < 500) return dist;
-  else if (dist < 640) return (dist-500)*1.54 + 500;
+  else if (dist < 900) return dist;
   else return -1;
 }

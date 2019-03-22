@@ -219,7 +219,8 @@ void loop() {
 
   if (!Button()) {
     Stop();
-    gyro_yaw = 0;
+    InitMPU();
+    CURRENT_DIRECTION = STARTING_DIRECTION;
     DISTANCE_NORTH = 260;
     DISTANCE_EAST = 150;
   } else {
