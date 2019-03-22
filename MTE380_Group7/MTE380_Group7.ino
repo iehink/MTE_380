@@ -208,7 +208,7 @@ void setup() {
   COURSE[5][2].type = WATER;
 
   // Define starting position #TODO - update to actual expected starting position
-  STARTING_TILE = &COURSE[0][1];
+  STARTING_TILE = &COURSE[1][0];
   CURRENT_TILE = STARTING_TILE;
   STARTING_DIRECTION = EAST;
   CURRENT_DIRECTION = STARTING_DIRECTION;
@@ -380,9 +380,10 @@ void GoalApproach() { // As you approach a structure
       if (fire_count > 0) {
         (*CURRENT_TILE).goal = FIRE;
       } else if (GOAL[PEOPLE]) {
+        //let's arbitrarily mark the first structure as PEOPLE for now
         (*CURRENT_TILE).goal = LOST;
       } else {
-        (*CURRENT_TILE).goal = STRUCTURE;
+        (*CURRENT_TILE).goal = PEOPLE;
       }
 
       structure_loop = 0;
@@ -426,9 +427,7 @@ void GoalHandling() { // If you are on a goal tile, assess which one, handle it 
     } else if (fan_on) {
       fan_on_count++;
     }
-  } else if ((*CURRENT_TILE).goal == STRUCTURE) {
-    //let's arbitrarily mark the first structure as PEOPLE for now
-    (*CURRENT_TILE).goal = PEOPLE;
+  } else if ((*CURRENT_TILE).goal == PEOPLE) {
     people_tile = CURRENT_TILE;
     digitalWrite(LED_pin[PEOPLE], HIGH);
     GOAL[PEOPLE] = true;
