@@ -231,32 +231,48 @@ bool ObjectOnTile() {
   if (left_scan_off_count > 15) {
     left_scan_off_count = 0;
     if (CURRENT_DIRECTION == NORTH) {
-      row = (*CURRENT_TILE).row;
+      if (DISTANCE_NORTH < 100) { // if we caught a reading from the previous row
+        row = (*CURRENT_TILE).row + 1;
+      } else {
+        row = (*CURRENT_TILE).row;
+      }
       col = (*CURRENT_TILE).col - (((int)(left_dist/300.0))+1);
     } else if (CURRENT_DIRECTION == EAST) {
       row = (*CURRENT_TILE).row + (((int)(left_dist/300.0))+1);
-      col = (*CURRENT_TILE).col;
+      if (DISTANCE_EAST < 100) { // if we caught a reading from the previous column
+        col = (*CURRENT_TILE).col - 1;
+      } else {
+        col = (*CURRENT_TILE).col;
+      }
     } else if (CURRENT_DIRECTION == SOUTH) {
-      row = (*CURRENT_TILE).row;
+      if (DISTANCE_NORTH > -100) { // if we caught a reading from the previous row
+        row = (*CURRENT_TILE).row - 1;
+      } else {
+        row = (*CURRENT_TILE).row;
+      }
       col = (*CURRENT_TILE).col + (((int)(left_dist/300.0))+1);
     } else if (CURRENT_DIRECTION == WEST) {
       row = (*CURRENT_TILE).row - (((int)(left_dist/300.0))+1);
-      col = (*CURRENT_TILE).col;
+      if (DISTANCE_EAST > -100) { // if we caught a reading from the previous column
+        col = (*CURRENT_TILE).col + 1;
+      } else {
+        col = (*CURRENT_TILE).col;
+      }
     }
 
     if (COURSE[row][col].goal == 0) {
       /*if (path_state != -1) { // if we were only travelling to an unnecessary tile
         ClearPath(); 
       }*/ // Might cause issues with centering on a tile
+      Serial.print(row);
+      Serial.println(col);
       COURSE[row][col].goal = POSSIBILITY;
       COURSE[row][col].type = WATER; // avoid running through this tile
-      if (path_state == -1) {
-        struct Tile* tile = ClearPath();
-        SelectPath(&COURSE[row][col]);
-        SelectPath(tile);
-      } else {
-        SelectPath(&COURSE[row][col]);
-      }
+      
+      // Clear wherever we were previously going and instead go to the object we found
+      struct Tile* tile = ClearPath();
+      SelectPath(&COURSE[row][col]);
+      //SelectPath(tile);
       
       return true;
     }
@@ -280,17 +296,20 @@ bool ObjectOnTile() {
 
     //Serial.print("FRONT: ");
     //Serial.println((int)(front_dist/300.0));
+
+    Serial.print(row);
+    Serial.println(col);
     
     if (COURSE[row][col].goal == 0) {
       COURSE[row][col].goal = POSSIBILITY;
       COURSE[row][col].type = WATER; // avoid running through this tile
-      if (path_state == -1) {
+      //if (path_state == -1) {
         struct Tile* tile = ClearPath();
         SelectPath(&COURSE[row][col]);
-        SelectPath(tile);
-      } else {
+        //SelectPath(tile);
+      /*} else {
         SelectPath(&COURSE[row][col]);
-      }
+      }*/
       return true;
     }
   }

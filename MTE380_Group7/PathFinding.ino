@@ -21,7 +21,7 @@ void AddToPath(struct Tile* newTile) { // Function to add the next path point to
 }
 
 bool Center() { // Function to travel to the center of the current tile. Returns TRUE when the center has been reached.
-  double distOff = 0, nosePosition = 260;
+  double distOff = 0, nosePosition = 250;
 
   if (CURRENT_DIRECTION == NORTH) {
     distOff = nosePosition - DISTANCE_NORTH;
@@ -312,7 +312,7 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
     }
 
 
-    if (colDiff != 0) {
+    if (colDiff != 0 && rowDiff != 0) {
       // Store ROW FIRST OPTION corner assuming you needed to head west
       if (COURSE[(*prevTile).row][(*target).col].type == WATER) {
         int NSModifier = 0;
@@ -441,7 +441,7 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
     }
 
     
-    if (colDiff != 0) {
+    if (colDiff != 0 && rowDiff != 0) {
       // Store ROW FIRST OPTION corner assuming you needed to head west
       if (COURSE[(*prevTile).row][(*target).col].type == WATER) {
         int NSModifier = 0;
@@ -573,7 +573,7 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
       }
     }
 
-    if (rowDiff != 0) {
+    if (rowDiff != 0 && colDiff != 0) {
       // Store corner
       if (COURSE[(*target).row][(*prevTile).col].type == WATER) {
         int EWModifier = 0;
@@ -698,7 +698,7 @@ void SelectPath(struct Tile* target) { // Select a path avoiding water tiles at 
       }
     }
 
-    if (rowDiff != 0) {
+    if (rowDiff != 0 && colDiff != 0) {
       // Store corner
       if (COURSE[(*target).row][(*prevTile).col].type == WATER) {
         int EWModifier = 0;

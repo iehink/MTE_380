@@ -99,7 +99,7 @@ int previous_MPU_interrupt_time;
 bool fan_on = false;
 int fan_on_count = 0;
 
-#define TEST true
+#define TEST false
 #define LOOP_RUNTIME 20 // milliseconds
 
 #define FRONT_TO_NOSE 80
@@ -108,6 +108,7 @@ bool btnState = false;
 
 bool temporary_stop = false;
 int temporary_stop_counter = 0;
+int approach_counter = 0;
 bool centering = false;
 bool turning = false;
 
@@ -302,6 +303,7 @@ void ProductionLoop() { // Full code
 void SearchState() { // Navigation with searching
   if (!turning && ObjectOnTile()) {
     path_state = -1;
+    production_state = TRAVELLING;
   }
 
   // Run along hard-coded path if there is no path found (i.e. no objects have been found from our path)
@@ -331,8 +333,6 @@ void SearchState() { // Navigation with searching
 
   int dir = -1;
   if (!centering && !temporary_stop) dir = Navigate();
-
-  Serial.println(dir);
 
   if (temporary_stop) {
     forward = false;
@@ -367,7 +367,11 @@ void SearchState() { // Navigation with searching
 
 void GoalApproach() { // As you approach a structure
   if (front_dist == -1) {
-    forward = false;
+    approach_counter++;
+    if (approach_counter > 30) { 
+      forward = false;
+      approach_counter = 0;
+    }
   } else if (front_dist < FRONT_TO_NOSE + 50) {
     forward = false;
     structure_loop++;
@@ -386,6 +390,7 @@ void GoalApproach() { // As you approach a structure
 
       structure_loop = 0;
       fire_count = 0;
+      approach_counter = 0;
       production_state = GOAL_HANDLING;
     }
   } else {
@@ -506,26 +511,45 @@ void FindingFood() {
   production_state = TRAVELLING;
 }
 
-void Travelling() { // Navigation without searching; only occurs after all structures have been found
-  int dir = Navigate();
-
-  if (dir == CURRENT_DIRECTION) {
-    forward = true;
-  } else if (dir == -1) { // Path head is NULL; stop moving!
-    forward = false;
-    turn_left = false;
-    turn_right = false;
-    production_state = ANY_STATE;
-  } else if (dir == CURRENT_DIRECTION) {
-    forward = true;
-  } else if (dir == 0) {
-    forward = false;
-    turn_left = false;
-    turn_right = false;
+void Travelling() { // Navigation without searching
+  // If we began centering, finish centering
+  if (centering) {
+    if (Center()) {
+      centering = false;
+    }
   } else {
-    Head(dir);
+    int dir = Navigate();
+  
+    if (temporary_stop) {
+      forward = false;
+      turn_left = false;
+      turn_right = false;
+      if (temporary_stop_counter > 30)
+      {
+        temporary_stop = false;
+        temporary_stop_counter = 0;
+      }
+      temporary_stop_counter++;
+    } else if ((*CURRENT_TILE).goal == POSSIBILITY) {
+      forward = false;
+      turn_left = false;
+      turn_right = false;
+      production_state = GOAL_APPROACH; 
+    } else if (dir == CURRENT_DIRECTION) {
+      forward = true;
+    } else if (dir == -1) { // Path head is NULL; stop moving!
+      forward = false;
+      turn_left = false;
+      turn_right = false;
+      production_state = ANY_STATE;
+    } else if (dir == CURRENT_DIRECTION) {
+      forward = true;
+    } else if (dir == 0) {
+      centering = true;
+    } else {
+      Head(dir);
+    }
   }
-
   Move();
 }
 
