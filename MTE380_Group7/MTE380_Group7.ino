@@ -301,26 +301,16 @@ void ProductionLoop() { // Full code
 
 void SearchState() { // Navigation with searching
   if (!turning && ObjectOnTile()) {
-    path_state = -1;
     production_state = TRAVELLING;
   }
 
   // Run along hard-coded path if there is no path found (i.e. no objects have been found from our path)
   if (PATH_HEAD == NULL) {
-    path_state++; // If we reset the path counter to -1, then we will return to the pre-programmed path. If we reached the first pre-programmed path, proceed to the next pathpoint
-  }
-  if (path_state == 1) {
-    SelectPath(&COURSE[3][2]);
-    path_state = 2;
-  } else if (path_state == 3) {
-    SelectPath(&COURSE[2][2]);
-    path_state = 4;
-  } else if (path_state == 5) {
-    SelectPath(&COURSE[2][4]);
-    path_state = 6;
-  } else if (path_state == 7) {
-    SelectPath(&COURSE[3][4]);
-    path_state = 0;
+    forward = false; 
+    turn_left = false;
+    turn_right = false;
+    reverse = false;
+    SetSandPath();
   }
 
   // If we began centering, finish centering
